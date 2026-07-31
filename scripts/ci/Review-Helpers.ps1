@@ -18,6 +18,29 @@ function ConvertTo-RedactedText([string]$Text) {
   return $Text
 }
 
+function Assert-ReviewJson([string]$Json, [string]$SchemaPath) {
+  if ([string]::IsNullOrWhiteSpace($Json)) { throw 'Review JSON is empty.' }
+  try { $document = $Json | ConvertFrom-Json } catch { throw "Review JSON is invalid: $($_.Exception.Message)" }
+  if ($SchemaPath -and (Get-Command Test-Json -ErrorAction SilentlyContinue)) {
+    if (-not (Test-Json -Json $Json -SchemaFile $SchemaPath)) { throw 'Review JSON does not conform to the report schema.' }
+  }
+  foreach ($required in @('schema_version','status','summary','findings','metadata')) {
+    if ($null -eq $document.$required) { throw "Review JSON missing $required." }
+  }
+  if ($document.schema_version -ne '1.0') { throw 'Unsupported review JSON schema.' }
+  if ($document.status -notin @('passed','findings','blocked','failed')) { throw "Invalid review status: $($document.status)." }
+  foreach ($finding in @($document.findings)) {
+    foreach ($required in @('severity','title','location','evidence','suggested_fix')) {
+      if ($null -eq $finding.$required) { throw "Finding missing $required." }
+    }
+    if ($finding.severity -notin @('critical','high','medium','low','info')) { throw "Invalid finding severity: $($finding.severity)." }
+  }
+  foreach ($required in @('repository','commit','generated_at','failure_class')) {
+    if ($null -eq $document.metadata.$required) { throw "Review metadata missing $required." }
+  }
+  if ($document.metadata.failure_class -notin @('none','usage','prerequisite','timeout','output_limit','codex','contract','blocked')) { throw "Invalid failure class: $($document.metadata.failure_class)." }
+}
+
 function Get-ReviewConfig([string]$Path) {
   if (-not (Test-Path -LiteralPath $Path)) { throw "Missing review configuration: $Path" }
   $text = Get-Content -LiteralPath $Path -Raw
@@ -96,7 +119,9 @@ function Assert-ReviewMarkdown([string]$Markdown) {
 
 function Test-ReviewSecrets([string]$Text) {
   if ($null -eq $Text) { return $false }
-  return $Text -match '(?i)(OPENAI_API_KEY|API_KEY|PASSWORD|SECRET)\s*[:=]\s*\S+|(?:sk|ghp|gho|ghs|ghr)[_-][A-Za-z0-9_-]{12,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'
+  $candidate = $Text -replace '(?i)(OPENAI_API_KEY|API_KEY|PASSWORD|SECRET)\s*[:=]\s*\[REDACTED\]', ''
+  $candidate = $candidate -replace '\[REDACTED(?: PRIVATE KEY)?\]', ''
+  return $candidate -match '(?i)(OPENAI_API_KEY|API_KEY|PASSWORD|SECRET)\s*[:=]\s*\S+|(?:sk|ghp|gho|ghs|ghr)[_-][A-Za-z0-9_-]{12,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'
 }
 
 function Get-ReviewStatus([object[]]$Findings) {

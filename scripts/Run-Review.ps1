@@ -84,10 +84,11 @@ if ($DryRun) {
 }
 
 $job = Start-Job -ScriptBlock {
-    param($Args)
+    param($Args, $WorkingDirectory)
+    Set-Location -LiteralPath $WorkingDirectory
     $jobOutput = (& codex @Args 2>&1 | Out-String)
     [pscustomobject]@{ Output = $jobOutput; ExitCode = $LASTEXITCODE }
-} -ArgumentList (,$codexArgs)
+} -ArgumentList (,$codexArgs), $HarnessRoot
 try {
     if (-not (Wait-Job -Job $job -Timeout $TimeoutSeconds)) {
         Stop-Job -Job $job -ErrorAction SilentlyContinue
@@ -120,7 +121,9 @@ $report = [ordered]@{
     schema_version = '1.0'; status = (Get-ReviewStatus $findings); summary = $output.Substring(0, [Math]::Min($output.Length, 20000)); findings = $findings
     metadata = [ordered]@{ repository = $gitTop.Trim(); commit = $commit.Trim(); generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = 'none' }
 }
-Set-Content -LiteralPath $jsonFile -Value ($report | ConvertTo-Json -Depth 8) -Encoding UTF8
+$jsonText = $report | ConvertTo-Json -Depth 8
+Assert-ReviewJson $jsonText (Join-Path $HarnessRoot 'schemas\review-report.schema.json')
+Set-Content -LiteralPath $jsonFile -Value $jsonText -Encoding UTF8
 Get-FileHash -Algorithm SHA256 $reportFile, $jsonFile | ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($reportsDir.Length + 1) } | Set-Content -LiteralPath $hashFile -Encoding ASCII
 Write-Host "Review finished. Markdown: $reportFile; JSON: $jsonFile; SHA-256: $hashFile"
 exit 0

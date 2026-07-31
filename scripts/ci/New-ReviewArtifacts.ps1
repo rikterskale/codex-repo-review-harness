@@ -49,6 +49,7 @@ $report = [ordered]@{
   metadata = [ordered]@{ repository = $env:GITHUB_REPOSITORY; commit = $env:GITHUB_SHA; generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = $failure }
 }
 $json = $report | ConvertTo-Json -Depth 8
+Assert-ReviewJson $json (Join-Path $PSScriptRoot '..\..\schemas\review-report.schema.json')
 Set-Content -LiteralPath (Join-Path $out 'review.md') -Value $message -Encoding UTF8
 Set-Content -LiteralPath (Join-Path $out 'review.json') -Value $json -Encoding UTF8
 Get-FileHash -Algorithm SHA256 (Join-Path $out 'review.md'), (Join-Path $out 'review.json') |

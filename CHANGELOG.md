@@ -6,3 +6,5 @@ All notable changes to this project are documented here.
 
 - Initial review harness release.
 - Added split, least-privilege Codex review workflows and report contracts.
+- Added canonical Windows and Linux novice guides, portable test invocation, and
+  stronger runner, report, and CI regression coverage.

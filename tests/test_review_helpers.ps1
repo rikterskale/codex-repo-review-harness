@@ -35,4 +35,8 @@ if ($findings.Count -ne 1 -or $findings[0].severity -ne 'high' -or $findings[0].
 if (@(Select-ReviewFindings $findings 'medium').Count -ne 1) { throw 'Minimum severity filtering regression.' }
 $redacted = ConvertTo-RedactedText "ghp_12345678901234567890`n-----BEGIN PRIVATE KEY-----`nsecret`n-----END PRIVATE KEY-----"
 if ($redacted -match 'ghp_12345678901234567890|BEGIN PRIVATE KEY|secret') { throw 'Secret redaction regression.' }
+$credentialReview = ConvertTo-RedactedText 'A finding quotes PASSWORD=hunter2 for remediation.'
+if (Test-ReviewSecrets $credentialReview) { throw 'Redacted credential findings must remain publishable.' }
+$schemaPath = Join-Path $PSScriptRoot '..\schemas\review-report.schema.json'
+Assert-ReviewJson (@{ schema_version='1.0'; status='passed'; summary='ok'; findings=@(); metadata=@{ repository='fixture'; commit='fixture'; generated_at=(Get-Date).ToUniversalTime().ToString('o'); failure_class='none' } } | ConvertTo-Json -Depth 8) $schemaPath
 Write-Host 'PASS: review helper contract tests passed.'

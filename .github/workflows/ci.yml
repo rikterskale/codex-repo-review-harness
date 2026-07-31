@@ -38,6 +38,7 @@ jobs:
       - name: Validate reports, release metadata, and workflow policy
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           pwsh -NoProfile -File scripts/ci/Test-ReportContract.ps1
           pwsh -NoProfile -File tests/test_review_artifacts.ps1
           pwsh -NoProfile -File tests/test_security_regressions.ps1

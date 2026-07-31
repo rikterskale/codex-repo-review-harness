@@ -42,7 +42,9 @@ Reports appear under `reports/`.
 
 Open the file:
 
-**[docs/WINDOWS_BEGINNER_GUIDE.md](docs/WINDOWS_BEGINNER_GUIDE.md)**
+**Platform guides:** [Windows novice guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md) · [Linux novice guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md)
+
+The older [Windows beginner guide](docs/WINDOWS_BEGINNER_GUIDE.md) remains available as a short orientation guide.
 
 It starts from installing Git and walks through every single step.
 
@@ -73,7 +75,10 @@ It starts from installing Git and walks through every single step.
 ├── tests/
 │   └── test_harness_structure.ps1
 ├── docs/
-│   └── WINDOWS_BEGINNER_GUIDE.md # The detailed beginner guide
+│   ├── guides/
+│   │   ├── WINDOWS_NOVICE_USABILITY_GUIDE.md
+│   │   └── LINUX_NOVICE_USABILITY_GUIDE.md
+│   └── WINDOWS_BEGINNER_GUIDE.md # Short orientation guide
 └── .github/workflows/
     └── codex-review.yml          # Optional CI template
 ```
@@ -130,6 +135,25 @@ This harness deliberately builds on the current Codex workflow (as of mid-2026):
 
 It does **not** replace Codex; it packages a safe, repeatable way to use it for repository reviews.
 
+### Privacy and data handling
+
+The local runner sends repository content and review prompts to the Codex service.
+Do not run it on code that your organization does not permit you to disclose to a
+third party. Review reports may contain sensitive findings; keep `reports/` and
+any CI artifacts access-controlled and redact credentials before sharing them.
+
+### Safe rollback
+
+Before updating the harness, create a branch or stash local changes. To return to
+the previous revision without discarding uncommitted work, use:
+
+```powershell
+git switch --detach <KNOWN_GOOD_COMMIT>
+```
+
+Replace `<KNOWN_GOOD_COMMIT>` with a commit from `git log`. Return to your branch
+with `git switch <BRANCH_NAME>` after checking the older revision.
+
 ## License
 
 Apache-2.0 (same spirit as the official Codex CLI). Use freely.
@@ -137,4 +161,4 @@ Apache-2.0 (same spirit as the official Codex CLI). Use freely.
 ---
 
 **Start here if you are new to computers or the command line:**  
-→ [docs/WINDOWS_BEGINNER_GUIDE.md](docs/WINDOWS_BEGINNER_GUIDE.md)
+→ [Windows novice guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md) · [Linux novice guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md)

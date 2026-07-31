@@ -25,6 +25,8 @@ Assert-True (Test-Path "$root\tests\test_security_regressions.ps1") "Missing sec
 Assert-True (Test-Path "$root\tests\test_review_artifacts.ps1") "Missing artifact verification test"
 Assert-True (Test-Path "$root\tests\test_review_helpers.ps1") "Missing review helper contract test"
 Assert-True (Test-Path "$root\tests\test_runner_failure.ps1") "Missing runner failure test"
+Assert-True (Test-Path "$root\docs\guides\WINDOWS_NOVICE_USABILITY_GUIDE.md") "Missing canonical Windows novice guide"
+Assert-True (Test-Path "$root\docs\guides\LINUX_NOVICE_USABILITY_GUIDE.md") "Missing canonical Linux novice guide"
 
 $config = Get-Content "$root\config\review-config.yaml" -Raw
 Assert-True ($config -match "sandbox:\s*read-only") "Config must default to sandbox: read-only"
@@ -32,6 +34,15 @@ Assert-True ($config -match "base_branch:") "Config must declare base_branch"
 
 $agents = Get-Content "$root\AGENTS.md" -Raw
 Assert-True ($agents -match "## Code Review Rules") "AGENTS.md must contain Code Review Rules section"
+$readme = Get-Content "$root\README.md" -Raw
+Assert-True ($readme -match 'docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE\.md') "README must link the Windows novice guide"
+Assert-True ($readme -match 'docs/guides/LINUX_NOVICE_USABILITY_GUIDE\.md') "README must link the Linux novice guide"
+foreach ($guide in @('WINDOWS_NOVICE_USABILITY_GUIDE.md', 'LINUX_NOVICE_USABILITY_GUIDE.md')) {
+    $guideText = Get-Content (Join-Path $root "docs\guides\$guide") -Raw
+    foreach ($heading in @('## 1.','## 2.','## 3.','## 4.','## 5.','## 6.','## 7.','## 8.','## 9.','## 10.')) {
+        Assert-True ($guideText -match [regex]::Escape($heading)) "$guide is missing required section prefix $heading"
+    }
+}
 
 foreach ($workflow in Get-ChildItem "$root\.github\workflows" -Filter '*.yml') {
     $workflowText = Get-Content $workflow.FullName -Raw

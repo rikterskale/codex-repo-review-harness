@@ -9,6 +9,7 @@ $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pa
 Set-Location $HarnessRoot
 
 $failed = 0
+$isWindows = $env:OS -eq 'Windows_NT'
 
 function Check($name, $condition, $fixHint) {
     if ($condition) {
@@ -46,7 +47,12 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
 }
 
 # Codex
-Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) "Install with: powershell -ExecutionPolicy ByPass -c `"irm https://chatgpt.com/codex/install.ps1 | iex`""
+$codexHint = if ($isWindows) {
+    'Install Codex using the Windows installer from the official documentation.'
+} else {
+    'Install the Codex CLI using the official Linux instructions, then reopen this shell.'
+}
+Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) $codexHint
 
 # Config sanity
 $config = Get-Content (Join-Path $HarnessRoot "config\review-config.yaml") -Raw
