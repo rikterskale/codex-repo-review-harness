@@ -1,0 +1,16 @@
+# Generated reports (keep the folder, ignore contents)
+reports/*
+!reports/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Local secrets (never commit)
+.env
+*.pem
+*.key

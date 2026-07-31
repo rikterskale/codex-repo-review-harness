@@ -1,0 +1,61 @@
+# Codex Repo Review Harness - Configuration
+# This file controls the default behavior of reviews.
+# Edit the values below to match your project. Keep it simple.
+# Lines starting with # are comments and are ignored.
+
+# Base branch to compare against for reviews (usually "main" or "master")
+base_branch: main
+
+# Default sandbox mode for Codex. ALWAYS keep "read-only" for safety.
+# Options: read-only | workspace-write | danger-full-access
+# read-only means Codex cannot change any of your source files.
+sandbox: read-only
+
+# Focus areas for the review (Codex will prioritize these)
+# You can remove items you don't care about.
+focus_areas:
+  - security          # secrets, injection, auth, unsafe patterns
+  - correctness       # bugs, logic errors, edge cases
+  - reliability       # error handling, retries, resource leaks
+  - performance       # obvious slow paths, N+1 queries, large allocations
+  - maintainability   # clarity, duplication, naming, structure
+  - testing           # missing tests, weak assertions, flaky patterns
+  - documentation     # missing or outdated docs for public APIs
+
+# Minimum severity to report (ignore lower ones)
+# Options: critical | high | medium | low | info
+min_severity: medium
+
+# Paths to always include (globs relative to repo root). Empty = whole repo.
+include_paths: []
+
+# Paths to always exclude (globs). Useful for generated code, vendor, large assets.
+exclude_paths:
+  - "node_modules/**"
+  - "vendor/**"
+  - "dist/**"
+  - "build/**"
+  - "*.min.js"
+  - "coverage/**"
+  - ".git/**"
+  - "reports/**"
+
+# Report settings
+report:
+  # Directory where timestamped reports are written (relative to repo root)
+  output_dir: reports
+  # Include a short executive summary at the top
+  include_summary: true
+  # Maximum number of findings to keep in the report (0 = unlimited)
+  max_findings: 50
+
+# Codex model preference (leave empty for default)
+# Examples: "o3", "gpt-5", etc. Check current Codex /model options.
+model: ""
+
+# Extra instructions that are always prepended to the review prompt
+extra_instructions: |
+  Be concise. Prefer actionable findings over praise.
+  For every finding cite the file path and approximate line or symbol.
+  Suggest a concrete fix when possible.
+  Do not invent issues that are not present in the code.
