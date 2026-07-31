@@ -6,9 +6,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
-  pull-requests: write
-  actions: read
+  {}
 
 concurrency:
   group: codex-review-comment-${{ github.event.workflow_run.id }}
@@ -16,7 +14,7 @@ concurrency:
 
 jobs:
   comment:
-    if: ${{ github.event.workflow_run.event == 'pull_request_target' && github.event.workflow_run.conclusion != 'cancelled' }}
+    if: ${{ github.event.workflow_run.event == 'pull_request_target' && github.event.workflow_run.conclusion != 'cancelled' && github.event.workflow_run.pull_requests[0].number }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
