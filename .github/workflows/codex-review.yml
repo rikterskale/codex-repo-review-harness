@@ -1,0 +1,41 @@
+# Optional: run a Codex review on every pull request.
+# Requires a ChatGPT / Codex secret configured in the repository.
+# See the beginner guide for how to add the secret safely.
+#
+# NOTE: This is an advanced optional feature. Beginners can ignore it
+# until they are comfortable with the local PowerShell scripts.
+
+name: Codex Read-Only Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Codex CLI
+        run: |
+          curl -fsSL https://chatgpt.com/codex/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # The official openai/codex-action can also be used once you are ready.
+      # This example keeps the sandbox read-only and posts a comment.
+      - name: Run read-only review (placeholder)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # or use ChatGPT auth token if supported
+        run: |
+          echo "This is a template. Replace with the official codex-action or a codex exec call."
+          echo "Always keep sandbox: read-only for PR reviews unless you intentionally want writes."
+          # Example once authenticated:
+          # codex exec --sandbox read-only "Review the PR diff against the base branch. Follow AGENTS.md Code Review Rules. Output the standard report format."
