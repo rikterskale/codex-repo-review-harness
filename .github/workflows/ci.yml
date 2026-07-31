@@ -1,0 +1,47 @@
+name: Harness Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harness-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Run structural and regression tests
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/test_harness_structure.ps1
+
+      - name: Validate reports, release metadata, and workflow policy
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/ci/Test-ReportContract.ps1
+          pwsh -NoProfile -File tests/test_security_regressions.ps1
+          pwsh -NoProfile -File tests/test_clean_room.ps1
+          pwsh -NoProfile -File scripts/ci/Validate-Release.ps1
+          pwsh -NoProfile -File scripts/ci/Validate-WorkflowPolicy.ps1
+
+      - name: Validate PowerShell syntax
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/ci/Test-PowerShellSyntax.ps1

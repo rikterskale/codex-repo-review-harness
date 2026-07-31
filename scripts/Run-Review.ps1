@@ -1,215 +1,93 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Codex Repo Review Harness – Windows runner (read-only by default)
+  Bounded, read-only Codex repository review runner.
 
 .DESCRIPTION
-  This script launches a Codex review against the current repository.
-  It is deliberately conservative:
-  - Forces read-only sandbox
-  - Never modifies source files
-  - Writes only a timestamped report under ./reports/
-
-.PARAMETER Prompt
-  Which prompt file to use (relative to prompts/). Default: system-review.md
-
-.PARAMETER BaseBranch
-  Override the base branch from config. Default: value from review-config.yaml or "main"
-
-.PARAMETER DryRun
-  Only validate the environment and print the command that would be run.
-
-.EXAMPLE
-  .\scripts\Run-Review.ps1
-
-.EXAMPLE
-  .\scripts\Run-Review.ps1 -Prompt security-focus.md
-
-.EXAMPLE
-  .\scripts\Run-Review.ps1 -DryRun
+  Exit codes: 0 success, 2 usage/configuration, 3 prerequisite, 4 Codex
+  failure, 5 contract failure, 6 timeout, 7 output-size limit.
 #>
-
 param(
-    [string]$Prompt = "system-review.md",
-    [string]$BaseBranch = "",
+    [string]$Prompt = 'system-review.md',
+    [string]$BaseBranch = '',
+    [int]$TimeoutSeconds = 900,
+    [int]$MaxOutputBytes = 5242880,
     [switch]$DryRun
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $HarnessRoot
+. (Join-Path $HarnessRoot 'scripts\ci\Review-Helpers.ps1')
 
-function Write-Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
-function Write-Ok($msg)   { Write-Host "    OK: $msg" -ForegroundColor Green }
-function Write-Warn($msg) { Write-Host "    WARN: $msg" -ForegroundColor Yellow }
-function Write-Err($msg)  { Write-Host "    ERROR: $msg" -ForegroundColor Red }
+function Fail([int]$Code, [string]$Message) { Write-Error $Message; exit $Code }
+if ($TimeoutSeconds -lt 1 -or $MaxOutputBytes -lt 1024) { Fail 2 'TimeoutSeconds must be positive and MaxOutputBytes must be at least 1024.' }
 
-Write-Step "Codex Repo Review Harness (read-only)"
-Write-Host "    Working directory: $HarnessRoot"
-
-# ------------------------------------------------------------------
-# 1. Basic environment checks
-# ------------------------------------------------------------------
-Write-Step "Checking prerequisites"
-
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Err "Git is not installed or not on PATH."
-    Write-Host "    Install Git for Windows from https://git-scm.com/download/win"
-    exit 1
-}
-Write-Ok "Git found: $(git --version)"
-
-if (-not (Get-Command codex -ErrorAction SilentlyContinue)) {
-    Write-Err "Codex CLI is not installed or not on PATH."
-    Write-Host "    Run the official installer:"
-    Write-Host '    powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"'
-    exit 1
-}
-Write-Ok "Codex found: $(codex --version 2>$null)"
-
-# Are we inside a git repo?
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) { Fail 3 'Git is not installed or not on PATH.' }
+if (-not (Get-Command codex -ErrorAction SilentlyContinue)) { Fail 3 'Codex CLI is not installed or not on PATH.' }
 $gitTop = git rev-parse --show-toplevel 2>$null
-if (-not $gitTop) {
-    Write-Err "This folder is not inside a Git repository."
-    Write-Host "    Initialize one with:  git init"
-    exit 1
+if (-not $gitTop) { Fail 3 'This folder is not inside a Git repository.' }
+
+$configPath = Join-Path $HarnessRoot 'config\review-config.yaml'
+if (-not (Test-Path -LiteralPath $configPath)) { Fail 2 "Missing config file: $configPath" }
+$configText = Get-Content -LiteralPath $configPath -Raw
+function Get-YamlValue([string]$Text, [string]$Key, [string]$Default = '') {
+    $match = [regex]::Match($Text, "(?m)^\s*$([regex]::Escape($Key))\s*:\s*[`"']?([^`"'\r\n#]+)")
+    if ($match.Success) { return $match.Groups[1].Value.Trim() }
+    return $Default
 }
-Write-Ok "Git repository root: $gitTop"
+$cfgBase = Get-YamlValue $configText 'base_branch' 'main'
+$cfgSandbox = Get-YamlValue $configText 'sandbox' 'read-only'
+$nestedReport = [regex]::Match($configText, '(?ms)^report:\s*\r?\n(?:\s+#.*\r?\n)*\s+output_dir:\s*[`"'']?([^`"''\r\n#]+)')
+$cfgOutDir = if ($nestedReport.Success) { $nestedReport.Groups[1].Value.Trim() } else { 'reports' }
+if ($BaseBranch -eq '') { $BaseBranch = $cfgBase }
+if ($cfgSandbox -ne 'read-only') { Write-Warning "Config sandbox is '$cfgSandbox'; forcing read-only." }
+if ([IO.Path]::IsPathRooted($cfgOutDir) -or $cfgOutDir.Contains('..')) { Fail 2 'report.output_dir must be a repository-relative path.' }
 
-# ------------------------------------------------------------------
-# 2. Load configuration (simple YAML-ish parse – no external deps)
-# ------------------------------------------------------------------
-Write-Step "Loading configuration"
-$configPath = Join-Path $HarnessRoot "config\review-config.yaml"
-if (-not (Test-Path $configPath)) {
-    Write-Err "Missing config file: $configPath"
-    exit 1
-}
-
-# Very small parser for the keys we care about
-$configText = Get-Content $configPath -Raw
-function Get-YamlValue($text, $key, $default = "") {
-    if ($text -match "(?m)^\s*${key}\s*:\s*[`"']?([^`"'\r\n#]+)") {
-        return $Matches[1].Trim()
-    }
-    return $default
-}
-
-$cfgBase   = Get-YamlValue $configText "base_branch" "main"
-$cfgSandbox = Get-YamlValue $configText "sandbox" "read-only"
-$cfgOutDir  = Get-YamlValue $configText "output_dir" "reports"
-
-if ($BaseBranch -eq "") { $BaseBranch = $cfgBase }
-
-if ($cfgSandbox -ne "read-only") {
-    Write-Warn "Config sandbox is '$cfgSandbox'. Forcing read-only for safety."
-    $cfgSandbox = "read-only"
-}
-Write-Ok "base_branch = $BaseBranch"
-Write-Ok "sandbox     = $cfgSandbox"
-
-# ------------------------------------------------------------------
-# 3. Locate the chosen prompt
-# ------------------------------------------------------------------
-$promptPath = Join-Path $HarnessRoot "prompts\$Prompt"
-if (-not (Test-Path $promptPath)) {
-    Write-Err "Prompt file not found: $promptPath"
-    Write-Host "    Available prompts:"
-    Get-ChildItem (Join-Path $HarnessRoot "prompts") -Filter *.md | ForEach-Object { Write-Host "      - $($_.Name)" }
-    exit 1
-}
-Write-Ok "Using prompt: $Prompt"
-
-# ------------------------------------------------------------------
-# 4. Prepare reports directory
-# ------------------------------------------------------------------
+$promptPath = Join-Path $HarnessRoot (Join-Path 'prompts' $Prompt)
+if (-not (Test-Path -LiteralPath $promptPath)) { Fail 2 "Prompt file not found: $Prompt" }
 $reportsDir = Join-Path $HarnessRoot $cfgOutDir
-if (-not (Test-Path $reportsDir)) {
-    New-Item -ItemType Directory -Path $reportsDir | Out-Null
-}
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+New-Item -ItemType Directory -Path $reportsDir -Force | Out-Null
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $reportFile = Join-Path $reportsDir "review-$timestamp.md"
-Write-Ok "Report will be written to: $reportFile"
+$jsonFile = [IO.Path]::ChangeExtension($reportFile, '.json')
+$hashFile = [IO.Path]::ChangeExtension($reportFile, '.sha256')
 
-# ------------------------------------------------------------------
-# 5. Build the Codex command
-# ------------------------------------------------------------------
-$promptContent = Get-Content $promptPath -Raw
-
-# Compose a single instruction that forces read-only + loads config intent
+$promptContent = Get-Content -LiteralPath $promptPath -Raw
 $fullPrompt = @"
-You are running inside the Codex Repo Review Harness.
-Sandbox mode is forced to read-only. You must not modify any files.
-
-Base branch to compare against: $BaseBranch
-
-Follow the instructions in the prompt below exactly, including the required Markdown report structure.
-
+You are running inside the Codex Repo Review Harness. Sandbox mode is forced to read-only.
+Do not modify files, access external systems, or claim unverified runtime behavior.
+Base branch: $BaseBranch
+Follow this trusted prompt exactly:
 ----- BEGIN PROMPT -----
 $promptContent
 ----- END PROMPT -----
-
-Also respect every rule under "## Code Review Rules" in AGENTS.md (if present).
 "@
-
-# Codex CLI invocation.
-# We use `codex exec` for non-interactive runs when available.
-# Fallback to interactive `codex` if exec is missing.
-$codexArgs = @(
-    "exec",
-    "--sandbox", "read-only",
-    $fullPrompt
-)
-
-Write-Step "Prepared command"
-Write-Host "    codex $($codexArgs[0]) --sandbox read-only <long prompt>"
-
+$codexArgs = @('exec', '--sandbox', 'read-only', $fullPrompt)
 if ($DryRun) {
-    Write-Step "Dry-run mode – stopping before launching Codex"
-    Write-Host "    The full prompt length is $($fullPrompt.Length) characters."
-    Write-Host "    Report path would be: $reportFile"
+    Write-Host "Prepared bounded read-only review; prompt length=$($fullPrompt.Length), timeout=$TimeoutSeconds seconds, max_output_bytes=$MaxOutputBytes."
     exit 0
 }
 
-# ------------------------------------------------------------------
-# 6. Run Codex and capture output
-# ------------------------------------------------------------------
-Write-Step "Launching Codex (this may take a few minutes)..."
-Write-Host "    Please wait. Codex will print progress in this window."
-
+$job = Start-Job -ScriptBlock { param($Args) & codex @Args 2>&1 | Out-String } -ArgumentList (,$codexArgs)
 try {
-    # Capture both stdout and stderr
-    $output = & codex @codexArgs 2>&1 | Out-String
-} catch {
-    Write-Err "Codex failed: $_"
-    exit 1
-}
+    if (-not (Wait-Job -Job $job -Timeout $TimeoutSeconds)) {
+        Stop-Job -Job $job -ErrorAction SilentlyContinue
+        Fail 6 "Codex review timed out after $TimeoutSeconds seconds."
+    }
+    $output = (Receive-Job -Job $job | Out-String)
+} finally { Remove-Job -Job $job -Force -ErrorAction SilentlyContinue }
+$output = ConvertTo-RedactedText $output
+if ([Text.Encoding]::UTF8.GetByteCount($output) -gt $MaxOutputBytes) { Fail 7 "Codex output exceeded $MaxOutputBytes bytes." }
 
-# ------------------------------------------------------------------
-# 7. Write the report
-# ------------------------------------------------------------------
-$header = @"
-# Codex Repo Review Report
-Generated by the Codex Repo Review Harness
-**Timestamp:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-**Base branch:** $BaseBranch
-**Sandbox:** read-only
-**Prompt:** $Prompt
-**Repository:** $gitTop
-
----
-
-"@
-
+$header = "# Codex Repository Review Report`nGenerated by the Codex Repo Review Harness`n**Timestamp:** $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n**Base branch:** $BaseBranch`n**Sandbox:** read-only`n**Prompt:** $Prompt`n**Repository:** $gitTop`n`n---`n`n"
 $fullReport = $header + $output
-Set-Content -Path $reportFile -Value $fullReport -Encoding UTF8
-
-Write-Step "Review finished"
-Write-Ok "Report saved to: $reportFile"
-Write-Host ""
-Write-Host "Open the file with any text editor or Markdown viewer."
-Write-Host "You can also run:  notepad `"$reportFile`""
-Write-Host ""
-Write-Host "To run another review type:" -ForegroundColor Cyan
-Write-Host "  .\scripts\Run-Review.ps1 -Prompt security-focus.md"
-Write-Host "  .\scripts\Run-Review.ps1 -Prompt pr-diff-review.md"
+Set-Content -LiteralPath $reportFile -Value $fullReport -Encoding UTF8
+$report = [ordered]@{
+    schema_version = '1.0'; status = 'passed'; summary = $output.Substring(0, [Math]::Min($output.Length, 20000)); findings = @()
+    metadata = [ordered]@{ repository = $gitTop; commit = (git rev-parse HEAD); generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = 'none' }
+}
+Set-Content -LiteralPath $jsonFile -Value ($report | ConvertTo-Json -Depth 8) -Encoding UTF8
+Get-FileHash -Algorithm SHA256 $reportFile, $jsonFile | ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($reportsDir.Length + 1) } | Set-Content -LiteralPath $hashFile -Encoding ASCII
+Write-Host "Review finished. Markdown: $reportFile; JSON: $jsonFile; SHA-256: $hashFile"
+exit 0

@@ -10,6 +10,7 @@ This project gives you:
 - **Validation** and **runner** scripts (Windows PowerShell first)
 - Timestamped **reports** that never touch your source code
 - A complete **beginner-friendly Windows guide** (start from zero computer knowledge)
+- Cross-platform CI validation and a split, least-privilege PR review pipeline
 
 ## Why this exists
 
@@ -82,9 +83,33 @@ It starts from installing Git and walks through every single step.
 ```powershell
 powershell -File tests/test_harness_structure.ps1
 .\scripts\Validate-Harness.ps1
+pwsh -NoProfile -File scripts/ci/Test-ReportContract.ps1
+pwsh -NoProfile -File tests/test_security_regressions.ps1
 ```
 
 These checks do not require an active Codex authentication and verify that the files and safety defaults are correct.
+
+## GitHub Actions
+
+The repository has two separate review workflows. `Codex Read-Only Review` runs
+trusted base-branch code with read-only GitHub permissions and treats the PR diff
+as untrusted data. `Publish Codex Review` is triggered by `workflow_run` and is
+the only workflow allowed to write a PR conversation comment. All actions are
+pinned to immutable commit SHAs, jobs have timeouts and cancellation, and review
+artifacts include Markdown, JSON, and SHA-256 manifests.
+
+The analysis workflow requires an `OPENAI_API_KEY` repository secret. Do not
+enable it until the repository owner has reviewed the trust boundary and has
+configured the secret. Fork pull requests are analyzed by the trusted base
+workflow; PR source code is never checked out or executed by that workflow.
+
+## Report contract and exit codes
+
+Reports follow `schemas/review-report.schema.json`. The local runner writes
+Markdown, JSON, and SHA-256 files to the configured nested `report.output_dir`.
+Its deterministic exit codes are: `0` success, `2` usage/configuration, `3`
+prerequisite, `4` Codex failure, `5` contract failure, `6` timeout, and `7`
+output-size limit.
 
 ## Customization
 

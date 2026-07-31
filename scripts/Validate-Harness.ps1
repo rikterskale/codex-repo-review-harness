@@ -53,17 +53,10 @@ $config = Get-Content (Join-Path $HarnessRoot "config\review-config.yaml") -Raw
 Check "Config declares sandbox: read-only" ($config -match "(?m)^\s*sandbox\s*:\s*read-only") "Edit config/review-config.yaml and set sandbox: read-only"
 Check "Config has a base_branch" ($config -match "(?m)^\s*base_branch\s*:") "Add base_branch: main (or master) to the config"
 
-# Reports directory is writable
+# Reports directory is present. Do not write a probe file: validation itself is
+# read-only; the review runner is the component authorized to create reports.
 $reports = Join-Path $HarnessRoot "reports"
-if (-not (Test-Path $reports)) { New-Item -ItemType Directory -Path $reports | Out-Null }
-$testFile = Join-Path $reports ".write-test"
-try {
-    "ok" | Set-Content $testFile -ErrorAction Stop
-    Remove-Item $testFile -ErrorAction SilentlyContinue
-    Check "reports/ directory is writable" $true ""
-} catch {
-    Check "reports/ directory is writable" $false "Check folder permissions."
-}
+Check "reports/ directory exists" (Test-Path $reports) "Create the reports directory before running a review."
 
 Write-Host ""
 if ($failed -eq 0) {

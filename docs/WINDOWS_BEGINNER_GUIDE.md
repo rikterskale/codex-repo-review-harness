@@ -366,6 +366,18 @@ codex --version
 - The reports folder only contains text files. You can delete old reports any time.
 - This harness does not send your code to any third-party service beyond the official OpenAI / ChatGPT Codex service you already authenticated with.
 
+### CI safety and release checks
+
+If you enable the optional GitHub Actions review, keep the analysis and comment
+workflows separate. The analysis workflow must have only read permissions; the
+comment workflow receives pull-request write permission only through the
+trusted `workflow_run` event. Never add a secret to a job that checks out or
+executes pull-request source code.
+
+The CI matrix runs on Windows and Ubuntu, checks PowerShell syntax, validates
+the Markdown/JSON report contract, exercises synthetic secret-redaction and
+prompt-injection fixtures, and checks `VERSION` against `CHANGELOG.md`.
+
 ---
 
 ## You are done!

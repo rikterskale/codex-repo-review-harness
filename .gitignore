@@ -1,6 +1,8 @@
 # Generated reports (keep the folder, ignore contents)
 reports/*
 !reports/.gitkeep
+review-input/
+review-output/
 
 # OS / editor
 .DS_Store
