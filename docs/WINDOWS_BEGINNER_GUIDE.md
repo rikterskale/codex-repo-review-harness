@@ -255,7 +255,7 @@ What happens:
 5. When finished, a new file appears under the `reports\` folder, for example:
 
    ```
-   reports\review-20260731-143022.md
+   reports\review-20260731-143022-123-a1b2c3d4.md
    ```
 
 You will see a message telling you the exact file name.

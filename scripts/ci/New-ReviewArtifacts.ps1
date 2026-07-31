@@ -7,12 +7,45 @@ $message = if ($env:CODEX_MESSAGE) { $env:CODEX_MESSAGE } else { 'Codex did not 
 $message = ConvertTo-RedactedText $message
 if ([Text.Encoding]::UTF8.GetByteCount($message) -gt 200KB) { $message = $message.Substring(0, 180000) + "`n`n[Output truncated by contract.]" }
 $failure = if ($env:CODEX_OUTCOME -eq 'success') { 'none' } else { 'codex' }
-$status = if ($failure -eq 'none') { 'passed' } else { 'failed' }
+$findings = @()
+if ($failure -eq 'none') {
+  try {
+    Assert-ReviewMarkdown $message
+    $findings = @(Get-ReviewFindings $message)
+    Assert-ReviewFindings $message $findings
+    $config = Get-ReviewConfig (Join-Path $PSScriptRoot '..\..\config\review-config.yaml')
+    $findings = @(Select-ReviewFindings $findings $config.min_severity)
+    if ($config.report.max_findings -gt 0 -and $findings.Count -gt $config.report.max_findings) { throw "Review contains $($findings.Count) findings; configured maximum is $($config.report.max_findings)." }
+  } catch {
+    $failure = 'contract'
+  }
+}
+$status = if ($failure -eq 'none') { Get-ReviewStatus $findings } else { 'failed' }
+if ($failure -ne 'none') {
+  $message = @"
+# Codex Repository Review Report
+
+## Executive Summary
+- Review execution failed with failure class: $failure.
+
+## Findings
+- No findings are available because the review did not complete successfully.
+
+## Positive Observations
+- The failure was captured as a structured review artifact.
+
+## Recommended Next Actions
+1. Inspect the workflow logs and rerun after correcting the failure.
+
+## Raw failure output
+$message
+"@
+}
 $report = [ordered]@{
   schema_version = '1.0'
   status = $status
   summary = $message.Substring(0, [Math]::Min($message.Length, 20000))
-  findings = @()
+  findings = $findings
   metadata = [ordered]@{ repository = $env:GITHUB_REPOSITORY; commit = $env:GITHUB_SHA; generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = $failure }
 }
 $json = $report | ConvertTo-Json -Depth 8
@@ -21,3 +54,4 @@ Set-Content -LiteralPath (Join-Path $out 'review.json') -Value $json -Encoding U
 Get-FileHash -Algorithm SHA256 (Join-Path $out 'review.md'), (Join-Path $out 'review.json') |
   ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($out.Length + 1) } |
   Set-Content -LiteralPath (Join-Path $out 'SHA256SUMS') -Encoding ASCII
+if ($failure -eq 'contract') { exit 5 }

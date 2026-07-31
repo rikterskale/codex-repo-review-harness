@@ -107,9 +107,10 @@ workflow; PR source code is never checked out or executed by that workflow.
 
 Reports follow `schemas/review-report.schema.json`. The local runner writes
 Markdown, JSON, and SHA-256 files to the configured nested `report.output_dir`.
-Its deterministic exit codes are: `0` success, `2` usage/configuration, `3`
-prerequisite, `4` Codex failure, `5` contract failure, `6` timeout, and `7`
-output-size limit.
+The JSON artifact contains parsed findings and uses `passed` when no findings
+are present or `findings` when findings are present. Its deterministic exit
+codes are: `0` success, `2` usage/configuration, `3` prerequisite, `4` Codex
+failure, `5` contract failure, `6` timeout, and `7` output-size limit.
 
 ## Customization
 

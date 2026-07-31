@@ -41,8 +41,11 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         run: |
+          $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Path review-input -Force | Out-Null
-          gh pr diff "$env:PR_NUMBER" --repo "$env:REPOSITORY" > review-input/pr.diff
+          $diff = gh pr diff "$env:PR_NUMBER" --repo "$env:REPOSITORY" 2>&1
+          if ($LASTEXITCODE -ne 0) { throw "GitHub CLI failed to retrieve the pull-request diff (exit code $LASTEXITCODE)." }
+          Set-Content -LiteralPath review-input/pr.diff -Value ($diff -join "`n") -Encoding UTF8
           if ((Get-Item review-input/pr.diff).Length -gt 5242880) {
             Write-Error 'PR diff exceeds the 5 MiB review input limit.'
           }

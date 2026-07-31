@@ -23,6 +23,8 @@ Assert-True (Test-Path "$root\.github\CODEOWNERS") "Missing CODEOWNERS"
 Assert-True (Test-Path "$root\tests\test_clean_room.ps1") "Missing clean-room test"
 Assert-True (Test-Path "$root\tests\test_security_regressions.ps1") "Missing security regression test"
 Assert-True (Test-Path "$root\tests\test_review_artifacts.ps1") "Missing artifact verification test"
+Assert-True (Test-Path "$root\tests\test_review_helpers.ps1") "Missing review helper contract test"
+Assert-True (Test-Path "$root\tests\test_runner_failure.ps1") "Missing runner failure test"
 
 $config = Get-Content "$root\config\review-config.yaml" -Raw
 Assert-True ($config -match "sandbox:\s*read-only") "Config must default to sandbox: read-only"
