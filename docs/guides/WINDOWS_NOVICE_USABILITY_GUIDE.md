@@ -1,4 +1,4 @@
----
+﻿---
 guide_id: windows-novice-usability
 guide_schema_version: 1
 platform: windows
@@ -6,7 +6,7 @@ canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_head: "e0d974af1ce78cab7f3105c75635eac11758eee0"
+reviewed_head: "82fa0f10e0caf5fdc6b7cbb7591723bd84082623"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
@@ -15,7 +15,7 @@ validated_environments:
   - "Windows 11 Pro 10.0.26200, x64, Windows PowerShell 5.1.26100.8875, Git 2.54.0.windows.1, standard user"
 primary_shells:
   - "Windows PowerShell 5.1"
-  - "PowerShell 7 (pwsh) — required for the harness self-test commands"
+  - "PowerShell 7 (pwsh) â€” required for the harness self-test commands"
 maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, scripts/Run-Review.ps1"
 known_limitations:
   - "Under Windows PowerShell 5.1 the runner launches Codex in the user's Documents folder instead of the repository under review (reproduced; finding REV-COR-001). The review may analyse the wrong directory."
@@ -24,7 +24,7 @@ known_limitations:
   - "A review whose findings quote a credential assignment is rejected by the runner with exit code 5 and no report is written (defect REV-COR-002)."
 ---
 
-# Codex Repo Review Harness — Windows Novice Usability Guide
+# Codex Repo Review Harness â€” Windows Novice Usability Guide
 
 ## 1. About This Guide
 
@@ -50,7 +50,7 @@ to trust it:
 | **Blocked** | The command could not be run during validation, and the reason is stated. Treat the described result as expected, not proven. |
 
 There is a companion guide for Linux at `docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md`.
-Do not mix commands between the two guides — the shells and paths are different.
+Do not mix commands between the two guides â€” the shells and paths are different.
 
 ## 2. What This Project Does
 
@@ -68,7 +68,7 @@ restricted way:
   folder.
 - It checks the report Codex sends back against a fixed structure, and refuses to
   save a report that does not match.
-- It writes three files per review — a report you read, a machine-readable copy,
+- It writes three files per review â€” a report you read, a machine-readable copy,
   and a checksum file that proves the other two were not altered afterwards.
 
 ## 3. Who Should Use It
@@ -106,7 +106,7 @@ review.
 this guide. The harness tries to remove secret-looking text from the report
 (`scripts/ci/Review-Helpers.ps1` lines 1-19), but that filter is not a guarantee.
 
-**Known safety-relevant defect 1 — the wrong folder may be reviewed.** In release
+**Known safety-relevant defect 1 â€” the wrong folder may be reviewed.** In release
 0.1.0, when the runner is started from Windows PowerShell 5.1 (the version built
 into Windows, and the one this guide uses), Codex is launched in your Documents
 folder rather than in the repository you are reviewing. This was reproduced during
@@ -122,9 +122,9 @@ Until this is fixed, do not rely on the review's contents, and be aware of what
 your Documents folder contains before running one. Tracked as finding
 `REV-COR-001`. See troubleshooting row `WIN-TRB-015`.
 
-**Known safety-relevant defect 2 — reviews that mention credentials are thrown
-away.** If the review Codex produces contains a finding that quotes a credential —
-for example the text `PASSWORD=hunter2` copied out of your code — the harness
+**Known safety-relevant defect 2 â€” reviews that mention credentials are thrown
+away.** If the review Codex produces contains a finding that quotes a credential â€”
+for example the text `PASSWORD=hunter2` copied out of your code â€” the harness
 detects its own redaction placeholder as if it were a real secret, aborts with
 exit code 5, and writes **no report at all**. This was reproduced during
 validation. See troubleshooting row `WIN-TRB-009`.
@@ -220,20 +220,20 @@ line 60). You do not need an API key to follow this guide.
 
 Read these once. Full definitions are in section 29.
 
-- **Terminal / PowerShell window** — the black or blue window where you type
+- **Terminal / PowerShell window** â€” the black or blue window where you type
   commands. On Windows you open it from the Start menu.
-- **Command** — one line of text you type and then press Enter.
-- **Working directory** — the folder the terminal is "standing in" right now. Most
+- **Command** â€” one line of text you type and then press Enter.
+- **Working directory** â€” the folder the terminal is "standing in" right now. Most
   commands in this guide only work from the correct folder.
-- **Repository (repo)** — a project folder that Git is tracking. It contains a
+- **Repository (repo)** â€” a project folder that Git is tracking. It contains a
   hidden `.git` folder.
-- **Clone** — make a copy of a repository from the internet onto your computer.
-- **Exit code** — an invisible number a program returns when it finishes. `0`
+- **Clone** â€” make a copy of a repository from the internet onto your computer.
+- **Exit code** â€” an invisible number a program returns when it finishes. `0`
   means success. Anything else means a specific failure. This project defines
   its exit codes in `README.md` lines 112-113.
-- **Read-only sandbox** — the restricted mode this harness forces Codex into, so
+- **Read-only sandbox** â€” the restricted mode this harness forces Codex into, so
   Codex can read your files but cannot change them.
-- **Report / artifact** — a file the harness produces for you to read or keep.
+- **Report / artifact** â€” a file the harness produces for you to read or keep.
 
 ## 10. Choose the Correct Installation Path
 
@@ -243,8 +243,8 @@ There is exactly one supported way to use this project on Windows:
 |---|---|---|
 | Native Windows, Windows PowerShell 5.1 | **Recommended and supported** | Always |
 | PowerShell 7 (`pwsh`) on native Windows | **Supported, optional** | You want to run the harness's own self-tests |
-| WSL (Windows Subsystem for Linux) | **Not documented by this project** | — |
-| Docker Desktop container | **Not documented by this project** | — |
+| WSL (Windows Subsystem for Linux) | **Not documented by this project** | â€” |
+| Docker Desktop container | **Not documented by this project** | â€” |
 
 Do not attempt the WSL or container paths. The project contains no Dockerfile, no
 container definition, and no WSL instructions, so any commands would be invented.
@@ -259,7 +259,7 @@ You will use **Windows PowerShell** for every command in this guide.
 2. Type the word `powershell`.
 3. In the results list, click **Windows PowerShell**. Press Enter.
 4. A window opens with a blinking cursor after a line ending in `>`. This is your
-   terminal. Leave it open — you will use it for the rest of the guide.
+   terminal. Leave it open â€” you will use it for the rest of the guide.
 
 **Do not** click "Windows PowerShell (Admin)" or "Run as administrator". Nothing
 in this guide needs administrator rights, except optionally installing PowerShell 7.
@@ -296,7 +296,7 @@ git --version
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 git version 2.54.0.windows.1
@@ -330,7 +330,7 @@ $PSVersionTable.PSVersion
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 Major  Minor  Build    Revision
@@ -365,7 +365,7 @@ Get-Command pwsh -ErrorAction SilentlyContinue
 
 Expected exit status: `0`.
 
-Representative output when PowerShell 7 is **not** installed — **Verified Runtime
+Representative output when PowerShell 7 is **not** installed â€” **Verified Runtime
 Output**: the command prints nothing at all and returns you to the prompt.
 
 **Success means:** either you see a table containing `pwsh.exe` (it is installed),
@@ -386,7 +386,7 @@ section 21.3, do 12.4. Otherwise skip to 12.5.
 - **Replace before running:** Nothing
 - **Expected side effects:** Installs the PowerShell 7 program and adds `pwsh` to
   your PATH. Changes your computer.
-- **Validation status:** Statically verified — not executed during validation
+- **Validation status:** Statically verified â€” not executed during validation
 
 ```powershell
 winget install --id Microsoft.PowerShell --source winget
@@ -394,7 +394,7 @@ winget install --id Microsoft.PowerShell --source winget
 
 Expected exit status: `0`.
 
-Representative output — **Unverified — Runtime Blocked**: winget prints a progress
+Representative output â€” **Unverified â€” Runtime Blocked**: winget prints a progress
 bar and finishes with a line containing the word `Successfully`.
 
 **Success means:** after closing and reopening PowerShell, `WIN-CMD-003` now
@@ -404,7 +404,7 @@ prints a table containing `pwsh.exe`.
 (section 11), then continue at 12.5.
 
 **Common failure:** `winget` is not recognised on older Windows 10 builds. In that
-case install PowerShell 7 from the Microsoft Store instead, or skip it — it is
+case install PowerShell 7 from the Microsoft Store instead, or skip it â€” it is
 only needed for the self-tests.
 
 ### 12.5 Allow PowerShell to run the harness scripts
@@ -421,7 +421,7 @@ not disable any security software.
 - **Internet access:** Not required
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
-- **Expected side effects:** None — this only reads a setting
+- **Expected side effects:** None â€” this only reads a setting
 - **Validation status:** Verified
 
 ```powershell
@@ -430,7 +430,7 @@ Get-ExecutionPolicy -Scope CurrentUser
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 Undefined
@@ -453,7 +453,7 @@ skip it.
 - **Expected side effects:** Changes one PowerShell setting for your Windows user
   only. It does not affect other users, and it does not turn off antivirus,
   SmartScreen, or the firewall.
-- **Validation status:** Statically verified — not executed during validation
+- **Validation status:** Statically verified â€” not executed during validation
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
@@ -461,7 +461,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 Expected exit status: `0`.
 
-Representative output — **Code-Derived Output Shape**: PowerShell asks
+Representative output â€” **Code-Derived Output Shape**: PowerShell asks
 `Do you want to change the execution policy?`. Type `Y` and press Enter.
 
 **Success means:** re-running `WIN-CMD-005` now prints `RemoteSigned`.
@@ -496,7 +496,7 @@ line 12).
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates the file `codex-install.ps1` in your Downloads
   folder. Runs nothing.
-- **Validation status:** Statically verified — not executed during validation
+- **Validation status:** Statically verified â€” not executed during validation
 
 ```powershell
 Invoke-WebRequest -Uri "https://chatgpt.com/codex/install.ps1" -OutFile "$HOME\Downloads\codex-install.ps1"
@@ -506,7 +506,7 @@ Expected exit status: `0`.
 
 **Success means:** the command finishes without an error message. Open the file
 with `notepad "$HOME\Downloads\codex-install.ps1"` and read it. You are looking
-for anything that is not an installer — if it looks wrong, stop and ask a
+for anything that is not an installer â€” if it looks wrong, stop and ask a
 maintainer rather than running it.
 
 ---
@@ -521,7 +521,7 @@ maintainer rather than running it.
 - **Replace before running:** Nothing
 - **Expected side effects:** Installs the Codex CLI and adds `codex` to your PATH.
   Changes your computer.
-- **Validation status:** Blocked — the Codex CLI was not installed in the
+- **Validation status:** Blocked â€” the Codex CLI was not installed in the
   validation environment, because doing so requires network installation of
   third-party software and an OpenAI account.
 
@@ -531,7 +531,7 @@ powershell -ExecutionPolicy Bypass -File "$HOME\Downloads\codex-install.ps1"
 
 Expected exit status: `0`.
 
-Representative output — **Unverified — Runtime Blocked**: progress text ending
+Representative output â€” **Unverified â€” Runtime Blocked**: progress text ending
 with a success message.
 
 **Success means:** after closing and reopening PowerShell, `WIN-CMD-009` prints a
@@ -558,7 +558,7 @@ first. Prefer `WIN-CMD-007` plus `WIN-CMD-008`.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** None
-- **Validation status:** Blocked — Codex was not installed in the validation
+- **Validation status:** Blocked â€” Codex was not installed in the validation
   environment
 
 ```powershell
@@ -567,7 +567,7 @@ codex --version
 
 Expected exit status: `0`.
 
-Representative output — **Unverified — Runtime Blocked**: a version number such as
+Representative output â€” **Unverified â€” Runtime Blocked**: a version number such as
 `0.146.0`. The exact number will differ.
 
 **Success means:** you see a version number rather than an error.
@@ -576,7 +576,7 @@ Representative output — **Unverified — Runtime Blocked**: a version number s
 in and will usually open a browser window. Complete that sign-in. Your ChatGPT
 plan must include Codex access.
 
-**Common failure:** `codex : The term 'codex' is not recognized...` — see
+**Common failure:** `codex : The term 'codex' is not recognized...` â€” see
 troubleshooting row `WIN-TRB-002`.
 
 ## 13. Download or Clone the Repository
@@ -617,8 +617,8 @@ Expected exit status: `0`.
 - **Working directory:** `%USERPROFILE%\Documents\Projects`
 - **Privilege required:** Standard user
 - **Internet access:** Required
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_REPOSITORY_URL` — the web address of the
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_REPOSITORY_URL` â€” the web address of the
   repository, ending in `.git`. Example value:
   `https://github.com/rikterskale/codex-repo-review-harness.git`
 - **Expected side effects:** Creates a new folder containing the repository
@@ -630,7 +630,7 @@ git clone YOUR_REPOSITORY_URL
 
 Expected exit status: `0`.
 
-Representative output — **Code-Derived Output Shape**:
+Representative output â€” **Code-Derived Output Shape**:
 
 ```text
 Cloning into 'codex-repo-review-harness'...
@@ -653,8 +653,8 @@ the repository is private. See troubleshooting row `WIN-TRB-003`.
 - **Working directory:** `%USERPROFILE%\Documents\Projects`
 - **Privilege required:** Standard user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_PROJECT_FOLDER` — the folder name printed by
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_PROJECT_FOLDER` â€” the folder name printed by
   `WIN-CMD-011`. Example value: `codex-repo-review-harness`
 - **Expected side effects:** None
 - **Validation status:** Verified
@@ -689,7 +689,7 @@ Get-ChildItem -Force -Name
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output** (from the harness repository):
+Representative output â€” **Verified Runtime Output** (from the harness repository):
 
 ```text
 .git
@@ -727,7 +727,7 @@ This project is written entirely in PowerShell and has no libraries to install.
 There is no `requirements.txt`, no `package.json`, and no lock file anywhere in
 the repository. Skip this section.
 
-The two programs the harness depends on — Git and the Codex CLI — are installed
+The two programs the harness depends on â€” Git and the Codex CLI â€” are installed
 once for your whole computer, in section 12.
 
 ## 16. Install Project Dependencies
@@ -777,7 +777,7 @@ comfortable.
 Expected exit status: `0` when everything passes, `1` when at least one check
 fails.
 
-Representative output — **Verified Runtime Output** (captured on Windows 11 with
+Representative output â€” **Verified Runtime Output** (captured on Windows 11 with
 Git installed but Codex not yet installed):
 
 ```text
@@ -809,7 +809,7 @@ tells you the fix.
 **Next step:** when all checks pass, go to section 19.
 
 **Common failure:** `File ... cannot be loaded because running scripts is disabled
-on this system` — you skipped `WIN-CMD-006`. See troubleshooting row `WIN-TRB-004`.
+on this system` â€” you skipped `WIN-CMD-006`. See troubleshooting row `WIN-TRB-004`.
 
 ## 19. Complete the First Safe Successful Run
 
@@ -822,7 +822,7 @@ The project documents a `-DryRun` switch as a way to "just check what the script
 would do without calling the AI" (`docs/WINDOWS_BEGINNER_GUIDE.md` line 304).
 
 **Be aware:** in release 0.1.0 the dry run still refuses to start unless the Codex
-CLI is installed. This was confirmed during validation — running
+CLI is installed. This was confirmed during validation â€” running
 `.\scripts\Run-Review.ps1 -DryRun` on a machine without Codex produced
 `Codex CLI is not installed or not on PATH.` and exit code `3`, even though a dry
 run never calls Codex. Install Codex first (section 12.6).
@@ -834,13 +834,13 @@ run never calls Codex. Install Codex first (section 12.6).
 - **Run in:** Windows PowerShell
 - **Working directory:** The repository folder containing `scripts\`
 - **Privilege required:** Standard user
-- **Internet access:** Required — your code is sent to OpenAI for analysis
+- **Internet access:** Required â€” your code is sent to OpenAI for analysis
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates exactly three files in `reports\`. Never
   modifies your source code. Codex is forced into `read-only` mode by
   `scripts/Run-Review.ps1` line 79.
-- **Validation status:** Partially verified — the full pipeline was run end to end
+- **Validation status:** Partially verified â€” the full pipeline was run end to end
   against a simulated Codex executable and produced correct artifacts. It was not
   run against the real Codex CLI, which was unavailable in the validation
   environment.
@@ -849,10 +849,10 @@ run never calls Codex. Install Codex first (section 12.6).
 .\scripts\Run-Review.ps1
 ```
 
-Expected exit status: `0` on success. Other values mean specific failures — see
+Expected exit status: `0` on success. Other values mean specific failures â€” see
 section 20.2.
 
-Representative output — **Verified Runtime Output** (produced with a simulated
+Representative output â€” **Verified Runtime Output** (produced with a simulated
 Codex; the file names on your machine will differ):
 
 ```text
@@ -868,10 +868,10 @@ while it works. Do not close the window.
 **Next step:** section 20.
 
 **Common failures:**
-- `Codex review failed with exit code ...` → row `WIN-TRB-005`
-- `Codex review timed out after 900 seconds.` → row `WIN-TRB-006`
-- `Review Markdown is missing required section: ...` → row `WIN-TRB-007`
-- `Potential secret detected in the generated review artifact.` → row `WIN-TRB-009`
+- `Codex review failed with exit code ...` â†’ row `WIN-TRB-005`
+- `Codex review timed out after 900 seconds.` â†’ row `WIN-TRB-006`
+- `Review Markdown is missing required section: ...` â†’ row `WIN-TRB-007`
+- `Potential secret detected in the generated review artifact.` â†’ row `WIN-TRB-009`
 
 ## 20. Understand the Screen Output, Exit Status, and Result Files
 
@@ -881,7 +881,7 @@ Every successful run writes **three** files into `reports\`, all sharing one nam
 
 | File | What it is | Do you read it? |
 |---|---|---|
-| `review-<timestamp>-<id>.md` | The human-readable report | **Yes — this is the one you read** |
+| `review-<timestamp>-<id>.md` | The human-readable report | **Yes â€” this is the one you read** |
 | `review-<timestamp>-<id>.json` | The same review as structured data, for tools | Only if you are automating |
 | `review-<timestamp>-<id>.sha256` | Checksums proving the other two files were not altered | Only when you need to prove integrity |
 
@@ -890,7 +890,7 @@ characters, so runs never overwrite each other
 (`scripts/Run-Review.ps1` lines 57-61).
 
 > Note: `docs/WINDOWS_BEGINNER_GUIDE.md` line 284 states that the report is "the
-> only new file that was created". That is inaccurate for release 0.1.0 — three
+> only new file that was created". That is inaccurate for release 0.1.0 â€” three
 > files are created. This guide reflects the actual behaviour.
 
 - **Command ID:** `WIN-CMD-016`
@@ -910,7 +910,7 @@ Get-ChildItem reports -File | Sort-Object LastWriteTime
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
     Length Name
@@ -931,8 +931,8 @@ endings.
 - **Working directory:** The repository folder
 - **Privilege required:** Standard user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_REPORT_FILE` — the exact `.md` name from
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_REPORT_FILE` â€” the exact `.md` name from
   `WIN-CMD-016`. Example value: `review-20260731-213440-423-e4a65858.md`
 - **Expected side effects:** Opens Notepad
 - **Validation status:** Statically verified
@@ -969,19 +969,19 @@ Exit codes `2` and `3` were **verified** during validation. The remaining codes 
 
 The report always contains these sections, in this order:
 
-- `## Executive Summary` — a few bullet points and an overall risk rating.
-- `## Findings` — the issues found. Each begins with `### [SEVERITY] Title` where
+- `## Executive Summary` â€” a few bullet points and an overall risk rating.
+- `## Findings` â€” the issues found. Each begins with `### [SEVERITY] Title` where
   severity is `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, or `INFO`, and each has a
   Location, a Why it matters, an Evidence, and a Suggested fix line.
-- `## Positive Observations` — things done well.
-- `## Recommended Next Actions` — a numbered to-do list.
+- `## Positive Observations` â€” things done well.
+- `## Recommended Next Actions` â€” a numbered to-do list.
 
 Start with the Executive Summary, then read the `CRITICAL` and `HIGH` findings.
 
 **Two things that will look odd, and are known defects in release 0.1.0:**
 
 1. The title line `# Codex Repository Review Report` appears **twice** near the
-   top — once from the harness's own header and once from the AI's report. This
+   top â€” once from the harness's own header and once from the AI's report. This
    is harmless.
 2. The `.json` file may contain **fewer** findings than the `.md` file. The JSON
    drops any finding below the `min_severity` setting in
@@ -996,8 +996,8 @@ Start with the Executive Summary, then read the `CRITICAL` and `HIGH` findings.
 - **Working directory:** The repository folder
 - **Privilege required:** Standard user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_REPORT_FILE` — the `.md` name. Example value:
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_REPORT_FILE` â€” the `.md` name. Example value:
   `review-20260731-213440-423-e4a65858.md`
 - **Expected side effects:** None
 - **Validation status:** Verified
@@ -1010,7 +1010,7 @@ Expected exit status: `0`.
 
 **Success means:** the `Hash` value shown matches the line for that file inside
 the matching `.sha256` file. Open the `.sha256` file with Notepad to compare. The
-recorded value is lower-case; the computed value is upper-case — that difference
+recorded value is lower-case; the computed value is upper-case â€” that difference
 does not matter.
 
 ## 21. Common Novice Workflows
@@ -1031,7 +1031,7 @@ authentication problems.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** Three new files in `reports\`
-- **Validation status:** Statically verified — the switch is implemented at
+- **Validation status:** Statically verified â€” the switch is implemented at
   `scripts/Run-Review.ps1` lines 11 and 53
 
 ```powershell
@@ -1085,11 +1085,11 @@ Expected exit status: `0`.
 - **Working directory:** The repository folder
 - **Privilege required:** Standard user
 - **Internet access:** Required
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_BASE_BRANCH` — the branch to compare against.
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_BASE_BRANCH` â€” the branch to compare against.
   Example value: `develop`
 - **Expected side effects:** Three new files in `reports\`
-- **Validation status:** Statically verified — the switch is implemented at
+- **Validation status:** Statically verified â€” the switch is implemented at
   `scripts/Run-Review.ps1` lines 12 and 47
 
 ```powershell
@@ -1125,7 +1125,7 @@ powershell -File tests\test_harness_structure.ps1
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 PASS: All structural tests succeeded.
@@ -1143,7 +1143,7 @@ PASS: All structural tests succeeded.
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates and deletes temporary folders under your
   `%TEMP%` directory
-- **Validation status:** Partially verified — under **Windows PowerShell 5.1**
+- **Validation status:** Partially verified â€” under **Windows PowerShell 5.1**
   two of these tests fail for reasons unrelated to your setup (see section 30).
   Use `pwsh`, not `powershell`, for this command.
 
@@ -1153,7 +1153,7 @@ pwsh -NoProfile -File tests\test_review_helpers.ps1
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 PASS: review helper contract tests passed.
@@ -1177,7 +1177,7 @@ All settings live in one file, `config\review-config.yaml`. Open it with
 | `focus_areas` | seven areas | Topics the AI is told to prioritise. |
 | `include_paths` | empty | Limit the review to certain folders. Empty means the whole repository. |
 | `exclude_paths` | eight globs | Folders the review should skip. |
-| `report.output_dir` | `reports` | Where reports are written. Must be a relative path — an absolute path or one containing `..` is rejected with exit code 2. |
+| `report.output_dir` | `reports` | Where reports are written. Must be a relative path â€” an absolute path or one containing `..` is rejected with exit code 2. |
 | `report.max_findings` | `50` | If a review produces more findings than this, the run fails with exit code 5. |
 | `model` | empty | Which AI model to ask for. Empty means the Codex default. |
 | `extra_instructions` | four lines | Extra text prepended to every prompt. |
@@ -1232,7 +1232,7 @@ Get-Process codex -ErrorAction SilentlyContinue
 
 Expected exit status: `0`.
 
-**Success means:** nothing is printed — no Codex process is running.
+**Success means:** nothing is printed â€” no Codex process is running.
 
 **If a process is still listed**, close the PowerShell window; that ends the
 background job the runner created. As a last resort, run
@@ -1307,7 +1307,7 @@ Expected exit status: `0`.
 ### 24.4 Uninstall the prerequisites
 
 Removing Git, PowerShell 7, or the Codex CLI is done through Windows, not through
-this project: open **Settings → Apps → Installed apps**, find the program, and
+this project: open **Settings â†’ Apps â†’ Installed apps**, find the program, and
 choose **Uninstall**.
 
 **What cannot be undone automatically:** any code you already sent to OpenAI as
@@ -1339,7 +1339,7 @@ Get-Content VERSION
 
 Expected exit status: `0`.
 
-Representative output — **Verified Runtime Output**:
+Representative output â€” **Verified Runtime Output**:
 
 ```text
 0.1.0
@@ -1407,8 +1407,8 @@ release's `CHANGELOG.md` entry.
 - **Working directory:** The repository folder
 - **Privilege required:** Standard user
 - **Internet access:** Not required (if the commit is already downloaded)
-- **Safe to copy and paste:** **No — replace the placeholder first**
-- **Replace before running:** `YOUR_COMMIT_ID` — the identifier of the commit you
+- **Safe to copy and paste:** **No â€” replace the placeholder first**
+- **Replace before running:** `YOUR_COMMIT_ID` â€” the identifier of the commit you
   want. Get it from `git log --oneline`. Example value: `26cc06c`
 - **Expected side effects:** Changes which version of the files is on disk. Your
   reports and untracked files are not affected.
@@ -1438,8 +1438,8 @@ downgrade to. This section will apply once a second release exists.
 | `WIN-TRB-001` | `git : The term 'git' is not recognized as the name of a cmdlet...` | Windows PowerShell | Git is not installed, or the terminal was opened before installation finished | Install Git from https://git-scm.com/download/win accepting the default options, then **close every PowerShell window and open a new one** | `git --version` (`WIN-CMD-001`) | `git version 2.x.x.windows.1` | Restart the computer, then retry | Output of `WIN-CMD-001` and `$env:PATH` |
 | `WIN-TRB-002` | `Codex CLI is not installed or not on PATH.` and exit code `3` | Windows PowerShell | Codex is not installed, or PATH has not refreshed | Complete section 12.6, then close and reopen PowerShell | `codex --version` (`WIN-CMD-009`) | A version number is printed | Sign out of Windows and back in to refresh PATH | Output of `WIN-CMD-009` and `WIN-CMD-014` |
 | `WIN-TRB-003` | `fatal: repository 'URL' not found` | Windows PowerShell | The URL is wrong, or the repository is private and you are not signed in | Re-copy the URL from the green **Code** button on the GitHub page. For a private repository, sign in to Git first | `git clone YOUR_REPOSITORY_URL` (`WIN-CMD-011`) | `Cloning into '...'... done.` | Download the repository as a ZIP from GitHub and extract it | The exact URL you used, with any token removed |
-| `WIN-TRB-004` | `File ...ps1 cannot be loaded because running scripts is disabled on this system` | Windows PowerShell | Execution policy is `Restricted` or `Undefined` | Run `WIN-CMD-006` and answer `Y`. Standard user is sufficient — do **not** use an Administrator window | `Get-ExecutionPolicy -Scope CurrentUser` (`WIN-CMD-005`) | `RemoteSigned` | Run the script once with `powershell -ExecutionPolicy Bypass -File .\scripts\Validate-Harness.ps1` | Output of `WIN-CMD-005` and the full error text |
-| `WIN-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Windows PowerShell | Codex itself failed — commonly a sign-in problem, a plan that lacks Codex access, or no internet | Run `codex --version` and then sign in when prompted. Confirm your ChatGPT plan includes Codex | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. Markdown: ...` | Try again later; the service may be temporarily unavailable | The full `Output:` text with any token removed, plus `codex --version` |
+| `WIN-TRB-004` | `File ...ps1 cannot be loaded because running scripts is disabled on this system` | Windows PowerShell | Execution policy is `Restricted` or `Undefined` | Run `WIN-CMD-006` and answer `Y`. Standard user is sufficient â€” do **not** use an Administrator window | `Get-ExecutionPolicy -Scope CurrentUser` (`WIN-CMD-005`) | `RemoteSigned` | Run the script once with `powershell -ExecutionPolicy Bypass -File .\scripts\Validate-Harness.ps1` | Output of `WIN-CMD-005` and the full error text |
+| `WIN-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Windows PowerShell | Codex itself failed â€” commonly a sign-in problem, a plan that lacks Codex access, or no internet | Run `codex --version` and then sign in when prompted. Confirm your ChatGPT plan includes Codex | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. Markdown: ...` | Try again later; the service may be temporarily unavailable | The full `Output:` text with any token removed, plus `codex --version` |
 | `WIN-TRB-006` | `Codex review timed out after 900 seconds.` and exit code `6` | Windows PowerShell | The repository is large, or the model is slow | Re-run with a longer limit: `.\scripts\Run-Review.ps1 -TimeoutSeconds 1800`. Or narrow the review by setting `include_paths` in `config\review-config.yaml` | `.\scripts\Run-Review.ps1 -TimeoutSeconds 1800` | `Review finished. ...` | Review a subfolder by setting `include_paths` | The timeout value used and the repository's file count |
 | `WIN-TRB-007` | `Review Markdown is missing required section: ## Findings` and exit code `5` | Windows PowerShell | Codex did not follow the required report structure | Re-run the review; the model's output varies between runs. If it recurs, confirm `prompts\system-review.md` is unmodified | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Try `-Prompt security-focus.md`, which uses the same structure | The exact error line and `git status` for the `prompts` folder |
 | `WIN-TRB-008` | `report.output_dir must be a repository-relative path.` and exit code `2` | Windows PowerShell | `output_dir` in the config is an absolute path or contains `..` | Open `config\review-config.yaml` and set the nested `output_dir` back to `reports` | `.\scripts\Validate-Harness.ps1` (`WIN-CMD-014`) | All `[PASS]` lines | Restore the file with `git checkout config/review-config.yaml` | The `report:` block from your config file |
@@ -1447,9 +1447,9 @@ downgrade to. This section will apply once a second release exists.
 | `WIN-TRB-010` | `Codex output exceeded 5242880 bytes.` and exit code `7` | Windows PowerShell | The review produced more than 5 MB of text | Narrow the scope using `include_paths` in `config\review-config.yaml`, or raise the limit for one run with `-MaxOutputBytes 10485760` | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Review one subfolder at a time | The repository size and the limit you used |
 | `WIN-TRB-011` | `This folder is not inside a Git repository.` and exit code `3` | Windows PowerShell | The current folder is not a Git repository | Move into the repository with `Set-Location`, or create one with `git init` | `git rev-parse --is-inside-work-tree` | `true` | Clone a repository first (`WIN-CMD-011`) | Output of `Get-Location` and `WIN-CMD-013` |
 | `WIN-TRB-012` | `pwsh : The term 'pwsh' is not recognized...` | Windows PowerShell | PowerShell 7 is not installed, but a self-test command requires it | Install it with `WIN-CMD-004`, then reopen PowerShell | `Get-Command pwsh` (`WIN-CMD-003`) | A table containing `pwsh.exe` | Skip the self-tests; they are optional for running reviews | Output of `WIN-CMD-003` |
-| `WIN-TRB-013` | Windows Defender or SmartScreen warns about the downloaded Codex installer | Windows | Windows flags files downloaded from the internet | Do **not** disable Defender or SmartScreen. Inspect the file first (`WIN-CMD-007`), confirm it came from `chatgpt.com`, and use **More info → Run anyway** only if you are satisfied it is genuine | `codex --version` (`WIN-CMD-009`) | A version number is printed | Ask your IT administrator to approve the installer | The exact warning text, the file name, and its `Get-FileHash` value |
+| `WIN-TRB-013` | Windows Defender or SmartScreen warns about the downloaded Codex installer | Windows | Windows flags files downloaded from the internet | Do **not** disable Defender or SmartScreen. Inspect the file first (`WIN-CMD-007`), confirm it came from `chatgpt.com`, and use **More info â†’ Run anyway** only if you are satisfied it is genuine | `codex --version` (`WIN-CMD-009`) | A version number is printed | Ask your IT administrator to approve the installer | The exact warning text, the file name, and its `Get-FileHash` value |
 | `WIN-TRB-014` | `Set-Location : Cannot find path ...` | Windows PowerShell | The folder name is misspelled, or contains a space and was not quoted | Run `Get-ChildItem -Name` to see the exact names, then quote any name containing a space: `Set-Location "My Project"` | `Get-Location` | The path shown ends with your folder name | Use Tab completion: type the first letters and press Tab | Output of `Get-ChildItem -Name` from the parent folder |
-| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | **Known defect in release 0.1.0.** The runner starts Codex through a background job, and Windows PowerShell 5.1 starts background jobs in your Documents folder rather than the current folder, so Codex reviews the wrong directory (`scripts/Run-Review.ps1` lines 86-90) | There is no user-side workaround in 0.1.0. Do not trust the report's contents. Report the defect to the maintainer, citing finding `REV-COR-001` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead (`pwsh -NoProfile -File .\scripts\Run-Review.ps1`), which starts background jobs in the current folder — untested for this project, so verify the report's paths afterwards | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
+| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | **Known defect in release 0.1.0.** The runner starts Codex through a background job, and Windows PowerShell 5.1 starts background jobs in your Documents folder rather than the current folder, so Codex reviews the wrong directory (`scripts/Run-Review.ps1` lines 86-90) | There is no user-side workaround in 0.1.0. Do not trust the report's contents. Report the defect to the maintainer, citing finding `REV-COR-001` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead (`pwsh -NoProfile -File .\scripts\Run-Review.ps1`), which starts background jobs in the current folder â€” untested for this project, so verify the report's paths afterwards | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
 
 **When to stop and ask for help.** If a command fails twice with the same error
 after you have applied the fix and the verification command still disagrees, stop.
@@ -1484,7 +1484,7 @@ Findings below the `min_severity` setting are filtered out of the JSON only. Rea
 the Markdown for the full list.
 
 **Can I run this on Linux?**
-Partly. See `docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md` — the review runner has
+Partly. See `docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md` â€” the review runner has
 not been verified on Linux and no Linux installation path is documented by this
 project.
 
@@ -1529,56 +1529,56 @@ standard user account.
 
 ## 29. Glossary
 
-- **Absolute path** — a location written out in full from the drive letter, such
+- **Absolute path** â€” a location written out in full from the drive letter, such
   as `C:\Users\you\Documents\Projects`. It means the same thing no matter where
   you are.
-- **Administrator** — a Windows account with permission to change the whole
+- **Administrator** â€” a Windows account with permission to change the whole
   computer. This guide does not require one.
-- **Artifact** — any file a tool produces for you to keep, such as a report.
-- **Clean-up** — deleting files a tool created so the computer returns to its
+- **Artifact** â€” any file a tool produces for you to keep, such as a report.
+- **Clean-up** â€” deleting files a tool created so the computer returns to its
   earlier state.
-- **Clone** — make a copy of a repository from the internet onto your computer.
-- **Command** — one line of text you type into a terminal and run with Enter.
-- **Configuration file** — a plain text file holding a program's settings. Here it
+- **Clone** â€” make a copy of a repository from the internet onto your computer.
+- **Command** â€” one line of text you type into a terminal and run with Enter.
+- **Configuration file** â€” a plain text file holding a program's settings. Here it
   is `config\review-config.yaml`.
-- **Container** — a packaged, isolated environment for running software. This
+- **Container** â€” a packaged, isolated environment for running software. This
   project does not use one.
-- **Dependency** — a piece of software another program needs. This project has
+- **Dependency** â€” a piece of software another program needs. This project has
   none of its own beyond Git and Codex.
-- **Downgrade** — install an older version deliberately.
-- **Environment variable** — a named value stored by Windows that programs can
+- **Downgrade** â€” install an older version deliberately.
+- **Environment variable** â€” a named value stored by Windows that programs can
   read. Written `$env:NAME` in PowerShell. This project needs none locally.
-- **Exit code** — the number a program returns when it finishes. `0` means
+- **Exit code** â€” the number a program returns when it finishes. `0` means
   success. See section 20.2.
-- **Log** — a running record of what a program did. This project writes reports
+- **Log** â€” a running record of what a program did. This project writes reports
   rather than logs.
-- **Package manager** — a program that installs other programs, such as `winget`.
-- **Port / listener** — a numbered network channel a program can open to receive
+- **Package manager** â€” a program that installs other programs, such as `winget`.
+- **Port / listener** â€” a numbered network channel a program can open to receive
   connections. This project opens none.
-- **Process** — one running program.
-- **Pull / update** — fetch the newest version of a repository.
-- **Relative path** — a location written from where you currently are, such as
+- **Process** â€” one running program.
+- **Pull / update** â€” fetch the newest version of a repository.
+- **Relative path** â€” a location written from where you currently are, such as
   `scripts\Run-Review.ps1`. It only works from the right folder.
-- **Repository** — a project folder tracked by Git, containing a hidden `.git`
+- **Repository** â€” a project folder tracked by Git, containing a hidden `.git`
   folder.
-- **Report** — the Markdown file this harness produces for you to read.
-- **Rollback** — return to an earlier version after an update.
-- **Root / `sudo`** — the Linux equivalent of Administrator. Not used on Windows.
-- **Runtime** — the program that executes another program's code. Here it is
+- **Report** â€” the Markdown file this harness produces for you to read.
+- **Rollback** â€” return to an earlier version after an update.
+- **Root / `sudo`** â€” the Linux equivalent of Administrator. Not used on Windows.
+- **Runtime** â€” the program that executes another program's code. Here it is
   PowerShell.
-- **Service** — a program Windows runs in the background automatically. This
+- **Service** â€” a program Windows runs in the background automatically. This
   project installs none.
-- **Shell** — the program that reads and runs your commands. Here it is Windows
+- **Shell** â€” the program that reads and runs your commands. Here it is Windows
   PowerShell.
-- **Standard output / standard error** — the two text streams a program writes.
+- **Standard output / standard error** â€” the two text streams a program writes.
   Normal messages go to standard output; error messages go to standard error and
   usually appear in red.
-- **Terminal** — the window in which you type commands.
-- **Uninstall** — remove a program from the computer.
-- **Upgrade** — install a newer version.
-- **Virtual environment** — an isolated set of libraries for one project. Not used
+- **Terminal** â€” the window in which you type commands.
+- **Uninstall** â€” remove a program from the computer.
+- **Upgrade** â€” install a newer version.
+- **Virtual environment** â€” an isolated set of libraries for one project. Not used
   by this project.
-- **Working directory (current directory)** — the folder your terminal is
+- **Working directory (current directory)** â€” the folder your terminal is
   currently in. Shown in the prompt and by `Get-Location`.
 
 ## 30. Validation Record, Known Limitations, and Support Boundaries
@@ -1617,15 +1617,15 @@ standard user account.
 
 | Stage | Result |
 |---|---|
-| Prerequisites verified | **Pass** — Git and Windows PowerShell confirmed by execution |
-| Installation verified | **Partial** — harness file layout confirmed; Codex CLI installation blocked |
-| First safe successful run | **Partial** — the complete runner pipeline was executed end to end against a simulated Codex executable and produced correct Markdown, JSON, and SHA-256 artifacts. Not exercised against the real Codex CLI |
-| Results located and interpreted | **Pass** — all three artifacts located, opened, and their contents explained |
-| Representative failure recovered | **Pass** — exit codes 2 and 3 reproduced and their remedies confirmed |
-| Cancellation verified | **Blocked** — no long-running real Codex process was available to interrupt |
-| Cleanup verified | **Pass** — report deletion confirmed; the review left the repository working tree clean |
-| Update verified | **Statically verified** — `git pull` is standard Git behaviour, not executed here |
-| Rollback verified | **Statically verified** — `git checkout` is standard Git behaviour, not executed here |
+| Prerequisites verified | **Pass** â€” Git and Windows PowerShell confirmed by execution |
+| Installation verified | **Partial** â€” harness file layout confirmed; Codex CLI installation blocked |
+| First safe successful run | **Partial** â€” the complete runner pipeline was executed end to end against a simulated Codex executable and produced correct Markdown, JSON, and SHA-256 artifacts. Not exercised against the real Codex CLI |
+| Results located and interpreted | **Pass** â€” all three artifacts located, opened, and their contents explained |
+| Representative failure recovered | **Pass** â€” exit codes 2 and 3 reproduced and their remedies confirmed |
+| Cancellation verified | **Blocked** â€” no long-running real Codex process was available to interrupt |
+| Cleanup verified | **Pass** â€” report deletion confirmed; the review left the repository working tree clean |
+| Update verified | **Statically verified** â€” `git pull` is standard Git behaviour, not executed here |
+| Rollback verified | **Statically verified** â€” `git checkout` is standard Git behaviour, not executed here |
 
 ### 30.4 Known limitations of release 0.1.0
 
@@ -1662,3 +1662,4 @@ standard user account.
   `docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md`.
 - This guide describes commit `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`. Re-verify
   after any update.
+
