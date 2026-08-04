@@ -29,7 +29,8 @@
         "repository": { "type": "string" },
         "commit": { "type": "string" },
         "generated_at": { "type": "string" },
-        "failure_class": { "enum": ["none", "usage", "prerequisite", "timeout", "output_limit", "codex", "contract", "blocked"] }
+        "failure_class": { "enum": ["none", "usage", "prerequisite", "timeout", "output_limit", "codex", "contract", "blocked"] },
+        "failure_detail": { "type": "string", "maxLength": 5000 }
       }
     }
   },

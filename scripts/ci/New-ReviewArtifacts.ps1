@@ -7,6 +7,7 @@ $message = if ($env:CODEX_MESSAGE) { $env:CODEX_MESSAGE } else { 'Codex did not 
 $message = ConvertTo-RedactedText $message
 $message = Limit-ReviewUtf8 $message 200KB "`n`n[Output truncated by contract.]"
 $failure = if ($env:CODEX_OUTCOME -eq 'success') { 'none' } else { 'codex' }
+$failureDetail = ''
 $findings = @()
 if ($failure -eq 'none') {
   try {
@@ -20,15 +21,18 @@ if ($failure -eq 'none') {
     if ($config.report.max_findings -gt 0 -and $findings.Count -gt $config.report.max_findings) { throw "Review contains $($findings.Count) findings; configured maximum is $($config.report.max_findings)." }
   } catch {
     $failure = 'contract'
+    $failureDetail = $_.Exception.Message
   }
 }
 $status = if ($failure -eq 'none') { Get-ReviewStatus $findings } else { 'failed' }
 if ($failure -ne 'none') {
+  $detailLine = if ($failureDetail) { "- Detail: $failureDetail" } else { '- Detail: (none reported)' }
   $message = @"
 # Codex Repository Review Report
 
 ## Executive Summary
 - Review execution failed with failure class: $failure.
+$detailLine
 
 ## Findings
 - No findings are available because the review did not complete successfully.
@@ -48,7 +52,7 @@ $report = [ordered]@{
   status = $status
   summary = $message.Substring(0, [Math]::Min($message.Length, 20000))
   findings = $findings
-  metadata = [ordered]@{ repository = $env:GITHUB_REPOSITORY; commit = $env:GITHUB_SHA; generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = $failure }
+  metadata = [ordered]@{ repository = $env:GITHUB_REPOSITORY; commit = $env:GITHUB_SHA; generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = $failure; failure_detail = $failureDetail }
 }
 $json = $report | ConvertTo-Json -Depth 8
 Write-ReviewUtf8 (Join-Path $out 'review.md') $message

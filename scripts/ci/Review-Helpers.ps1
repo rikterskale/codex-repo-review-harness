@@ -26,25 +26,84 @@ function Assert-ReviewJson([string]$Json, [string]$SchemaPath) {
   Test-ReviewJsonSchemaNode $document $schema '$'
 }
 
+function Get-ReviewJsonSchemaTypeName([object]$Value) {
+  if ($null -eq $Value) { return 'null' }
+  if ($Value -is [bool]) { return 'boolean' }
+  if ($Value -is [string]) { return 'string' }
+  if ($Value -is [array]) { return 'array' }
+  if ($Value -is [pscustomobject]) { return 'object' }
+  if ($Value -is [long] -or $Value -is [int] -or $Value -is [short] -or $Value -is [byte]) { return 'integer' }
+  if ($Value -is [decimal] -or $Value -is [double] -or $Value -is [single]) {
+    if ([math]::Floor([double]$Value) -eq [double]$Value) { return 'integer' }
+    return 'number'
+  }
+  return $Value.GetType().Name
+}
+
 function Test-ReviewJsonSchemaNode([object]$Value, [object]$Schema, [string]$Path) {
-  if ($null -ne $Schema.const -and $Value -ne $Schema.const) { throw "Schema const mismatch at $Path." }
-  if ($null -ne $Schema.enum -and @($Schema.enum) -notcontains $Value) { throw "Schema enum mismatch at $Path." }
-  if ($Schema.type -eq 'object') {
-    if ($null -eq $Value -or $Value -isnot [pscustomobject]) { throw "Schema expected an object at $Path." }
-    $properties = @($Schema.properties.PSObject.Properties.Name)
-    foreach ($required in @($Schema.required)) {
-      if ($null -eq $Value.PSObject.Properties[$required]) { throw "Schema required property missing at $Path.$required." }
+  if ($null -ne $Schema.const -and $Value -ne $Schema.const) { throw "Schema const mismatch at ${Path}: expected '$($Schema.const)', got '$Value'." }
+  if ($null -ne $Schema.enum -and @($Schema.enum) -notcontains $Value) { throw "Schema enum mismatch at ${Path}: '$Value' is not one of [$(@($Schema.enum) -join ', ')]." }
+  $expectedTypes = @()
+  if ($null -ne $Schema.type) { $expectedTypes = @($Schema.type) }
+  if ($expectedTypes.Count -gt 0) {
+    $actual = Get-ReviewJsonSchemaTypeName $Value
+    $ok = $false
+    foreach ($t in $expectedTypes) {
+      if ($actual -eq $t) { $ok = $true; break }
+      if ($t -eq 'number' -and $actual -eq 'integer') { $ok = $true; break }
     }
-    foreach ($property in $Value.PSObject.Properties) {
-      if ($Schema.additionalProperties -eq $false -and $properties -notcontains $property.Name) { throw "Schema disallows property at $Path.$($property.Name)." }
-      if ($properties -contains $property.Name) { Test-ReviewJsonSchemaNode $property.Value $Schema.properties.$($property.Name) "$Path.$($property.Name)" }
+    if (-not $ok) { throw "Schema type mismatch at ${Path}: expected $($expectedTypes -join '|'), got $actual." }
+  }
+  if ($null -ne $Schema.oneOf) {
+    $passing = 0
+    foreach ($sub in @($Schema.oneOf)) { try { Test-ReviewJsonSchemaNode $Value $sub $Path; $passing++ } catch { } }
+    if ($passing -ne 1) { throw "Schema oneOf mismatch at ${Path}: matched $passing subschemas (expected 1)." }
+  }
+  if ($null -ne $Schema.anyOf) {
+    $passing = 0
+    foreach ($sub in @($Schema.anyOf)) { try { Test-ReviewJsonSchemaNode $Value $sub $Path; $passing++; break } catch { } }
+    if ($passing -eq 0) { throw "Schema anyOf mismatch at ${Path}: no subschema matched." }
+  }
+  if ($null -ne $Schema.allOf) {
+    foreach ($sub in @($Schema.allOf)) { Test-ReviewJsonSchemaNode $Value $sub $Path }
+  }
+  if (($expectedTypes -contains 'object') -or ($expectedTypes.Count -eq 0 -and $Value -is [pscustomobject])) {
+    if ($Value -is [pscustomobject]) {
+      $properties = if ($null -ne $Schema.properties) { @($Schema.properties.PSObject.Properties.Name) } else { @() }
+      foreach ($required in @($Schema.required)) {
+        if ($null -eq $Value.PSObject.Properties[$required]) { throw "Schema required property missing at ${Path}: '${required}'." }
+      }
+      foreach ($property in $Value.PSObject.Properties) {
+        $propPath = "${Path}.$($property.Name)"
+        if ($properties -contains $property.Name) {
+          Test-ReviewJsonSchemaNode $property.Value $Schema.properties.$($property.Name) $propPath
+        } elseif ($Schema.additionalProperties -eq $false) {
+          throw "Schema disallows property at ${propPath}."
+        } elseif ($null -ne $Schema.additionalProperties -and $Schema.additionalProperties -isnot [bool]) {
+          Test-ReviewJsonSchemaNode $property.Value $Schema.additionalProperties $propPath
+        }
+      }
     }
-  } elseif ($Schema.type -eq 'array') {
-    if ($Value -isnot [array]) { throw "Schema expected an array at $Path." }
-    foreach ($item in $Value) { Test-ReviewJsonSchemaNode $item $Schema.items "$Path[]" }
-  } elseif ($Schema.type -eq 'string') {
-    if ($Value -isnot [string]) { throw "Schema expected a string at $Path." }
-    if ($null -ne $Schema.maxLength -and $Value.Length -gt [int]$Schema.maxLength) { throw "Schema string is too long at $Path." }
+  }
+  if (($expectedTypes -contains 'array') -or ($expectedTypes.Count -eq 0 -and $Value -is [array])) {
+    if ($Value -is [array]) {
+      if ($null -ne $Schema.maxItems -and $Value.Count -gt [int]$Schema.maxItems) { throw "Schema maxItems exceeded at ${Path}: $($Value.Count) > $($Schema.maxItems)." }
+      if ($null -ne $Schema.minItems -and $Value.Count -lt [int]$Schema.minItems) { throw "Schema minItems not met at ${Path}: $($Value.Count) < $($Schema.minItems)." }
+      if ($null -ne $Schema.items) {
+        for ($i = 0; $i -lt $Value.Count; $i++) { Test-ReviewJsonSchemaNode $Value[$i] $Schema.items "${Path}[$i]" }
+      }
+    }
+  }
+  if (($expectedTypes -contains 'string') -or ($expectedTypes.Count -eq 0 -and $Value -is [string])) {
+    if ($Value -is [string]) {
+      if ($null -ne $Schema.maxLength -and $Value.Length -gt [int]$Schema.maxLength) { throw "Schema maxLength exceeded at ${Path}: length $($Value.Length) > $($Schema.maxLength)." }
+      if ($null -ne $Schema.minLength -and $Value.Length -lt [int]$Schema.minLength) { throw "Schema minLength not met at ${Path}: length $($Value.Length) < $($Schema.minLength)." }
+      if ($null -ne $Schema.pattern -and $Value -notmatch [string]$Schema.pattern) { throw "Schema pattern mismatch at ${Path}: value does not match /$([string]$Schema.pattern)/." }
+    }
+  }
+  if (($expectedTypes -contains 'integer' -or $expectedTypes -contains 'number')) {
+    if ($null -ne $Schema.minimum -and [double]$Value -lt [double]$Schema.minimum) { throw "Schema minimum not met at ${Path}: $Value < $($Schema.minimum)." }
+    if ($null -ne $Schema.maximum -and [double]$Value -gt [double]$Schema.maximum) { throw "Schema maximum exceeded at ${Path}: $Value > $($Schema.maximum)." }
   }
 }
 
@@ -132,26 +191,61 @@ function Get-ReviewConfig([string]$Path) {
   }
 }
 
+function Get-ReviewNonCodeLines([string]$Markdown) {
+  # Returns a boolean array parallel to the split lines: $true where the line
+  # is prose (outside a fenced code block), $false inside a fence. Fences are
+  # opened and closed by lines whose first non-whitespace run is ``` or ~~~,
+  # regardless of the language tag that follows.
+  $lines = $Markdown -split '\r?\n'
+  $inFence = $false
+  $fenceMark = ''
+  $mask = New-Object 'bool[]' $lines.Count
+  for ($k = 0; $k -lt $lines.Count; $k++) {
+    $stripped = $lines[$k].TrimStart()
+    $fenceMatch = [regex]::Match($stripped, '^(`{3,}|~{3,})')
+    if ($fenceMatch.Success) {
+      if (-not $inFence) {
+        $inFence = $true
+        $fenceMark = $fenceMatch.Groups[1].Value.Substring(0, 1)
+      } elseif ($stripped.StartsWith($fenceMark * 3)) {
+        $inFence = $false
+      }
+      $mask[$k] = $false
+      continue
+    }
+    $mask[$k] = -not $inFence
+  }
+  return ,$mask
+}
+
 function Get-ReviewFindings([string]$Markdown) {
   $lines = $Markdown -split '\r?\n'
+  $prose = Get-ReviewNonCodeLines $Markdown
   $findings = @()
   for ($i = 0; $i -lt $lines.Count; $i++) {
+    if (-not $prose[$i]) { continue }
     $heading = [regex]::Match($lines[$i], '(?i)^###\s+\[(critical|high|medium|low|info)\]\s+(.+)$')
     if (-not $heading.Success) { continue }
     $block = @()
-    for ($j = $i + 1; $j -lt $lines.Count -and $lines[$j] -notmatch '^###\s+\[' -and $lines[$j] -notmatch '^##\s+'; $j++) { $block += $lines[$j] }
+    for ($j = $i + 1; $j -lt $lines.Count -and -not (($prose[$j]) -and ($lines[$j] -match '^###\s+\[' -or $lines[$j] -match '^##\s+')); $j++) {
+      if ($prose[$j]) { $block += $lines[$j] }
+    }
     $blockText = $block -join "`n"
-    $location = [regex]::Match($blockText, '(?m)^-\s+\*\*Location:\*\*\s+(.+)$')
-    $why = [regex]::Match($blockText, '(?m)^-\s+\*\*Why it matters:\*\*\s+(.+)$')
-    $evidence = [regex]::Match($blockText, '(?m)^-\s+\*\*Evidence:\*\*\s+(.+)$')
-    $fix = [regex]::Match($blockText, '(?m)^-\s+\*\*Suggested fix:\*\*\s+(.+)$')
+    $location = [regex]::Match($blockText, '(?m)^-\s+\*\*Location\*\*\s*:\s*(.+)$|^-\s+\*\*Location:\*\*\s+(.+)$')
+    $why = [regex]::Match($blockText, '(?m)^-\s+\*\*Why it matters\*\*\s*:\s*(.+)$|^-\s+\*\*Why it matters:\*\*\s+(.+)$')
+    $evidence = [regex]::Match($blockText, '(?m)^-\s+\*\*Evidence\*\*\s*:\s*(.+)$|^-\s+\*\*Evidence:\*\*\s+(.+)$')
+    $fix = [regex]::Match($blockText, '(?m)^-\s+\*\*Suggested fix\*\*\s*:\s*(.+)$|^-\s+\*\*Suggested fix:\*\*\s+(.+)$')
     if ($location.Success -and $why.Success -and $evidence.Success -and $fix.Success) {
+      $locationValue = if ($location.Groups[1].Success) { $location.Groups[1].Value } else { $location.Groups[2].Value }
+      $whyValue = if ($why.Groups[1].Success) { $why.Groups[1].Value } else { $why.Groups[2].Value }
+      $evidenceValue = if ($evidence.Groups[1].Success) { $evidence.Groups[1].Value } else { $evidence.Groups[2].Value }
+      $fixValue = if ($fix.Groups[1].Success) { $fix.Groups[1].Value } else { $fix.Groups[2].Value }
       $findings += [ordered]@{
         severity = $heading.Groups[1].Value.ToLowerInvariant()
         title = $heading.Groups[2].Value.Trim()
-        location = $location.Groups[1].Value.Trim()
-        evidence = ($why.Groups[1].Value.Trim() + ' ' + $evidence.Groups[1].Value.Trim()).Trim()
-        suggested_fix = $fix.Groups[1].Value.Trim()
+        location = $locationValue.Trim()
+        evidence = ($whyValue.Trim() + ' ' + $evidenceValue.Trim()).Trim()
+        suggested_fix = $fixValue.Trim()
       }
     }
     $i = $j - 1
@@ -170,12 +264,13 @@ function Filter-ReviewMarkdown([string]$Markdown, [object[]]$AllowedFindings) {
   $allowed = @{}
   foreach ($finding in @($AllowedFindings)) { $allowed[($finding.severity + '|' + $finding.title)] = $true }
   $lines = $Markdown -split '\r?\n'
+  $prose = Get-ReviewNonCodeLines $Markdown
   $result = @()
   for ($i = 0; $i -lt $lines.Count; $i++) {
-    $heading = [regex]::Match($lines[$i], '(?i)^###\s+\[(critical|high|medium|low|info)\]\s+(.+)$')
-    if (-not $heading.Success) { $result += $lines[$i]; continue }
+    $heading = if ($prose[$i]) { [regex]::Match($lines[$i], '(?i)^###\s+\[(critical|high|medium|low|info)\]\s+(.+)$') } else { $null }
+    if ($null -eq $heading -or -not $heading.Success) { $result += $lines[$i]; continue }
     $j = $i + 1
-    while ($j -lt $lines.Count -and $lines[$j] -notmatch '^###\s+\[' -and $lines[$j] -notmatch '^##\s+') { $j++ }
+    while ($j -lt $lines.Count -and -not (($prose[$j]) -and ($lines[$j] -match '^###\s+\[' -or $lines[$j] -match '^##\s+'))) { $j++ }
     $key = $heading.Groups[1].Value.ToLowerInvariant() + '|' + $heading.Groups[2].Value.Trim()
     if ($allowed.ContainsKey($key)) { $result += $lines[$i..($j - 1)] }
     $i = $j - 1
@@ -206,8 +301,22 @@ function Get-ReviewStatus([object[]]$Findings) {
 }
 
 function Assert-ReviewFindings([string]$Markdown, [object[]]$Findings) {
-  $declared = @([regex]::Matches($Markdown, '(?im)^###\s+\[(critical|high|medium|low|info)\]\s+')).Count
-  if ($declared -ne @($Findings).Count) { throw "Review contains $declared declared findings but only $(@($Findings).Count) valid findings." }
+  $lines = $Markdown -split '\r?\n'
+  $prose = Get-ReviewNonCodeLines $Markdown
+  $declaredHeadings = @()
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    if (-not $prose[$i]) { continue }
+    $m = [regex]::Match($lines[$i], '(?im)^###\s+\[(critical|high|medium|low|info)\]\s+(.+)$')
+    if ($m.Success) { $declaredHeadings += [pscustomobject]@{ Severity = $m.Groups[1].Value.ToLowerInvariant(); Title = $m.Groups[2].Value.Trim(); Line = $i + 1 } }
+  }
+  if ($declaredHeadings.Count -eq @($Findings).Count) { return }
+  $parsedKeys = @{}
+  foreach ($f in @($Findings)) { $parsedKeys[($f.severity + '|' + $f.title)] = $true }
+  $unparsed = @($declaredHeadings | Where-Object { -not $parsedKeys.ContainsKey($_.Severity + '|' + $_.Title) })
+  $detail = if ($unparsed.Count -gt 0) {
+    ($unparsed | ForEach-Object { "  - line $($_.Line): [$($_.Severity.ToUpper())] $($_.Title) - missing one of **Location:** / **Why it matters:** / **Evidence:** / **Suggested fix:**" }) -join "`n"
+  } else { '  (all headings parsed; count mismatch is on the JSON side)' }
+  throw "Review contains $($declaredHeadings.Count) declared findings but only $(@($Findings).Count) valid findings. Unparseable headings:`n$detail"
 }
 
 function Select-ReviewFindings([object[]]$Findings, [string]$MinimumSeverity) {
