@@ -1,46 +1,70 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
+$psExe = (Get-Process -Id $PID).Path
 $root = Split-Path -Parent $PSScriptRoot
+$isWin = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
 $temp = Join-Path ([IO.Path]::GetTempPath()) ('codex-runner-' + [guid]::NewGuid().ToString('N'))
 $bin = Join-Path $temp 'bin'
 New-Item -ItemType Directory -Path $temp -Force | Out-Null
 New-Item -ItemType Directory -Path $bin -Force | Out-Null
+
+function Set-FakeCodex([string]$LineBody, [int]$ExitCode) {
+  if ($isWin) {
+    $cmd = "@echo off`n$LineBody`nexit /b $ExitCode"
+    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $cmd -Encoding ASCII
+  } else {
+    $sh = "#!/usr/bin/env bash`n$LineBody`nexit $ExitCode`n"
+    $path = Join-Path $bin 'codex'
+    Set-Content -LiteralPath $path -Value $sh -Encoding ASCII
+    & chmod +x $path | Out-Null
+  }
+}
+
 try {
   Get-ChildItem $root -Force | Where-Object { $_.Name -notin @('.git', 'reports', 'review-input', 'review-output') } |
     Copy-Item -Destination $temp -Recurse -Force
-  Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`necho simulated Codex failure`nexit /b 9" -Encoding ASCII
+  Set-FakeCodex 'echo simulated Codex failure' 9
   git -C $temp init --quiet
   $oldPath = $env:PATH
-  $env:PATH = "$bin;$oldPath"
+  $env:PATH = $bin + [IO.Path]::PathSeparator + $oldPath
   $previousErrorAction = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
-  & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 2>&1 | Out-Null
+  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 2>&1 | Out-Null
   $ErrorActionPreference = $previousErrorAction
   if ($LASTEXITCODE -ne 4) { throw "Expected local runner exit code 4, got $LASTEXITCODE." }
   Write-Host 'PASS: local runner propagates Codex failure.'
-  $success = @(
-    '@echo off',
-    'echo # Codex Repository Review Report',
-    'echo.',
-    'echo ## Executive Summary',
-    'echo - Overall risk assessment: Medium.',
-    'echo.',
-    'echo ## Findings',
-    'echo.',
-    'echo ### [MEDIUM] Synthetic issue',
-    'echo - **Location:** `fixture.ps1:1`',
-    'echo - **Why it matters:** Synthetic test finding.',
-    'echo - **Evidence:** The fake Codex output is deterministic.',
-    'echo - **Suggested fix:** Keep the regression test.',
-    'echo.',
-    'echo ## Positive Observations',
-    'echo - The runner produced structured output.',
-    'echo.',
-    'echo ## Recommended Next Actions',
-    'echo 1. Keep the regression test.'
+  $reportLines = @(
+    '# Codex Repository Review Report',
+    '',
+    '## Executive Summary',
+    '- Overall risk assessment: Medium.',
+    '',
+    '## Findings',
+    '',
+    '### [MEDIUM] Synthetic issue',
+    '- **Location:** `fixture.ps1:1`',
+    '- **Why it matters:** Synthetic test finding.',
+    '- **Evidence:** The fake Codex output is deterministic.',
+    '- **Suggested fix:** Keep the regression test.',
+    '',
+    '## Positive Observations',
+    '- The runner produced structured output.',
+    '',
+    '## Recommended Next Actions',
+    '1. Keep the regression test.'
   )
-  Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value ($success -join "`n") -Encoding ASCII
-  & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10
+  $successReportPath = Join-Path $temp 'fake-report.md'
+  Set-Content -LiteralPath $successReportPath -Value ($reportLines -join "`n") -Encoding ASCII
+  if ($isWin) {
+    $cmd = "@echo off`ntype `"$successReportPath`"`nexit /b 0"
+    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $cmd -Encoding ASCII
+  } else {
+    $sh = "#!/usr/bin/env bash`ncat `"$successReportPath`"`nexit 0`n"
+    $path = Join-Path $bin 'codex'
+    Set-Content -LiteralPath $path -Value $sh -Encoding ASCII
+    & chmod +x $path | Out-Null
+  }
+  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10
   if ($LASTEXITCODE -ne 0) { throw "Expected successful local runner exit code 0, got $LASTEXITCODE." }
   $json = Get-ChildItem (Join-Path $temp 'reports') -Filter '*.json' | Select-Object -First 1
   $document = Get-Content $json.FullName -Raw | ConvertFrom-Json
