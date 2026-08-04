@@ -51,9 +51,9 @@ $report = [ordered]@{
   metadata = [ordered]@{ repository = $env:GITHUB_REPOSITORY; commit = $env:GITHUB_SHA; generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = $failure }
 }
 $json = $report | ConvertTo-Json -Depth 8
-Set-Content -LiteralPath (Join-Path $out 'review.md') -Value $message -Encoding UTF8
-Set-Content -LiteralPath (Join-Path $out 'review.json') -Value $json -Encoding UTF8
-Get-FileHash -Algorithm SHA256 (Join-Path $out 'review.md'), (Join-Path $out 'review.json') |
-  ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($out.Length + 1) } |
-  Set-Content -LiteralPath (Join-Path $out 'SHA256SUMS') -Encoding ASCII
+Write-ReviewUtf8 (Join-Path $out 'review.md') $message
+Write-ReviewUtf8 (Join-Path $out 'review.json') $json
+$hashLines = Get-FileHash -Algorithm SHA256 (Join-Path $out 'review.md'), (Join-Path $out 'review.json') |
+  ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($out.Length + 1) }
+Write-ReviewUtf8 (Join-Path $out 'SHA256SUMS') (($hashLines -join "`n") + "`n")
 if ($failure -eq 'contract') { exit 5 }
