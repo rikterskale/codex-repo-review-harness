@@ -1,6 +1,7 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
-$schema = Get-Content (Join-Path $PSScriptRoot '..\..\schemas\review-report.schema.json') -Raw | ConvertFrom-Json
+. (Join-Path $PSScriptRoot 'Review-Helpers.ps1')
+$schemaPath = Join-Path $PSScriptRoot '..\..\schemas\review-report.schema.json'
 $markdown = Get-Content (Join-Path $PSScriptRoot '..\..\templates\report-skeleton.md') -Raw
 foreach ($heading in @('## Executive Summary', '## Findings', '## Positive Observations', '## Recommended Next Actions')) {
   if ($markdown -notmatch [regex]::Escape($heading)) { throw "Markdown report contract is missing: $heading" }
@@ -11,6 +12,5 @@ $fixture = [ordered]@{
   schema_version = '1.0'; status = 'findings'; summary = 'Synthetic review'; findings = @([ordered]@{ severity='medium'; title='Synthetic'; location='fixture'; evidence='fixture'; suggested_fix='fixture' }); metadata = [ordered]@{ repository='fixture'; commit='fixture'; generated_at=(Get-Date).ToUniversalTime().ToString('o'); failure_class='none' }
 }
 $json = $fixture | ConvertTo-Json -Depth 8 | ConvertFrom-Json
-foreach ($required in @('schema_version','status','summary','findings','metadata')) { if ($null -eq $json.$required) { throw "Missing required report field: $required" } }
-if ($json.schema_version -ne '1.0') { throw 'Unsupported report schema version.' }
+Assert-ReviewJson ($fixture | ConvertTo-Json -Depth 8) $schemaPath
 Write-Host 'PASS: report contract fixture is valid.'

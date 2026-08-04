@@ -5,7 +5,7 @@ $out = Join-Path (Get-Location) 'review-output'
 New-Item -ItemType Directory -Path $out -Force | Out-Null
 $message = if ($env:CODEX_MESSAGE) { $env:CODEX_MESSAGE } else { 'Codex did not produce a final message.' }
 $message = ConvertTo-RedactedText $message
-if ([Text.Encoding]::UTF8.GetByteCount($message) -gt 200KB) { $message = $message.Substring(0, 180000) + "`n`n[Output truncated by contract.]" }
+$message = Limit-ReviewUtf8 $message 200KB "`n`n[Output truncated by contract.]"
 $failure = if ($env:CODEX_OUTCOME -eq 'success') { 'none' } else { 'codex' }
 $findings = @()
 if ($failure -eq 'none') {
@@ -15,6 +15,8 @@ if ($failure -eq 'none') {
     Assert-ReviewFindings $message $findings
     $config = Get-ReviewConfig (Join-Path $PSScriptRoot '..\..\config\review-config.yaml')
     $findings = @(Select-ReviewFindings $findings $config.min_severity)
+    $message = Filter-ReviewMarkdown $message $findings
+    Assert-ReviewReportConsistency $message $findings
     if ($config.report.max_findings -gt 0 -and $findings.Count -gt $config.report.max_findings) { throw "Review contains $($findings.Count) findings; configured maximum is $($config.report.max_findings)." }
   } catch {
     $failure = 'contract'

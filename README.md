@@ -42,7 +42,9 @@ Reports appear under `reports/`.
 
 Open the file:
 
-**[docs/WINDOWS_BEGINNER_GUIDE.md](docs/WINDOWS_BEGINNER_GUIDE.md)**
+**Platform guides:** [Windows novice guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md) · [Linux novice guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md)
+
+The older [Windows beginner guide](docs/WINDOWS_BEGINNER_GUIDE.md) remains available as a short orientation guide.
 
 It starts from installing Git and walks through every single step.
 
@@ -73,7 +75,10 @@ It starts from installing Git and walks through every single step.
 ├── tests/
 │   └── test_harness_structure.ps1
 ├── docs/
-│   └── WINDOWS_BEGINNER_GUIDE.md # The detailed beginner guide
+│   ├── guides/
+│   │   ├── WINDOWS_NOVICE_USABILITY_GUIDE.md
+│   │   └── LINUX_NOVICE_USABILITY_GUIDE.md
+│   └── WINDOWS_BEGINNER_GUIDE.md # Short orientation guide
 └── .github/workflows/
     └── codex-review.yml          # Optional CI template
 ```
@@ -102,6 +107,10 @@ The analysis workflow requires an `OPENAI_API_KEY` repository secret. Do not
 enable it until the repository owner has reviewed the trust boundary and has
 configured the secret. Fork pull requests are analyzed by the trusted base
 workflow; PR source code is never checked out or executed by that workflow.
+
+The current feature branch has no live GitHub Actions result until a pull request
+targets `main`; validation runs on `main` pushes and pull requests, not arbitrary
+branch pushes.
 
 ## Report contract and exit codes
 
@@ -137,4 +146,4 @@ Apache-2.0 (same spirit as the official Codex CLI). Use freely.
 ---
 
 **Start here if you are new to computers or the command line:**  
-→ [docs/WINDOWS_BEGINNER_GUIDE.md](docs/WINDOWS_BEGINNER_GUIDE.md)
+→ [Windows novice guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md) · [Linux novice guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md)

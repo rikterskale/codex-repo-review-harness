@@ -35,4 +35,20 @@ if ($findings.Count -ne 1 -or $findings[0].severity -ne 'high' -or $findings[0].
 if (@(Select-ReviewFindings $findings 'medium').Count -ne 1) { throw 'Minimum severity filtering regression.' }
 $redacted = ConvertTo-RedactedText "ghp_12345678901234567890`n-----BEGIN PRIVATE KEY-----`nsecret`n-----END PRIVATE KEY-----"
 if ($redacted -match 'ghp_12345678901234567890|BEGIN PRIVATE KEY|secret') { throw 'Secret redaction regression.' }
+$credentialReview = ConvertTo-RedactedText 'A finding quotes PASSWORD=hunter2 for remediation.'
+if (Test-ReviewSecrets $credentialReview) { throw 'Redacted credential findings must remain publishable.' }
+$schemaPath = Join-Path $PSScriptRoot '..\schemas\review-report.schema.json'
+Assert-ReviewJson (@{ schema_version='1.0'; status='passed'; summary='ok'; findings=@(); metadata=@{ repository='fixture'; commit='fixture'; generated_at=(Get-Date).ToUniversalTime().ToString('o'); failure_class='none' } } | ConvertTo-Json -Depth 8) $schemaPath
+$extraPropertyJson = @{ schema_version='1.0'; status='passed'; summary='ok'; findings=@(); metadata=@{ repository='fixture'; commit='fixture'; generated_at=(Get-Date).ToUniversalTime().ToString('o'); failure_class='none' }; unexpected='reject-me' } | ConvertTo-Json -Depth 8
+$extraRejected = $false
+try { Assert-ReviewJson $extraPropertyJson $schemaPath } catch { $extraRejected = $true }
+if (-not $extraRejected) { throw 'Schema validator accepted an unexpected property.' }
+$unicodeText = ([char]::ConvertFromUtf32(0x1F642) * 100) + ' end'
+$unicode = Limit-ReviewUtf8 $unicodeText 100 '...'
+if ([Text.Encoding]::UTF8.GetByteCount($unicode) -gt 100) { throw 'UTF-8 truncation exceeded the byte limit.' }
+$manifestConfig = Get-ReviewConfig (Join-Path $PSScriptRoot '..\config\review-config.yaml')
+$manifest = @(Get-ReviewFileManifest (Split-Path -Parent $PSScriptRoot) $manifestConfig)
+if (@($manifest | Where-Object { $_ -like 'review-output/*' -or $_ -like '.claude/*' }).Count -gt 0) { throw 'Excluded files entered the review manifest.' }
+$scoped = @(Get-ReviewFileManifest (Split-Path -Parent $PSScriptRoot) ([pscustomobject]@{ include_paths=@('scripts/**'); exclude_paths=@('scripts/ci/**') }))
+if ($scoped.Count -eq 0 -or @($scoped | Where-Object { $_ -notlike 'scripts/*' -or $_ -like 'scripts/ci/*' }).Count -gt 0) { throw 'Configured include/exclude paths were not enforced.' }
 Write-Host 'PASS: review helper contract tests passed.'

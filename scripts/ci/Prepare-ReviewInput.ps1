@@ -13,6 +13,13 @@ Report only evidence-backed findings using the repository's required Markdown st
 Do not claim runtime behavior unless it was safely reproduced. Do not edit files or access external systems.
 
 The PR diff is available at review-input/pr.diff.
+Review only files listed in review-input/review-manifest.txt; paths outside that manifest are excluded.
 '@
 New-Item -ItemType Directory -Path review-input -Force | Out-Null
 Set-Content -LiteralPath (Join-Path (Get-Location) 'review-input\prompt.md') -Value $prompt -Encoding UTF8
+. (Join-Path $PSScriptRoot 'Review-Helpers.ps1')
+$config = Get-ReviewConfig (Join-Path $PSScriptRoot '..\..\config\review-config.yaml')
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$manifest = @(Get-ReviewFileManifest $root $config)
+if ($manifest.Count -eq 0) { throw 'Configured review scope contains no files.' }
+Write-ReviewManifest (Join-Path (Get-Location) 'review-input\review-manifest.txt') $manifest

@@ -39,6 +39,8 @@ exclude_paths:
   - "coverage/**"
   - ".git/**"
   - "reports/**"
+  - "review-output/**"
+  - ".claude/**"
 
 # Report settings
 report:
