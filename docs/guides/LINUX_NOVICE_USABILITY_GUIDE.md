@@ -5,11 +5,12 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
-target_commit: "26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9"
+target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
+reviewed_head: "e0d974af1ce78cab7f3105c75635eac11758eee0"
 support_status: unverified
 alternative_support_paths: []
 validation_status: partially_verified
-validated_on: 2026-07-31
+validated_on: 2026-08-04
 validated_environments:
   - "Ubuntu 24.04.4 LTS, x64, PowerShell 7 (/usr/bin/pwsh), GitHub Actions hosted runner image ubuntu-24.04 20260720.247.2 — evidence from workflow run 30662430133, job 91261545707"
 primary_shells:

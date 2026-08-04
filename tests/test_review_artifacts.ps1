@@ -33,7 +33,10 @@ try {
   Get-FileHash -Algorithm SHA256 (Join-Path $temp 'review.md'), (Join-Path $temp 'review.json') |
     ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($temp.Length + 1) } |
     Set-Content (Join-Path $temp 'SHA256SUMS') -Encoding ASCII
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '..\scripts\ci\Verify-ReviewArtifacts.ps1') 2>&1 | Out-Null
+  $ErrorActionPreference = $previousErrorAction
   if ($LASTEXITCODE -eq 0) { throw 'Invalid report status was accepted.' }
   Write-Host 'PASS: review artifact verification fixture passed.'
 } finally {

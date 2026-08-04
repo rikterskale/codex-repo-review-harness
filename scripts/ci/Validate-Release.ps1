@@ -2,7 +2,8 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
-$head = (git -C $root rev-parse HEAD).Trim()
+$head = if (Test-Path (Join-Path $root '.git')) { git -c core.excludesfile=NUL -C $root rev-parse HEAD 2>$null } else { '' }
+$head = if ($head) { $head.Trim() } else { '' }
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION is not SemVer: $version" }
 $changelog = Get-Content (Join-Path $root 'CHANGELOG.md') -Raw
 if ($changelog -notmatch "## \[$version\]") { throw "CHANGELOG.md has no entry for [$version]." }
@@ -16,6 +17,6 @@ foreach ($guide in @('WINDOWS_NOVICE_USABILITY_GUIDE.md', 'LINUX_NOVICE_USABILIT
   if ($guideText -notmatch '(?m)^validation_status:\s+(verified|partially_verified|blocked)\s*$') { throw "Guide has invalid validation status: $guide" }
   if ($guideText -notmatch [regex]::Escape($version)) { throw "Guide does not identify release ${version}: $guide" }
   if ($guideText -notmatch [regex]::Escape($releaseDate)) { throw "Guide does not identify release date ${releaseDate}: $guide" }
-  if ($guideText -notmatch [regex]::Escape($head)) { throw "Guide does not identify current commit ${head}: $guide" }
+  if ($head -and $guideText -notmatch ('(?m)^reviewed_head:\s*"?' + [regex]::Escape($head) + '"?\s*$')) { throw "Guide does not identify current reviewed HEAD ${head}: $guide" }
 }
 Write-Host "PASS: release metadata is consistent for $version."

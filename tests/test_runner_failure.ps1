@@ -12,7 +12,10 @@ try {
   git -C $temp init --quiet
   $oldPath = $env:PATH
   $env:PATH = "$bin;$oldPath"
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 2>&1 | Out-Null
+  $ErrorActionPreference = $previousErrorAction
   if ($LASTEXITCODE -ne 4) { throw "Expected local runner exit code 4, got $LASTEXITCODE." }
   Write-Host 'PASS: local runner propagates Codex failure.'
   $success = @(

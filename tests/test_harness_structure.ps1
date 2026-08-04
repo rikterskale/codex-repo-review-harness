@@ -40,7 +40,7 @@ Assert-True ($agents -match "## Code Review Rules") "AGENTS.md must contain Code
 $readme = Get-Content "$root\README.md" -Raw
 Assert-True ($readme -match 'docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE\.md') "README must link the Windows novice guide"
 Assert-True ($readme -match 'docs/guides/LINUX_NOVICE_USABILITY_GUIDE\.md') "README must link the Linux novice guide"
-$trackedGenerated = @(git -c core.excludesfile=NUL -C $root ls-files -- 'review-output/**' 2>$null)
+$trackedGenerated = if (Test-Path (Join-Path $root '.git')) { @(git -c core.excludesfile=NUL -C $root ls-files -- 'review-output/**' 2>$null) } else { @() }
 Assert-True ($trackedGenerated.Count -eq 0) "Generated review-output artifacts must not be tracked"
 
 foreach ($workflow in Get-ChildItem "$root\.github\workflows" -Filter '*.yml') {

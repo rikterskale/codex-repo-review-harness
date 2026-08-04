@@ -5,11 +5,12 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
-target_commit: "26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9"
+target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
+reviewed_head: "e0d974af1ce78cab7f3105c75635eac11758eee0"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
-validated_on: 2026-07-31
+validated_on: 2026-08-04
 validated_environments:
   - "Windows 11 Pro 10.0.26200, x64, Windows PowerShell 5.1.26100.8875, Git 2.54.0.windows.1, standard user"
 primary_shells:
