@@ -69,8 +69,13 @@ function Get-ReviewFileManifest([string]$RepositoryRoot, [object]$Config) {
   return @($selected | Sort-Object -Unique)
 }
 
+function Write-ReviewUtf8([string]$Path, [string]$Content) {
+  $encoding = New-Object System.Text.UTF8Encoding($false, $true)
+  [IO.File]::WriteAllBytes($Path, $encoding.GetBytes([string]$Content))
+}
+
 function Write-ReviewManifest([string]$Path, [string[]]$Manifest) {
-  Set-Content -LiteralPath $Path -Value ($Manifest -join "`n") -Encoding UTF8
+  Write-ReviewUtf8 $Path (($Manifest -join "`n") + "`n")
 }
 
 function Limit-ReviewUtf8([string]$Text, [int]$MaxBytes, [string]$Suffix = '') {
