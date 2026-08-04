@@ -117,7 +117,7 @@ try {
 } finally { $ErrorActionPreference = $previousErrorAction }
 $report = [ordered]@{
     schema_version = '1.0'; status = (Get-ReviewStatus $findings); summary = $output.Substring(0, [Math]::Min($output.Length, 20000)); findings = $findings
-    metadata = [ordered]@{ repository = $gitTop.Trim(); commit = $commit.Trim(); generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = 'none' }
+    metadata = [ordered]@{ repository = $gitTop.Trim(); commit = $commit.Trim(); generated_at = (Get-Date).ToUniversalTime().ToString('o'); failure_class = 'none'; failure_detail = '' }
 }
 Write-ReviewUtf8 $jsonFile ($report | ConvertTo-Json -Depth 8)
 $hashLines = Get-FileHash -Algorithm SHA256 $reportFile, $jsonFile | ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($reportsDir.Length + 1) }
