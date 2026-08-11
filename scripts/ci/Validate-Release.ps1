@@ -2,9 +2,18 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
-$heads = if (Test-Path (Join-Path $root '.git')) {
-  @((git -c core.excludesfile=NUL -C $root rev-parse HEAD 2>$null).Trim(), (git -c core.excludesfile=NUL -C $root rev-parse HEAD~1 2>$null).Trim()) | Where-Object { $_ }
-} else { @() }
+# Resolve with --verify --quiet so an unresolvable revision yields nothing and a
+# non-zero exit. Plain `git rev-parse HEAD~1` echoes the literal string "HEAD~1"
+# on failure, which is truthy and would be compared against reviewed_head as if
+# it were a SHA. HEAD~1 is unresolvable in a shallow checkout, so CI must fetch
+# at least two commits for the metadata-update pattern to work.
+$heads = @()
+if (Test-Path (Join-Path $root '.git')) {
+  foreach ($rev in @('HEAD', 'HEAD~1')) {
+    $resolved = git -c core.excludesfile=NUL -C $root rev-parse --verify --quiet "$rev^{commit}" 2>$null
+    if ($LASTEXITCODE -eq 0 -and $resolved) { $heads += ([string]$resolved).Trim() }
+  }
+}
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION is not SemVer: $version" }
 $changelog = Get-Content (Join-Path $root 'CHANGELOG.md') -Raw
 if ($changelog -notmatch "## \[$version\]") { throw "CHANGELOG.md has no entry for [$version]." }

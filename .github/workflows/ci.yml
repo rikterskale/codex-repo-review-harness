@@ -30,6 +30,11 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           persist-credentials: false
+          # Validate-Release.ps1 accepts HEAD or HEAD~1 as the guides'
+          # reviewed_head, so that a metadata-update commit can record the
+          # content commit it reviewed. The default depth-1 checkout cannot
+          # resolve HEAD~1, which made that pattern impossible to satisfy in CI.
+          fetch-depth: 2
 
       - name: Run structural and regression tests
         shell: pwsh
