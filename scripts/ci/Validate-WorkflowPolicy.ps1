@@ -23,6 +23,18 @@ $publisher = Get-Content (Join-Path $root '.github\workflows\codex-review-commen
 if ($analysis -notmatch '(?m)^\s*pull_request_target\s*:') { throw 'Analysis workflow must use pull_request_target.' }
 if ($analysis -notmatch 'ref:\s*\$\{\{\s*github\.event\.pull_request\.base\.sha\s*\}\}') { throw 'Analysis workflow must checkout the trusted pull-request base SHA.' }
 if ($analysis -match '(?m)^\s*pull-requests:\s*write\s*$') { throw 'Analysis workflow must not grant pull-request write permission.' }
+# codex-action appends its own --sandbox argument after the codex-args
+# pass-through, defaulting to workspace-write, so a sandbox selected through
+# codex-args is silently outranked and the review would run write-enabled. The
+# sandbox input is the only setting that survives.
+if ($analysis -notmatch '(?m)^\s*sandbox:\s*read-only\s*$') { throw 'Analysis workflow must pin the Codex sandbox to read-only through the action input.' }
+if ($analysis -match '(?m)^\s*codex-args:.*(--sandbox|(?<![\w-])-s(?![\w-])|sandbox_mode)') { throw 'Analysis workflow must not select a sandbox through codex-args; the action overrides it.' }
+# The preflight must see only whether the secret is set. Passing the secret
+# itself would copy the key into another process's environment for no reason.
+$credentialCheck = [regex]::Match($analysis, '(?m)^\s*REVIEW_CREDENTIAL_PRESENT:\s*\$\{\{\s*secrets\.OPENAI_API_KEY\s*!=\s*''''\s*\}\}\s*$')
+$codexAction = [regex]::Match($analysis, '(?m)^\s*uses:\s*openai/codex-action@')
+if (-not $credentialCheck.Success) { throw 'Analysis workflow must verify that the review credential is present, passing only its presence.' }
+if ($codexAction.Success -and $credentialCheck.Index -gt $codexAction.Index) { throw 'Analysis workflow must verify the review credential before invoking Codex, not after.' }
 if ($publisher -notmatch '(?m)^\s*workflow_run\s*:') { throw 'Publisher workflow must use workflow_run.' }
 if ($publisher -notmatch 'pull-requests:\s*write') { throw 'Publisher workflow must own PR comment permission.' }
 if ($publisher -notmatch 'pull_requests\[0\]\.number') { throw 'Publisher workflow must guard against workflow runs without an associated PR.' }

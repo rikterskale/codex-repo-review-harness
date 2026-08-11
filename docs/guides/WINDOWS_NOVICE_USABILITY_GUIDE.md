@@ -216,7 +216,7 @@ code anywhere in `scripts/`.
 they are not interchangeable. Running a review on your own computer uses your
 **ChatGPT sign-in**. The optional GitHub Actions workflow uses an
 **`OPENAI_API_KEY` repository secret** (`.github/workflows/codex-review.yml`
-line 60). You do not need an API key to follow this guide.
+line 77). You do not need an API key to follow this guide.
 
 ## 9. Terms and Concepts You Need to Know
 
@@ -1195,8 +1195,10 @@ validates.
 
 The harness reads no environment variables in the local path. `OPENAI_API_KEY`
 appears only in the optional GitHub Actions workflow
-(`.github/workflows/codex-review.yml` line 60) as a repository secret configured
-on GitHub's website, never on your computer.
+(`.github/workflows/codex-review.yml` line 77) as a repository secret configured
+on GitHub's website, never on your computer. If that secret is absent the
+workflow stops at its credential preflight and says so, rather than failing
+later inside the Codex action.
 
 ### 22.3 Credentials
 

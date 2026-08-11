@@ -25,6 +25,7 @@ Assert-True (Test-Path "$root\tests\test_security_regressions.ps1") "Missing sec
 Assert-True (Test-Path "$root\tests\test_review_artifacts.ps1") "Missing artifact verification test"
 Assert-True (Test-Path "$root\tests\test_review_helpers.ps1") "Missing review helper contract test"
 Assert-True (Test-Path "$root\tests\test_runner_failure.ps1") "Missing runner failure test"
+Assert-True (Test-Path "$root\tests\test_workflow_preflight.ps1") "Missing workflow preflight test"
 Assert-True (Test-Path "$root\scripts\ci\Test-GeneratedArtifacts.ps1") "Missing generated-artifact guard"
 Assert-True (Test-Path "$root\tests\test_report_consistency.ps1") "Missing report consistency test"
 Assert-True (Test-Path "$root\tests\test_unicode_output.ps1") "Missing Unicode output test"

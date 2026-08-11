@@ -66,6 +66,7 @@ jobs:
             'tests/test_runner_failure.ps1',
             'tests/test_batch2_regressions.ps1',
             'tests/test_clean_room.ps1',
+            'tests/test_workflow_preflight.ps1',
             'tests/test_release_pr_metadata.ps1',
             'scripts/ci/Validate-Release.ps1',
             'scripts/ci/Validate-WorkflowPolicy.ps1',

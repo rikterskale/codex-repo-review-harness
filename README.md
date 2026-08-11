@@ -125,6 +125,21 @@ enable it until the repository owner has reviewed the trust boundary and has
 configured the secret. Fork pull requests are analyzed by the trusted base
 workflow; PR source code is never checked out or executed by that workflow.
 
+A credential preflight runs before Codex is invoked, so a repository without the
+secret fails with a workflow error naming it instead of an unrelated error from
+inside the action. The preflight receives only whether the secret is set, never
+its value. The Codex sandbox is
+pinned through the action's `sandbox` input rather than through `codex-args`,
+because the action appends its own `--sandbox` argument after the pass-through
+args and would otherwise override a read-only setting with its `workspace-write`
+default.
+
+`openai/codex-action` additionally requires the triggering actor to have write
+access to the repository. Reviews of pull requests from outside collaborators
+therefore stop at that check unless the owner opts in through the action's
+`allow-users` input, which also means accepting the cost of runs triggered by
+those users.
+
 The current feature branch has no live GitHub Actions result until a pull request
 targets `main`; validation runs on `main` pushes and pull requests, not arbitrary
 branch pushes.

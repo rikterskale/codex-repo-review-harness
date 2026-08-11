@@ -224,7 +224,7 @@ PowerShell installation page for your distribution, then return to section 13.
 
 **Note on the two credentials.** Running a review locally uses your **ChatGPT
 sign-in**. The optional GitHub Actions workflow uses an **`OPENAI_API_KEY`
-repository secret** (`.github/workflows/codex-review.yml` line 60). They are not
+repository secret** (`.github/workflows/codex-review.yml` line 77). They are not
 interchangeable, and you need neither to follow sections 13 through 18.
 
 ## 9. Terms and Concepts You Need to Know
@@ -1087,8 +1087,10 @@ be treated as part of the folder name on Linux.
 **You do not need to set any environment variable to run a review on Linux.**
 
 The local path reads none. `OPENAI_API_KEY` appears only in the GitHub Actions
-workflow (`.github/workflows/codex-review.yml` line 60) as a repository secret
-configured on GitHub's website, never in your shell.
+workflow (`.github/workflows/codex-review.yml` line 77) as a repository secret
+configured on GitHub's website, never in your shell. If that secret is absent
+the workflow stops at its credential preflight and says so, rather than failing
+later inside the Codex action.
 
 Do not add `export OPENAI_API_KEY=...` to your `~/.bashrc`. It would not be used
 by the local runner and would leave a secret in a plain file.
