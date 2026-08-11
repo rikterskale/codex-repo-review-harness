@@ -43,6 +43,34 @@ $extraPropertyJson = @{ schema_version='1.0'; status='passed'; summary='ok'; fin
 $extraRejected = $false
 try { Assert-ReviewJson $extraPropertyJson $schemaPath } catch { $extraRejected = $true }
 if (-not $extraRejected) { throw 'Schema validator accepted an unexpected property.' }
+# Regression: PowerShell 7's ConvertFrom-Json turns ISO-8601 strings into
+# [datetime]; Windows PowerShell 5.1 leaves them as [string]. Schema validation
+# must not depend on the host, or CI (pwsh) and the local runner disagree.
+# Building the parsed document directly reproduces the PowerShell 7 shape on
+# either host. Two separate literals are used because the normaliser rewrites
+# PSCustomObject properties in place.
+function New-DateFixture {
+  [pscustomobject]@{
+    schema_version = '1.0'
+    status         = 'passed'
+    summary        = 'Portable date handling'
+    findings       = @()
+    metadata       = [pscustomobject]@{
+      repository    = 'fixture'
+      commit        = 'fixture'
+      generated_at  = [datetime]::UtcNow
+      failure_class = 'none'
+    }
+  }
+}
+$schemaObject = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
+$dateRejected = $false
+try { Test-ReviewJsonSchemaNode (New-DateFixture) $schemaObject '$' } catch { $dateRejected = $true }
+if (-not $dateRejected) { throw 'Expected an un-normalised DateTime to fail schema validation; the regression fixture no longer reproduces.' }
+$normalised = ConvertTo-ReviewJsonPortableValue (New-DateFixture)
+if ($normalised.metadata.generated_at -isnot [string]) { throw 'DateTime metadata was not normalised to a string.' }
+Test-ReviewJsonSchemaNode $normalised $schemaObject '$'
+
 $unicodeText = ([char]::ConvertFromUtf32(0x1F642) * 100) + ' end'
 $unicode = Limit-ReviewUtf8 $unicodeText 100 '...'
 if ([Text.Encoding]::UTF8.GetByteCount($unicode) -gt 100) { throw 'UTF-8 truncation exceeded the byte limit.' }

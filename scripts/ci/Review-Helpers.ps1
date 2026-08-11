@@ -18,10 +18,34 @@ function ConvertTo-RedactedText([string]$Text) {
   return $Text
 }
 
+function ConvertTo-ReviewJsonPortableValue([object]$Value) {
+  # PowerShell 7's ConvertFrom-Json coerces ISO-8601 strings into [datetime] (or
+  # [datetimeoffset]); Windows PowerShell 5.1 leaves them as [string]. Without
+  # this normalisation the same JSON validates differently depending on the host,
+  # so CI (pwsh) and the local runner (Windows PowerShell) disagree. Converting
+  # back to a round-trip string keeps the schema's string constraints applicable
+  # instead of silently skipping them.
+  if ($null -eq $Value) { return $null }
+  if ($Value -is [string]) { return $Value }
+  if ($Value -is [datetime]) { return $Value.ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
+  if ($Value -is [datetimeoffset]) { return $Value.ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
+  # The leading comma stops PowerShell unrolling the result: without it an empty
+  # array is returned as nothing, which the caller sees as $null.
+  if ($Value -is [array]) { return ,@($Value | ForEach-Object { ConvertTo-ReviewJsonPortableValue $_ }) }
+  if ($Value -is [pscustomobject]) {
+    foreach ($property in @($Value.PSObject.Properties)) {
+      $property.Value = ConvertTo-ReviewJsonPortableValue $property.Value
+    }
+    return $Value
+  }
+  return $Value
+}
+
 function Assert-ReviewJson([string]$Json, [string]$SchemaPath) {
   if ([string]::IsNullOrWhiteSpace($Json)) { throw 'Review JSON is empty.' }
   try { $document = $Json | ConvertFrom-Json } catch { throw "Review JSON is invalid: $($_.Exception.Message)" }
   if (-not $SchemaPath -or -not (Test-Path -LiteralPath $SchemaPath)) { throw 'Review JSON schema is missing.' }
+  $document = ConvertTo-ReviewJsonPortableValue $document
   $schema = Get-Content -LiteralPath $SchemaPath -Raw | ConvertFrom-Json
   Test-ReviewJsonSchemaNode $document $schema '$'
 }
