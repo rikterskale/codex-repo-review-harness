@@ -12,7 +12,7 @@ alternative_support_paths: []
 validation_status: partially_verified
 validated_on: 2026-08-04
 validated_environments:
-  - "Ubuntu 24.04.4 LTS, x64, PowerShell 7 (/usr/bin/pwsh), GitHub Actions hosted runner image ubuntu-24.04 20260720.247.2 â€” evidence from workflow run 30662430133, job 91261545707"
+  - "Ubuntu 24.04.4 LTS, x64, PowerShell 7 (/usr/bin/pwsh), GitHub Actions hosted runner image ubuntu-24.04 20260720.247.2 — evidence from workflow run 30662430133, job 91261545707"
 primary_shells:
   - "PowerShell 7 (pwsh)"
   - "Bash (only to install prerequisites and to start pwsh)"
@@ -23,7 +23,7 @@ known_limitations:
   - "Three of the project's own test scripts fail on Linux because they invoke the Windows-only 'powershell' executable, and the CI job nevertheless reports success."
 ---
 
-# Codex Repo Review Harness â€” Linux Novice Usability Guide
+# Codex Repo Review Harness — Linux Novice Usability Guide
 
 ## 1. About This Guide
 
@@ -52,7 +52,7 @@ Validation labels used throughout:
 | **Unsupported** | The project provides no Linux path for this, and none is invented here. |
 
 The companion Windows guide is `docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md`.
-Do not mix commands between the two â€” the shells and path separators differ.
+Do not mix commands between the two — the shells and path separators differ.
 
 ## 2. What This Project Does
 
@@ -84,7 +84,7 @@ You do not need to know how to program. You do need:
 - A Linux system where you can install software (usually via `sudo`).
 - An OpenAI ChatGPT account that includes Codex access.
 - A repository you are allowed to review.
-- Tolerance for an unverified path â€” see section 5. If you need a proven path
+- Tolerance for an unverified path — see section 5. If you need a proven path
   today, use the Windows guide instead.
 
 ## 4. Safety, Authorization, and Data Handling
@@ -112,7 +112,7 @@ areas.
 **Secrets.** Never type a real password, API key, or token into any command here.
 
 **Known safety-relevant defect.** If the review contains a finding that quotes a
-credential â€” for example `PASSWORD=hunter2` copied from your code â€” the harness
+credential — for example `PASSWORD=hunter2` copied from your code — the harness
 misidentifies its own redaction placeholder as a real secret, aborts with exit
 code 5, and writes no report. Reproduced on Windows; the same code path is used on
 Linux. See troubleshooting row `LNX-TRB-008`.
@@ -152,7 +152,7 @@ exist on Linux. The job still reported success, so this failure is currently
 invisible to the maintainers.
 
 **What has never been tried on Linux.** `scripts/Run-Review.ps1` and
-`scripts/Validate-Harness.ps1` â€” the two scripts you actually use â€” are not
+`scripts/Validate-Harness.ps1` — the two scripts you actually use — are not
 executed by any Linux test. Their behaviour on Linux is therefore inferred from
 their source code only.
 
@@ -174,7 +174,7 @@ Working through this guide, you will:
 1. Confirm which Linux distribution and shell you have.
 2. Install Git and PowerShell 7 if they are missing.
 3. Obtain the harness repository.
-4. Run the harness's own self-tests â€” the parts proven to work on Linux.
+4. Run the harness's own self-tests — the parts proven to work on Linux.
 5. Run the health check.
 6. Learn what a review would produce, where it lands, and how to interpret it.
 7. Learn how to cancel, clean up, update, and roll back.
@@ -214,7 +214,7 @@ Type paths exactly as shown, including capital letters.
 | Git | Any recent version | `scripts/Run-Review.ps1` line 26 refuses to run without it | `LNX-CMD-003` |
 | Codex CLI | A version supporting `codex exec --sandbox read-only` | `scripts/Run-Review.ps1` lines 79-80 | `LNX-CMD-011` |
 | Account | A ChatGPT plan including Codex | Codex requires sign-in | Sign-in prompt |
-| Privilege | Standard user to run; `sudo` to install | No harness script requires elevation | â€” |
+| Privilege | Standard user to run; `sudo` to install | No harness script requires elevation | — |
 
 **Other distributions.** Fedora, RHEL, Arch, SUSE, Alpine, and Debian are *not*
 covered. The project has never been tested on them. PowerShell 7 is available for
@@ -231,26 +231,26 @@ interchangeable, and you need neither to follow sections 13 through 18.
 
 Full definitions are in section 29. The essentials:
 
-- **Terminal** â€” the window where you type commands. Open it with `Ctrl`+`Alt`+`T`
+- **Terminal** — the window where you type commands. Open it with `Ctrl`+`Alt`+`T`
   on most desktop Linux systems.
-- **Shell** â€” the program inside the terminal that reads your commands. Yours is
+- **Shell** — the program inside the terminal that reads your commands. Yours is
   probably Bash. This project needs a second shell, PowerShell 7 (`pwsh`).
-- **Working directory** â€” the folder your terminal is currently in.
-- **Repository** â€” a project folder tracked by Git, containing a hidden `.git`
+- **Working directory** — the folder your terminal is currently in.
+- **Repository** — a project folder tracked by Git, containing a hidden `.git`
   folder.
-- **`sudo`** â€” a prefix that runs one command with administrator rights. It will
+- **`sudo`** — a prefix that runs one command with administrator rights. It will
   ask for your password. Use it only where this guide says to.
-- **Exit code** â€” the number a program returns when it finishes; `0` means
+- **Exit code** — the number a program returns when it finishes; `0` means
   success. See section 20.2.
-- **Package manager** â€” the program that installs software. On Ubuntu it is `apt`.
+- **Package manager** — the program that installs software. On Ubuntu it is `apt`.
 
 ## 10. Choose the Correct Installation Path
 
 | Path | Status | Use it when |
 |---|---|---|
-| Ubuntu 24.04, PowerShell 7, native | **Best available â€” partially verified** | You want the closest thing to a supported Linux path |
+| Ubuntu 24.04, PowerShell 7, native | **Best available — partially verified** | You want the closest thing to a supported Linux path |
 | Another Linux distribution with PowerShell 7 | **Unverified** | You accept that nothing has been tested |
-| Container | **Not documented by this project** | â€” |
+| Container | **Not documented by this project** | — |
 | Virtual machine running Windows | **Alternative** | You need the proven path; follow the Windows guide inside the VM |
 
 Follow the Ubuntu path below. If a proven end-to-end review matters more to you
@@ -261,13 +261,13 @@ follow `docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md` instead.
 
 You will use **two** shells in this guide, and it matters which one you are in.
 
-**Bash** â€” for installing software. This is the shell you get by default.
+**Bash** — for installing software. This is the shell you get by default.
 
 1. Press `Ctrl` + `Alt` + `T`, or open your applications menu and choose
    **Terminal**.
 2. A window opens with a prompt that usually ends in `$`.
 
-**PowerShell 7 (`pwsh`)** â€” for everything to do with the harness itself. You start
+**PowerShell 7 (`pwsh`)** — for everything to do with the harness itself. You start
 it *from* Bash by typing `pwsh` and pressing Enter. The prompt changes to `PS`
 followed by your current folder.
 
@@ -275,7 +275,7 @@ To leave PowerShell and return to Bash, type `exit` and press Enter.
 
 Throughout this guide each command block is labelled **Run in: Bash** or
 **Run in: PowerShell 7 (pwsh)**. Getting this wrong is the most common beginner
-mistake on Linux with this project â€” Bash does not understand PowerShell commands
+mistake on Linux with this project — Bash does not understand PowerShell commands
 and will answer `command not found`.
 
 ## 12. Check and Install Prerequisites
@@ -291,7 +291,7 @@ and will answer `command not found`.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** None
-- **Validation status:** Statically verified â€” standard Linux command, not
+- **Validation status:** Statically verified — standard Linux command, not
   executed during this review
 
 ```bash
@@ -300,7 +300,7 @@ cat /etc/os-release
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 PRETTY_NAME="Ubuntu 24.04.4 LTS"
@@ -310,7 +310,7 @@ VERSION_ID="24.04"
 
 **Success means:** you can read a `PRETTY_NAME` line. If it says Ubuntu 24.04, you
 are on the one configuration with evidence behind it. Anything else is unverified
-â€” re-read section 8.
+— re-read section 8.
 
 **Next step:** 12.2.
 
@@ -333,7 +333,7 @@ echo "$SHELL" && uname -m
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 /bin/bash
@@ -364,7 +364,7 @@ git --version
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 git version 2.54.0
@@ -387,7 +387,7 @@ ask for your login password. Then re-run this command.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** None
-- **Validation status:** Verified â€” `pwsh` is present and runs every harness test
+- **Validation status:** Verified — `pwsh` is present and runs every harness test
   script in the project's Ubuntu CI job
 
 ```bash
@@ -396,7 +396,7 @@ pwsh --version
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 PowerShell 7.4.6
@@ -419,13 +419,13 @@ begins with `7`.
 - **Command ID:** `LNX-CMD-005`
 - **Purpose:** Install the Codex CLI on Linux.
 - **Run in:** Bash
-- **Working directory:** â€”
-- **Privilege required:** â€”
+- **Working directory:** —
+- **Privilege required:** —
 - **Internet access:** Required
-- **Safe to copy and paste:** â€”
-- **Replace before running:** â€”
-- **Expected side effects:** â€”
-- **Validation status:** **Unsupported â€” this repository documents no Linux
+- **Safe to copy and paste:** —
+- **Replace before running:** —
+- **Expected side effects:** —
+- **Validation status:** **Unsupported — this repository documents no Linux
   installation command for the Codex CLI, and none is invented here.**
 
 There is no command block for this step, deliberately.
@@ -445,7 +445,7 @@ system.
    path. This gap is recorded as finding `REV-LNX-GUIDE-001`.
 
 **Stop condition.** If you cannot install the Codex CLI, you can still complete
-sections 13 through 18 and 21.3 â€” the harness installs and self-tests fine
+sections 13 through 18 and 21.3 — the harness installs and self-tests fine
 without Codex. You cannot complete section 19, the actual review.
 
 ## 13. Download or Clone the Repository
@@ -477,8 +477,8 @@ Expected exit status: `0`.
 - **Working directory:** `~/projects`
 - **Privilege required:** Ordinary user
 - **Internet access:** Required
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_REPOSITORY_URL` â€” the repository web address
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_REPOSITORY_URL` — the repository web address
   ending in `.git`. Example value:
   `https://github.com/rikterskale/codex-repo-review-harness.git`
 - **Expected side effects:** Creates a new folder containing the repository
@@ -490,7 +490,7 @@ git clone YOUR_REPOSITORY_URL
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 Cloning into 'codex-repo-review-harness'...
@@ -499,7 +499,7 @@ Receiving objects: 100% (120/120), done.
 
 **Success means:** the last line says `done.`
 
-**Common failure:** `fatal: repository ... not found` â€” see row `LNX-TRB-002`.
+**Common failure:** `fatal: repository ... not found` — see row `LNX-TRB-002`.
 
 ## 14. Find and Enter the Repository Folder
 
@@ -509,8 +509,8 @@ Receiving objects: 100% (120/120), done.
 - **Working directory:** `~/projects`
 - **Privilege required:** Ordinary user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_PROJECT_FOLDER` â€” the folder name printed by
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_PROJECT_FOLDER` — the folder name printed by
   `LNX-CMD-007`. Example value: `codex-repo-review-harness`
 - **Expected side effects:** None
 - **Validation status:** Statically verified
@@ -525,7 +525,7 @@ Expected exit status: `0`.
 
 **If the folder name contains a space**, wrap it in quotes: `cd "My Project"`.
 
-**Remember Linux is case-sensitive** â€” `cd codex-repo-review-harness` works,
+**Remember Linux is case-sensitive** — `cd codex-repo-review-harness` works,
 `cd Codex-Repo-Review-Harness` does not.
 
 ---
@@ -547,7 +547,7 @@ pwd && ls -a
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 /home/you/projects/codex-repo-review-harness
@@ -571,7 +571,7 @@ This project is written entirely in PowerShell and has no libraries to install.
 There is no `requirements.txt`, `package.json`, or lock file anywhere in the
 repository. Skip this section.
 
-The two programs the harness depends on â€” Git and PowerShell 7 â€” are installed
+The two programs the harness depends on — Git and PowerShell 7 — are installed
 once for the whole system, in section 12.
 
 ## 16. Install Project Dependencies
@@ -611,7 +611,7 @@ want reviewed (`README.md` line 31).
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** Starts a new shell. Type `exit` to return to Bash.
-- **Validation status:** Verified â€” `pwsh` runs on the project's Ubuntu CI job
+- **Validation status:** Verified — `pwsh` runs on the project's Ubuntu CI job
 
 ```bash
 pwsh
@@ -619,7 +619,7 @@ pwsh
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 PowerShell 7.4.6
@@ -640,7 +640,7 @@ sections 18 to 21 is typed here, not in Bash.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** None
-- **Validation status:** Blocked â€” the Codex CLI has no documented Linux
+- **Validation status:** Blocked — the Codex CLI has no documented Linux
   installation path in this repository, so it could not be installed or tested
 
 ```powershell
@@ -649,11 +649,11 @@ codex --version
 
 Expected exit status: `0`.
 
-Representative output â€” **Unverified â€” Runtime Blocked**: a version number.
+Representative output — **Unverified — Runtime Blocked**: a version number.
 
 **Success means:** a version number rather than an error.
 
-**If it fails**, that is expected â€” see section 12.5. You can still complete 18.3.
+**If it fails**, that is expected — see section 12.5. You can still complete 18.3.
 
 ### 18.3 Run the harness health check
 
@@ -666,8 +666,8 @@ Representative output â€” **Unverified â€” Runtime Blocked**: a versio
 - **Internet access:** Not required
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
-- **Expected side effects:** None â€” the script only reads
-- **Validation status:** Statically verified â€” this script is not run by the
+- **Expected side effects:** None — the script only reads
+- **Validation status:** Statically verified — this script is not run by the
   project's Linux CI and has never been executed on Linux. Its cmdlets are
   cross-platform, so it is expected to work, but that expectation is unproven.
 
@@ -677,7 +677,7 @@ Representative output â€” **Unverified â€” Runtime Blocked**: a versio
 
 Expected exit status: `0` when everything passes, `1` when a check fails.
 
-Representative output â€” **Code-Derived Output Shape** (this is the Windows-verified
+Representative output — **Code-Derived Output Shape** (this is the Windows-verified
 output; the Linux output should be identical apart from path separators):
 
 ```text
@@ -716,13 +716,13 @@ than print a command that has never been run.**
 - **Purpose:** Run a full read-only AI review of the current repository.
 - **Run in:** PowerShell 7 (pwsh)
 - **Working directory:** The repository folder
-- **Privilege required:** Ordinary user â€” never use `sudo`
+- **Privilege required:** Ordinary user — never use `sudo`
 - **Internet access:** Required
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates exactly three files in `reports/`. Never
   modifies your source code.
-- **Validation status:** **Blocked** â€” requires the Codex CLI, which has no
+- **Validation status:** **Blocked** — requires the Codex CLI, which has no
   documented Linux installation path in this repository. The script has never been
   executed on Linux by the project's CI or by this review.
 
@@ -732,7 +732,7 @@ than print a command that has never been run.**
 
 Expected exit status: `0` on success; see section 20.2 for other values.
 
-Representative output â€” **Unverified â€” Runtime Blocked**. On Windows the verified
+Representative output — **Unverified — Runtime Blocked**. On Windows the verified
 output is:
 
 ```text
@@ -747,7 +747,7 @@ files.
 - Whether `codex exec --sandbox read-only` behaves the same way.
 - Whether the background-job mechanism the runner uses
   (`scripts/Run-Review.ps1` lines 86-97) launches Codex in the repository folder.
-  On Windows PowerShell 5.1 this was **reproduced as broken** â€” Codex was launched
+  On Windows PowerShell 5.1 this was **reproduced as broken** — Codex was launched
   in the user's Documents folder instead of the repository under review
   (finding `REV-COR-001`). PowerShell 7 is documented to behave differently, so
   Linux may be unaffected, but this has not been proven.
@@ -809,8 +809,8 @@ nothing at all if you have not run a review.
 - **Working directory:** The repository folder
 - **Privilege required:** Ordinary user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_REPORT_FILE` â€” the `.md` name from
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_REPORT_FILE` — the `.md` name from
   `LNX-CMD-014`. Example value: `review-20260731-213440-423-e4a65858.md`
 - **Expected side effects:** None
 - **Validation status:** Statically verified
@@ -863,8 +863,8 @@ Two known oddities in release 0.1.0, both verified on Windows:
 - **Working directory:** The repository folder
 - **Privilege required:** Ordinary user
 - **Internet access:** Not required
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_REPORT_FILE` â€” the `.md` name. Example value:
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_REPORT_FILE` — the `.md` name. Example value:
   `review-20260731-213440-423-e4a65858.md`
 - **Expected side effects:** None
 - **Validation status:** Statically verified
@@ -895,7 +895,7 @@ Expected exit status: `0`.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** Three new files in `reports/`
-- **Validation status:** Blocked â€” depends on the Codex CLI
+- **Validation status:** Blocked — depends on the Codex CLI
 
 ```powershell
 ./scripts/Run-Review.ps1 -Prompt security-focus.md
@@ -924,11 +924,11 @@ row `LNX-TRB-008`.
 - **Working directory:** The repository folder
 - **Privilege required:** Ordinary user
 - **Internet access:** Required
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_BASE_BRANCH` â€” the branch to compare against.
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_BASE_BRANCH` — the branch to compare against.
   Example value: `develop`
 - **Expected side effects:** Three new files in `reports/`
-- **Validation status:** Blocked â€” depends on the Codex CLI
+- **Validation status:** Blocked — depends on the Codex CLI
 
 ```powershell
 ./scripts/Run-Review.ps1 -Prompt pr-diff-review.md -BaseBranch YOUR_BASE_BRANCH
@@ -938,7 +938,7 @@ Expected exit status: `0`.
 
 **Checkpoint:** the report header line `**Base branch:**` names your branch.
 
-### 21.3 Workflow: test the harness itself â€” the proven Linux path
+### 21.3 Workflow: test the harness itself — the proven Linux path
 
 This is the one workflow with real Linux evidence behind it. Every command here
 is proven by the project's Ubuntu CI job.
@@ -964,7 +964,7 @@ pwsh -NoProfile -File tests/test_harness_structure.ps1
 
 Expected exit status: `0`.
 
-Representative output â€” **Verified Runtime Output**:
+Representative output — **Verified Runtime Output**:
 
 ```text
 PASS: All structural tests succeeded.
@@ -989,7 +989,7 @@ pwsh -NoProfile -File scripts/ci/Test-ReportContract.ps1
 
 Expected exit status: `0`.
 
-Representative output â€” **Verified Runtime Output**:
+Representative output — **Verified Runtime Output**:
 
 ```text
 PASS: report contract fixture is valid.
@@ -1014,7 +1014,7 @@ pwsh -NoProfile -File tests/test_security_regressions.ps1
 
 Expected exit status: `0`.
 
-Representative output â€” **Verified Runtime Output**:
+Representative output — **Verified Runtime Output**:
 
 ```text
 PASS: secret redaction and prompt-injection fixtures passed.
@@ -1039,7 +1039,7 @@ pwsh -NoProfile -File tests/test_review_helpers.ps1
 
 Expected exit status: `0`.
 
-Representative output â€” **Verified Runtime Output**:
+Representative output — **Verified Runtime Output**:
 
 ```text
 PASS: review helper contract tests passed.
@@ -1097,7 +1097,7 @@ by the local runner and would leave a secret in a plain file.
 
 Your Codex sign-in is handled by the Codex CLI itself. The harness never asks for,
 stores, or writes a credential. Never put a real key into
-`config/review-config.yaml` â€” that file is tracked by Git and would be committed.
+`config/review-config.yaml` — that file is tracked by Git and would be committed.
 
 ## 23. How to Stop or Cancel Safely
 
@@ -1123,7 +1123,7 @@ pgrep -a codex
 
 Expected exit status: `0` if a process is found, `1` if none is.
 
-**Success means:** no output and exit status `1` â€” nothing is left running.
+**Success means:** no output and exit status `1` — nothing is left running.
 
 **If a process is listed**, close the terminal window, which ends the background
 job. As a last resort run `pkill codex`.
@@ -1166,7 +1166,7 @@ Expected exit status: `0`.
 
 The harness is only files. Delete `scripts/`, `prompts/`, `config/`, `templates/`,
 `tests/`, `schemas/`, `reports/`, and `AGENTS.md` and it is gone. Nothing outside
-the project folder is touched â€” no system files, no shell profile, no PATH entry.
+the project folder is touched — no system files, no shell profile, no PATH entry.
 
 **Verify:** `test -f scripts/Run-Review.ps1 && echo present || echo removed`
 prints `removed`.
@@ -1178,7 +1178,7 @@ This project makes no host changes to undo. It does not modify your PATH, your
 
 The only system-level changes you made were installing Git and PowerShell 7 in
 section 12, and they are removed through your package manager if you want them
-gone â€” for example `sudo apt remove powershell` on Ubuntu. `sudo` is required
+gone — for example `sudo apt remove powershell` on Ubuntu. `sudo` is required
 because removing system software affects all users.
 
 **Verify:** `pwsh --version` reports `command not found` once PowerShell is removed.
@@ -1210,7 +1210,7 @@ Get-Content VERSION
 
 Expected exit status: `0`.
 
-Representative output â€” **Code-Derived Output Shape**:
+Representative output — **Code-Derived Output Shape**:
 
 ```text
 0.1.0
@@ -1276,8 +1276,8 @@ readable. If a future release changes `schema_version` in the JSON report
 - **Working directory:** The repository folder
 - **Privilege required:** Ordinary user
 - **Internet access:** Not required if the commit is already downloaded
-- **Safe to copy and paste:** **No â€” replace the placeholder first**
-- **Replace before running:** `YOUR_COMMIT_ID` â€” from `git log --oneline`.
+- **Safe to copy and paste:** **No — replace the placeholder first**
+- **Replace before running:** `YOUR_COMMIT_ID` — from `git log --oneline`.
   Example value: `26cc06c`
 - **Expected side effects:** Changes which version is on disk. Reports and
   untracked files are unaffected.
@@ -1307,8 +1307,8 @@ to yet.
 | `LNX-TRB-001` | `./scripts/Validate-Harness.ps1: command not found` | Linux / Bash | You are in Bash, but harness scripts are PowerShell | Type `pwsh` and press Enter to switch shells (`LNX-CMD-010`), then re-run the command | `$PSVersionTable.PSVersion` | A table with `Major` = `7` | Run it in one step from Bash: `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | The prompt text and the output of `echo $SHELL` |
 | `LNX-TRB-002` | `fatal: repository 'URL' not found` | Linux / Bash | Wrong URL, or a private repository you are not signed in to | Re-copy the address from the green **Code** button on the GitHub page; sign in to Git for private repositories | `git clone YOUR_REPOSITORY_URL` (`LNX-CMD-007`) | `Cloning into '...'... done.` | Download a ZIP from GitHub and unzip it with `unzip` | The URL used, with any token removed |
 | `LNX-TRB-003` | `pwsh: command not found` | Linux / Bash | PowerShell 7 is not installed | Install PowerShell 7 using Microsoft's official instructions for your distribution. This project documents none, so do not guess a package command | `pwsh --version` (`LNX-CMD-004`) | Output begins `PowerShell 7` | Use the Windows guide on a Windows machine or VM | Output of `LNX-CMD-001` and `LNX-CMD-004` |
-| `LNX-TRB-004` | `Codex CLI is not installed or not on PATH.` and exit code `3` | Linux / pwsh | The Codex CLI is absent. **Expected on Linux** â€” this project documents no Linux installation path | Follow the official OpenAI Codex CLI documentation. Do not follow the Windows command shown by the validator | `codex --version` (`LNX-CMD-011`) | A version number | Complete only the self-tests in section 21.3, which need no Codex | Output of `LNX-CMD-012`, noting finding `REV-LNX-GUIDE-001` |
-| `LNX-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Linux / pwsh | Codex itself failed â€” commonly sign-in, plan access, or no internet | Run `codex --version` and complete any sign-in prompt. Confirm your ChatGPT plan includes Codex | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Retry later; the service may be unavailable | The full `Output:` text with tokens removed |
+| `LNX-TRB-004` | `Codex CLI is not installed or not on PATH.` and exit code `3` | Linux / pwsh | The Codex CLI is absent. **Expected on Linux** — this project documents no Linux installation path | Follow the official OpenAI Codex CLI documentation. Do not follow the Windows command shown by the validator | `codex --version` (`LNX-CMD-011`) | A version number | Complete only the self-tests in section 21.3, which need no Codex | Output of `LNX-CMD-012`, noting finding `REV-LNX-GUIDE-001` |
+| `LNX-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Linux / pwsh | Codex itself failed — commonly sign-in, plan access, or no internet | Run `codex --version` and complete any sign-in prompt. Confirm your ChatGPT plan includes Codex | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Retry later; the service may be unavailable | The full `Output:` text with tokens removed |
 | `LNX-TRB-006` | `Review Markdown is missing required section: ## Findings` and exit code `5` | Linux / pwsh | Codex did not follow the required report structure | Re-run; model output varies. If it recurs, confirm `prompts/system-review.md` is unmodified with `git status` | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Try `-Prompt security-focus.md`, same structure | The exact error line and `git status` output |
 | `LNX-TRB-007` | `report.output_dir must be a repository-relative path.` and exit code `2` | Linux / pwsh | `output_dir` is absolute or contains `..` | Edit `config/review-config.yaml` and set the nested `output_dir` back to `reports` | `./scripts/Validate-Harness.ps1` (`LNX-CMD-012`) | All `[PASS]` lines | Restore with `git checkout config/review-config.yaml` | The `report:` block of your config |
 | `LNX-TRB-008` | `Potential secret detected in the generated review artifact.` and exit code `5`, no report written | Linux / pwsh | **Known defect in release 0.1.0.** The report quoted a credential such as `PASSWORD=...`; the harness redacts it, then its own detector matches the redaction placeholder and discards the whole report | No user-side setting avoids this. Re-run and hope the wording differs, or use `include_paths` to exclude the credential-bearing file. Report it to the maintainer | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Use `-Prompt pr-diff-review.md` on a change set that avoids those files | The exact error text and a note that finding `REV-COR-002` is suspected |
@@ -1317,7 +1317,7 @@ to yet.
 | `LNX-TRB-011` | `This folder is not inside a Git repository.` and exit code `3` | Linux / pwsh | The current folder is not a repository | `cd` into the repository, or create one with `git init` | `git rev-parse --is-inside-work-tree` | `true` | Clone a repository first (`LNX-CMD-007`) | Output of `pwd` and `ls -a` |
 | `LNX-TRB-012` | `The term 'powershell' is not recognized` while running a test | Linux / pwsh | **Known defect.** `tests/test_review_artifacts.ps1`, `tests/test_runner_failure.ps1`, and `tests/test_clean_room.ps1` call the Windows-only `powershell` executable | Do not run these three on Linux. Run only the four commands in section 21.3. Nothing is wrong with your system | `pwsh -NoProfile -File tests/test_harness_structure.ps1` (`LNX-CMD-019`) | `PASS: All structural tests succeeded.` | Run the full suite on Windows with PowerShell 7 | The script name and line number, noting finding `REV-TEST-002` |
 | `LNX-TRB-013` | `Permission denied` when running a script | Linux / Bash | You tried to execute the `.ps1` file directly | Do not `chmod` the file. Run it through PowerShell: `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | The validation banner appears | Start `pwsh` first, then use `./scripts/...` | The exact command you typed and `ls -l` of the script |
-| `LNX-TRB-014` | `cd: no such file or directory` | Linux / Bash | Wrong capitalisation â€” Linux paths are case-sensitive â€” or a space in the name | Run `ls` to see the exact name, then type it exactly. Quote names with spaces: `cd "My Project"` | `pwd` | The path ends with your folder name | Use Tab completion: type a few letters and press Tab | Output of `ls` in the parent folder |
+| `LNX-TRB-014` | `cd: no such file or directory` | Linux / Bash | Wrong capitalisation — Linux paths are case-sensitive — or a space in the name | Run `ls` to see the exact name, then type it exactly. Quote names with spaces: `cd "My Project"` | `pwd` | The path ends with your folder name | Use Tab completion: type a few letters and press Tab | Output of `ls` in the parent folder |
 
 **When to stop and ask for help.** If a command fails twice after you applied the
 fix and the verification command still disagrees, stop. Collect the outputs of
@@ -1366,7 +1366,7 @@ project's CI runs.
 | `LNX-CMD-002` | Bash | `echo "$SHELL" && uname -m` | Identify shell and architecture |
 | `LNX-CMD-003` | Bash | `git --version` | Check Git |
 | `LNX-CMD-004` | Bash | `pwsh --version` | Check PowerShell 7 |
-| `LNX-CMD-005` | â€” | *(no command â€” Codex CLI has no documented Linux path)* | See section 12.5 |
+| `LNX-CMD-005` | — | *(no command — Codex CLI has no documented Linux path)* | See section 12.5 |
 | `LNX-CMD-006` | Bash | `mkdir -p ~/projects && cd ~/projects` | Create a projects folder |
 | `LNX-CMD-007` | Bash | `git clone YOUR_REPOSITORY_URL` | Copy a repository |
 | `LNX-CMD-008` | Bash | `cd YOUR_PROJECT_FOLDER` | Enter the repository |
@@ -1393,57 +1393,57 @@ project's CI runs.
 
 ## 29. Glossary
 
-- **Absolute path** â€” a location written from the top of the filesystem, such as
+- **Absolute path** — a location written from the top of the filesystem, such as
   `/home/you/projects`. It means the same thing from anywhere.
-- **Administrator** â€” on Linux this is the `root` account. See `root` and `sudo`.
-- **Artifact** â€” any file a tool produces for you to keep, such as a report.
-- **Bash** â€” the default shell on most Linux systems.
-- **Clean-up** â€” deleting files a tool created so the system returns to its
+- **Administrator** — on Linux this is the `root` account. See `root` and `sudo`.
+- **Artifact** — any file a tool produces for you to keep, such as a report.
+- **Bash** — the default shell on most Linux systems.
+- **Clean-up** — deleting files a tool created so the system returns to its
   earlier state.
-- **Clone** â€” make a copy of a repository from the internet onto your computer.
-- **Command** â€” one line of text you type and run with Enter.
-- **Configuration file** â€” a plain text file holding settings. Here,
+- **Clone** — make a copy of a repository from the internet onto your computer.
+- **Command** — one line of text you type and run with Enter.
+- **Configuration file** — a plain text file holding settings. Here,
   `config/review-config.yaml`.
-- **Container** â€” a packaged, isolated environment for running software. This
+- **Container** — a packaged, isolated environment for running software. This
   project does not use one.
-- **Dependency** â€” software another program needs. This project has none of its
+- **Dependency** — software another program needs. This project has none of its
   own beyond Git, PowerShell, and Codex.
-- **Downgrade** â€” install an older version deliberately.
-- **Environment variable** â€” a named value the shell stores that programs can
+- **Downgrade** — install an older version deliberately.
+- **Environment variable** — a named value the shell stores that programs can
   read. Set with `export NAME=value` in Bash. This project needs none locally.
-- **Exit code** â€” the number a program returns when it finishes; `0` means
+- **Exit code** — the number a program returns when it finishes; `0` means
   success. See section 20.2.
-- **Log** â€” a running record of what a program did. This project writes reports
+- **Log** — a running record of what a program did. This project writes reports
   rather than logs.
-- **Package manager** â€” the program that installs software; `apt` on Ubuntu.
-- **Port / listener** â€” a numbered network channel a program can open to receive
+- **Package manager** — the program that installs software; `apt` on Ubuntu.
+- **Port / listener** — a numbered network channel a program can open to receive
   connections. This project opens none.
-- **PowerShell 7 (`pwsh`)** â€” the shell the harness scripts are written for. It is
+- **PowerShell 7 (`pwsh`)** — the shell the harness scripts are written for. It is
   a separate program from Bash and must be installed.
-- **Process** â€” one running program.
-- **Pull / update** â€” fetch the newest version of a repository.
-- **Relative path** â€” a location written from where you are, such as
+- **Process** — one running program.
+- **Pull / update** — fetch the newest version of a repository.
+- **Relative path** — a location written from where you are, such as
   `scripts/Run-Review.ps1`. It only works from the right folder.
-- **Repository** â€” a project folder tracked by Git, containing a hidden `.git`
+- **Repository** — a project folder tracked by Git, containing a hidden `.git`
   folder.
-- **Report** â€” the Markdown file the harness produces for you to read.
-- **Rollback** â€” return to an earlier version after an update.
-- **Root** â€” the all-powerful Linux administrator account. You should not need it.
-- **Runtime** â€” the program that executes another program's code. Here, PowerShell.
-- **Service** â€” a program the system runs in the background, usually managed by
+- **Report** — the Markdown file the harness produces for you to read.
+- **Rollback** — return to an earlier version after an update.
+- **Root** — the all-powerful Linux administrator account. You should not need it.
+- **Runtime** — the program that executes another program's code. Here, PowerShell.
+- **Service** — a program the system runs in the background, usually managed by
   `systemd`. This project installs none.
-- **Shell** â€” the program that reads and runs your commands. Bash and PowerShell
+- **Shell** — the program that reads and runs your commands. Bash and PowerShell
   are both shells.
-- **Standard output / standard error** â€” the two text streams a program writes.
+- **Standard output / standard error** — the two text streams a program writes.
   Normal messages go to standard output, errors to standard error.
-- **`sudo`** â€” a prefix that runs one command as the administrator, after asking
+- **`sudo`** — a prefix that runs one command as the administrator, after asking
   for your password. Needed only to install software here.
-- **Terminal** â€” the window in which you type commands.
-- **Uninstall** â€” remove software from the system.
-- **Upgrade** â€” install a newer version.
-- **Virtual environment** â€” an isolated set of libraries for one project. Not used
+- **Terminal** — the window in which you type commands.
+- **Uninstall** — remove software from the system.
+- **Upgrade** — install a newer version.
+- **Virtual environment** — an isolated set of libraries for one project. Not used
   by this project.
-- **Working directory (current directory)** â€” the folder your terminal is in,
+- **Working directory (current directory)** — the folder your terminal is in,
   shown by `pwd`.
 
 ## 30. Validation Record, Known Limitations, and Support Boundaries
@@ -1457,7 +1457,7 @@ project's CI runs.
 | Shell | PowerShell 7 at `/usr/bin/pwsh` |
 | Terminal | GitHub Actions non-interactive runner |
 | Git | 2.54.0 |
-| Codex CLI | **Not installed â€” no documented Linux installation path** |
+| Codex CLI | **Not installed — no documented Linux installation path** |
 | Privilege | Ordinary user (`runner`) |
 | Date | 2026-07-31 |
 | Commit under test | `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9` |
@@ -1486,15 +1486,15 @@ scripts it executed and silent about the rest.
 
 | Stage | Result |
 |---|---|
-| Prerequisites verified | **Partial** â€” `pwsh` and Git proven present in the CI environment; not verified on an end-user desktop |
-| Installation verified | **Partial** â€” the harness is only files, and its layout check passes on Linux. The Codex CLI could not be installed |
-| First safe successful run | **Blocked** â€” requires the Codex CLI, which has no documented Linux installation path. `scripts/Run-Review.ps1` has never been executed on Linux |
-| Results located and interpreted | **Statically verified** â€” the artifact format is platform-independent and was verified on Windows |
-| Representative failure recovered | **Partial** â€” the `powershell`-not-found failure was observed in the CI log and its remedy documented |
-| Cancellation verified | **Blocked** â€” no runnable review existed to interrupt |
-| Cleanup verified | **Statically verified** â€” report deletion uses standard cmdlets; not executed on Linux |
-| Update verified | **Statically verified** â€” `git pull` is standard Git behaviour |
-| Rollback verified | **Statically verified** â€” `git checkout` is standard Git behaviour |
+| Prerequisites verified | **Partial** — `pwsh` and Git proven present in the CI environment; not verified on an end-user desktop |
+| Installation verified | **Partial** — the harness is only files, and its layout check passes on Linux. The Codex CLI could not be installed |
+| First safe successful run | **Blocked** — requires the Codex CLI, which has no documented Linux installation path. `scripts/Run-Review.ps1` has never been executed on Linux |
+| Results located and interpreted | **Statically verified** — the artifact format is platform-independent and was verified on Windows |
+| Representative failure recovered | **Partial** — the `powershell`-not-found failure was observed in the CI log and its remedy documented |
+| Cancellation verified | **Blocked** — no runnable review existed to interrupt |
+| Cleanup verified | **Statically verified** — report deletion uses standard cmdlets; not executed on Linux |
+| Update verified | **Statically verified** — `git pull` is standard Git behaviour |
+| Rollback verified | **Statically verified** — `git checkout` is standard Git behaviour |
 
 ### 30.4 Known limitations of release 0.1.0 on Linux
 
@@ -1518,7 +1518,7 @@ scripts it executed and silent about the rest.
 7. **A working-directory defect exists on Windows PowerShell 5.1** in which Codex
    is launched outside the repository under review (finding `REV-COR-001`).
    PowerShell 7 is documented to behave differently, so Linux is probably
-   unaffected â€” but this has not been proven, and it should be verified before any
+   unaffected — but this has not been proven, and it should be verified before any
    Linux support claim is made.
 
 ### 30.5 Support boundaries
