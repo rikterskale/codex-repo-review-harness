@@ -350,13 +350,21 @@ function Assert-ReviewFindings([string]$Markdown, [object[]]$Findings) {
 #
 # The guides themselves are excluded, which is the whole point: a guide edit
 # cannot change the digest, so the guide and its updated digest fit in one
-# commit. Tests, schemas, and the changelog are excluded because the guides do
-# not document them, and including them would force guide churn on every
-# unrelated change.
+# commit.
+#
+# Tests and schemas are included because the guides cite them by name and by
+# line: the Linux guide lists individual test scripts as evidence and cites
+# schemas/review-report.schema.json line 7 for the report schema version. That
+# costs guide churn on test changes, which is the honest price of the guides
+# making claims that specific. Templates and .gitignore appear in the guides
+# only inside directory listings, so editing a file inside them cannot falsify
+# anything, and including them would buy churn without buying correctness.
 function Get-GuideSubjectFile([string]$Root) {
   $relative = New-Object 'System.Collections.Generic.List[string]'
   foreach ($spec in @(
     @{ Directory = 'scripts'; Filter = '*.ps1' },
+    @{ Directory = 'tests'; Filter = '*.ps1' },
+    @{ Directory = 'schemas'; Filter = '*' },
     @{ Directory = 'config'; Filter = '*' },
     @{ Directory = 'prompts'; Filter = '*' },
     @{ Directory = (Join-Path '.github' 'workflows'); Filter = '*.yml' }

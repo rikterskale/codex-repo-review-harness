@@ -45,12 +45,26 @@ try {
   Add-Content -LiteralPath $guide -Value 'Prose appended by the digest contract test.'
   if ((Invoke-ValidateRelease) -ne 0) { throw 'A guide edit changed the digest; the guides are not excluded from their own subject set.' }
 
-  # A change outside the described surface must not force guide churn.
+  # A change outside the described surface must not force guide churn. The
+  # guides mention templates only inside directory listings, so a file inside
+  # one cannot falsify a claim.
   Add-Content -LiteralPath (Join-Path $temp 'CHANGELOG.md') -Value ''
-  Add-Content -LiteralPath (Join-Path $temp 'tests\test_clean_room.ps1') -Value '# digest contract test'
+  Add-Content -LiteralPath (Join-Path $temp 'templates\report-skeleton.md') -Value ''
   if ((Invoke-ValidateRelease) -ne 0) { throw 'A change outside the guides'' subject surface invalidated the digest.' }
 
-  # A change to the surface the guides describe must invalidate the digest.
+  # Every family the guides cite by name or line number must invalidate the
+  # digest. Tests and schemas are here because the Linux guide lists individual
+  # test scripts and cites the report schema by line.
+  foreach ($file in @('config\review-config.yaml', 'tests\test_clean_room.ps1', 'schemas\review-report.schema.json', 'prompts\system-review.md', 'scripts\Run-Review.ps1')) {
+    $path = Join-Path $temp $file
+    $original = [IO.File]::ReadAllBytes($path)
+    Add-Content -LiteralPath $path -Value '# digest contract test'
+    if ((Invoke-ValidateRelease) -eq 0) { throw "A change to $file did not invalidate the guide digest." }
+    [IO.File]::WriteAllBytes($path, $original)
+    if ((Invoke-ValidateRelease) -ne 0) { throw "Restoring $file did not restore the digest; the digest is not a pure function of content." }
+  }
+
+  # Leave the tree stale for the update step below.
   Add-Content -LiteralPath (Join-Path $temp 'config\review-config.yaml') -Value '# digest contract test'
   if ((Invoke-ValidateRelease) -eq 0) { throw 'Validate-Release accepted a guide recorded against a stale harness surface.' }
 

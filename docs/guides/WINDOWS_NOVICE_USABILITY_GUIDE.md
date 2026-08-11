@@ -6,7 +6,7 @@ canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "e2a0b7dc588b9afff2fcfc0547a539d6253dbef88ed09baef8e7c27ba8eb3948"
+reviewed_digest: "1ebc02c959d432c8f4d470f3d83f909a5cfdb8f4e85b592dd323494a89415e8c"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
