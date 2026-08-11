@@ -86,13 +86,30 @@ It starts from installing Git and walks through every single step.
 ## Testing the harness itself
 
 ```powershell
-powershell -File tests/test_harness_structure.ps1
-.\scripts\Validate-Harness.ps1
-pwsh -NoProfile -File scripts/ci/Test-ReportContract.ps1
-pwsh -NoProfile -File tests/test_security_regressions.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/test_harness_structure.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Validate-Harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/Test-ReportContract.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/test_security_regressions.ps1
 ```
 
 These checks do not require an active Codex authentication and verify that the files and safety defaults are correct.
+
+Every script in this repository declares `#Requires -Version 5.1` and runs on the
+**Windows PowerShell 5.1** that ships with Windows 10 and 11. PowerShell 7
+(`pwsh`) is **optional**: it is not installed by default on Windows, and no
+command in this README needs it. If you do have it, substitute `pwsh -NoProfile`
+for `powershell -NoProfile -ExecutionPolicy Bypass` anywhere below — PowerShell 7
+handles non-ASCII characters in reports more reliably. The GitHub Actions
+workflows use `pwsh` because the hosted runners already provide it.
+
+To run the full self-test suite:
+
+```powershell
+Get-ChildItem tests\test_*.ps1 | ForEach-Object {
+  powershell -NoProfile -ExecutionPolicy Bypass -File $_.FullName
+  "{0,-40} exit={1}" -f $_.Name, $LASTEXITCODE
+}
+```
 
 ## GitHub Actions
 

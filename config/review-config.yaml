@@ -41,6 +41,9 @@ exclude_paths:
   - "reports/**"
   - "review-output/**"
   - ".claude/**"
+  - ".codex/**"
+  - "logs/**"
+  - "review-input/**"
 
 # Report settings
 report:
