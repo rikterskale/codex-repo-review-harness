@@ -64,6 +64,16 @@ try {
     if ((Invoke-ValidateRelease) -ne 0) { throw "Restoring $file did not restore the digest; the digest is not a pure function of content." }
   }
 
+  # GitHub Actions runs both extensions, so both must be in the subject set.
+  foreach ($extension in @('yml', 'yaml')) {
+    $probe = Join-Path $temp ".github\workflows\digest-probe.$extension"
+    Set-Content -LiteralPath $probe -Value '# digest contract probe' -Encoding UTF8
+    $changed = ((Invoke-ValidateRelease) -ne 0)
+    Remove-Item -LiteralPath $probe -Force
+    if (-not $changed) { throw "A .$extension workflow did not invalidate the guide digest." }
+  }
+  if ((Invoke-ValidateRelease) -ne 0) { throw 'Removing the workflow probes did not restore the digest.' }
+
   # Leave the tree stale for the update step below.
   Add-Content -LiteralPath (Join-Path $temp 'config\review-config.yaml') -Value '# digest contract test'
   if ((Invoke-ValidateRelease) -eq 0) { throw 'Validate-Release accepted a guide recorded against a stale harness surface.' }

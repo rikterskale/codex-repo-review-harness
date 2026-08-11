@@ -359,19 +359,23 @@ function Assert-ReviewFindings([string]$Markdown, [object[]]$Findings) {
 # making claims that specific. Templates and .gitignore appear in the guides
 # only inside directory listings, so editing a file inside them cannot falsify
 # anything, and including them would buy churn without buying correctness.
+# An empty Extension list means every file in the directory. GitHub Actions
+# accepts both .yml and .yaml, so matching only one of them would let a workflow
+# change slip past the freshness check.
 function Get-GuideSubjectFile([string]$Root) {
   $relative = New-Object 'System.Collections.Generic.List[string]'
   foreach ($spec in @(
-    @{ Directory = 'scripts'; Filter = '*.ps1' },
-    @{ Directory = 'tests'; Filter = '*.ps1' },
-    @{ Directory = 'schemas'; Filter = '*' },
-    @{ Directory = 'config'; Filter = '*' },
-    @{ Directory = 'prompts'; Filter = '*' },
-    @{ Directory = (Join-Path '.github' 'workflows'); Filter = '*.yml' }
+    @{ Directory = 'scripts'; Extension = @('.ps1') },
+    @{ Directory = 'tests'; Extension = @('.ps1') },
+    @{ Directory = 'schemas'; Extension = @() },
+    @{ Directory = 'config'; Extension = @() },
+    @{ Directory = 'prompts'; Extension = @() },
+    @{ Directory = (Join-Path '.github' 'workflows'); Extension = @('.yml', '.yaml') }
   )) {
     $directory = Join-Path $Root $spec.Directory
     if (-not (Test-Path -LiteralPath $directory)) { continue }
-    foreach ($file in @(Get-ChildItem -LiteralPath $directory -Recurse -File -Filter $spec.Filter)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $directory -Recurse -File)) {
+      if (@($spec.Extension).Count -gt 0 -and $file.Extension.ToLowerInvariant() -notin $spec.Extension) { continue }
       $relative.Add($file.FullName.Substring($Root.Length).TrimStart('\', '/').Replace('\', '/'))
     }
   }

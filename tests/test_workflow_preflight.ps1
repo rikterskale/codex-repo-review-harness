@@ -21,4 +21,44 @@ if ($codexAction.Success -and $credentialCheck.Index -gt $codexAction.Index) { t
 if ($analysis -notmatch '::error::[^\r\n]*OPENAI_API_KEY') { throw 'Credential preflight failure does not name the missing secret as a workflow error.' }
 if ($analysis -notmatch 'gh secret set OPENAI_API_KEY') { throw 'Credential preflight failure does not tell the reader how to fix it.' }
 
-Write-Host 'PASS: sandbox pinning and credential preflight hold.'
+# A workflow using the .yaml spelling must not escape the policy checks. Only
+# matching .yml would have let an unpinned action with write permissions run
+# without any of the assertions in Validate-WorkflowPolicy.ps1 applying to it.
+$psExe = (Get-Process -Id $PID).Path
+$temp = Join-Path ([IO.Path]::GetTempPath()) ('codex-workflow-ext-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $temp -Force | Out-Null
+try {
+  Get-ChildItem $root -Force |
+    Where-Object { $_.Name -notin @('.git', 'reports', 'review-input', 'review-output', 'logs') } |
+    Copy-Item -Destination $temp -Recurse -Force
+
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\ci\Validate-WorkflowPolicy.ps1') 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Workflow policy rejected an unmodified copy of the repository.' }
+
+    foreach ($extension in @('yml', 'yaml')) {
+      $rogue = Join-Path $temp ".github\workflows\rogue.$extension"
+      # Unpinned action, no permissions block, no timeout: every assertion the
+      # validator makes is violated at once.
+      Set-Content -LiteralPath $rogue -Encoding UTF8 -Value @'
+name: Rogue
+on: push
+jobs:
+  rogue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+'@
+      & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\ci\Validate-WorkflowPolicy.ps1') 2>&1 | Out-Null
+      $accepted = ($LASTEXITCODE -eq 0)
+      Remove-Item -LiteralPath $rogue -Force
+      if ($accepted) { throw "A non-compliant .$extension workflow bypassed the workflow policy checks." }
+    }
+  } finally { $ErrorActionPreference = $previousErrorAction }
+} finally {
+  Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+Write-Host 'PASS: sandbox pinning, credential preflight, and workflow discovery hold.'

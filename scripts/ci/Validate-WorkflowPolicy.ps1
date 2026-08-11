@@ -1,7 +1,10 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$workflows = Get-ChildItem (Join-Path $root '.github\workflows') -Filter '*.yml'
+# GitHub Actions runs both .yml and .yaml. Matching only .yml would let a
+# workflow escape every policy check below simply by using the other spelling.
+$workflows = @(Get-ChildItem (Join-Path $root '.github\workflows') -File | Where-Object { $_.Extension.ToLowerInvariant() -in @('.yml', '.yaml') })
+if ($workflows.Count -eq 0) { throw 'No workflow files were found to validate.' }
 foreach ($workflow in $workflows) {
   $text = Get-Content $workflow.FullName -Raw
   if ($text -notmatch '(?m)^permissions:') { throw "Workflow lacks an explicit top-level permissions block: $($workflow.Name)." }
