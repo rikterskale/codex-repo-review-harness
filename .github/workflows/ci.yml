@@ -30,14 +30,9 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           persist-credentials: false
-          # Validate-Release.ps1 accepts a tip commit or its parent as the
-          # guides' reviewed_head, so that a metadata-update commit can record
-          # the content commit it reviewed. The default depth-1 checkout cannot
-          # resolve the parent, which made that pattern impossible to satisfy.
-          # On push, depth 2 covers HEAD and HEAD~1. On pull_request the checkout
-          # is a merge commit, and the pull request head's parent is two steps
-          # further out: merge (1), its parents (2), their parents (3).
-          fetch-depth: 3
+          # Validate-Release.ps1 checks the guides against a digest of the
+          # working tree, so it needs no history at all.
+          fetch-depth: 1
 
       - name: Run structural and regression tests
         shell: pwsh
@@ -45,10 +40,6 @@ jobs:
 
       - name: Validate reports, release metadata, and workflow policy
         shell: pwsh
-        env:
-          # Passed as an environment variable rather than interpolated into the
-          # script body. Empty on push events, which is the intended signal.
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           # A child pwsh exiting non-zero is not a PowerShell error, so
           # $ErrorActionPreference does not stop this block, and the step's exit
@@ -67,7 +58,7 @@ jobs:
             'tests/test_batch2_regressions.ps1',
             'tests/test_clean_room.ps1',
             'tests/test_workflow_preflight.ps1',
-            'tests/test_release_pr_metadata.ps1',
+            'tests/test_guide_digest.ps1',
             'scripts/ci/Validate-Release.ps1',
             'scripts/ci/Validate-WorkflowPolicy.ps1',
             'scripts/ci/Test-GeneratedArtifacts.ps1'

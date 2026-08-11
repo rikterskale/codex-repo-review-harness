@@ -111,6 +111,22 @@ Get-ChildItem tests\test_*.ps1 | ForEach-Object {
 }
 ```
 
+## Guide freshness
+
+The canonical novice guides in `docs/guides/` record a `reviewed_digest`: a hash
+of the harness surface they make claims about, namely `scripts/`, `config/`,
+`prompts/`, the workflows, `AGENTS.md`, `README.md`, and `VERSION`. If you change
+any of those, `Validate-Release.ps1` fails until the guides are re-read against
+the change and the digest is re-recorded:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/Update-GuideDigest.ps1
+```
+
+The guides are deliberately excluded from their own digest, so a guide edit and
+its new digest belong in the same commit. Changes to tests, schemas, or the
+changelog do not move the digest, because the guides do not document them.
+
 ## GitHub Actions
 
 The repository has two separate review workflows. `Codex Read-Only Review` runs
