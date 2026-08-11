@@ -343,6 +343,98 @@ function Assert-ReviewFindings([string]$Markdown, [object[]]$Findings) {
   throw "Review contains $($declaredHeadings.Count) declared findings but only $(@($Findings).Count) valid findings. Unparseable headings:`n$detail"
 }
 
+# The novice guides make factual claims about the harness surface: the scripts
+# users run, the config they edit, the prompts that shape a review, and the
+# workflows. Digesting exactly those files is what makes the guides' freshness
+# claim checkable.
+#
+# The guides themselves are excluded, which is the whole point: a guide edit
+# cannot change the digest, so the guide and its updated digest fit in one
+# commit.
+#
+# Tests and schemas are included because the guides cite them by name and by
+# line: the Linux guide lists individual test scripts as evidence and cites
+# schemas/review-report.schema.json line 7 for the report schema version. That
+# costs guide churn on test changes, which is the honest price of the guides
+# making claims that specific. Templates and .gitignore appear in the guides
+# only inside directory listings, so editing a file inside them cannot falsify
+# anything, and including them would buy churn without buying correctness.
+# An empty Extension list means every file in the directory. GitHub Actions
+# accepts both .yml and .yaml, so matching only one of them would let a workflow
+# change slip past the freshness check.
+function Get-GuideSubjectFile([string]$Root) {
+  $relative = New-Object 'System.Collections.Generic.List[string]'
+  foreach ($spec in @(
+    @{ Directory = 'scripts'; Extension = @('.ps1') },
+    @{ Directory = 'tests'; Extension = @('.ps1') },
+    @{ Directory = 'schemas'; Extension = @() },
+    @{ Directory = 'config'; Extension = @() },
+    @{ Directory = 'prompts'; Extension = @() },
+    @{ Directory = (Join-Path '.github' 'workflows'); Extension = @('.yml', '.yaml') }
+  )) {
+    $directory = Join-Path $Root $spec.Directory
+    if (-not (Test-Path -LiteralPath $directory)) { continue }
+    foreach ($file in @(Get-ChildItem -LiteralPath $directory -Recurse -File)) {
+      if (@($spec.Extension).Count -gt 0 -and $file.Extension.ToLowerInvariant() -notin $spec.Extension) { continue }
+      $relative.Add($file.FullName.Substring($Root.Length).TrimStart('\', '/').Replace('\', '/'))
+    }
+  }
+  foreach ($file in @('AGENTS.md', 'README.md', 'VERSION')) {
+    if (Test-Path -LiteralPath (Join-Path $Root $file)) { $relative.Add($file) }
+  }
+  $ordered = $relative.ToArray()
+  # Ordinal, not culture-aware: Sort-Object would order these differently under
+  # different locales and produce a digest that depends on the runner.
+  [Array]::Sort($ordered, [StringComparer]::Ordinal)
+  return @($ordered)
+}
+
+# A BOM and CRLF endings are stripped before hashing. The repository is checked
+# out with autocrlf on Windows and without it on Linux, so hashing raw bytes
+# would give the two CI runners different digests for identical content.
+function Get-GuideDigest([string]$Root) {
+  $utf8 = New-Object Text.UTF8Encoding($false)
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try {
+    $manifest = New-Object Text.StringBuilder
+    foreach ($relative in Get-GuideSubjectFile $Root) {
+      $text = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $Root $relative)))
+      if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) { $text = $text.Substring(1) }
+      $text = $text -replace "`r`n", "`n"
+      $hash = [BitConverter]::ToString($sha.ComputeHash($utf8.GetBytes($text))).Replace('-', '').ToLowerInvariant()
+      [void]$manifest.Append($relative).Append("`n").Append($hash).Append("`n")
+    }
+    return [BitConverter]::ToString($sha.ComputeHash($utf8.GetBytes($manifest.ToString()))).Replace('-', '').ToLowerInvariant()
+  } finally {
+    $sha.Dispose()
+  }
+}
+
+# Rewrites the recorded digest in place, preserving each guide's BOM and line
+# endings so the update is a one-line diff.
+function Set-GuideDigest([string]$Root, [string]$Digest) {
+  $updated = @()
+  foreach ($guide in @('WINDOWS_NOVICE_USABILITY_GUIDE.md', 'LINUX_NOVICE_USABILITY_GUIDE.md')) {
+    $path = Join-Path $Root (Join-Path 'docs/guides' $guide)
+    $bytes = [IO.File]::ReadAllBytes($path)
+    $hasBom = ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)
+    $text = [Text.Encoding]::UTF8.GetString($bytes)
+    if ($hasBom) { $text = $text.Substring(1) }
+    # Presence is tested separately from the rewrite: comparing the rewritten
+    # text against the original would treat an already-current digest as a
+    # missing field, so re-running this script would fail on a clean tree.
+    $pattern = '(?m)^(reviewed_digest:\s*")[0-9a-fA-F]{64}(")'
+    if (-not [regex]::IsMatch($text, $pattern)) { throw "Guide records no reviewed_digest to update: $guide" }
+    $rewritten = [regex]::Replace($text, $pattern, ('${1}' + $Digest + '${2}'))
+    $out = New-Object 'System.Collections.Generic.List[byte]'
+    if ($hasBom) { $out.AddRange([byte[]]@(0xEF, 0xBB, 0xBF)) }
+    $out.AddRange((New-Object Text.UTF8Encoding($false)).GetBytes($rewritten))
+    [IO.File]::WriteAllBytes($path, $out.ToArray())
+    $updated += $guide
+  }
+  return $updated
+}
+
 function Select-ReviewFindings([object[]]$Findings, [string]$MinimumSeverity) {
   $levels = @{ critical = 0; high = 1; medium = 2; low = 3; info = 4 }
   if (-not $levels.ContainsKey($MinimumSeverity)) { throw "Unsupported minimum severity: $MinimumSeverity" }
