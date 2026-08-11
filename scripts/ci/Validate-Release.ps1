@@ -6,12 +6,35 @@ $version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
 # non-zero exit. Plain `git rev-parse HEAD~1` echoes the literal string "HEAD~1"
 # on failure, which is truthy and would be compared against reviewed_head as if
 # it were a SHA. HEAD~1 is unresolvable in a shallow checkout, so CI must fetch
-# at least two commits for the metadata-update pattern to work.
+# enough history for the metadata-update pattern to work.
+function Resolve-ReleaseCommit([string]$Revision) {
+  if (-not $Revision) { return $null }
+  $sha = git -c core.excludesfile=NUL -C $root rev-parse --verify --quiet "${Revision}^{commit}" 2>$null
+  if ($LASTEXITCODE -eq 0 -and $sha) { return ([string]$sha).Trim() }
+  return $null
+}
+
+# On a pull_request event the checked-out commit is a synthetic merge of the pull
+# request into the base branch. HEAD is a commit no author ever wrote, and HEAD~1
+# is the base branch tip, so neither can carry a guide's reviewed_head and the
+# freshness check would always fail. The commit the guides were actually written
+# against is the pull request head, so resolve that explicitly and treat it as
+# the tip. PR_HEAD_SHA comes from github.event.pull_request.head.sha; HEAD^2 is
+# the same commit derived from the merge topology and covers the case where the
+# variable is absent. If neither resolves, fall back to HEAD so a non-merge
+# checkout still behaves as it does on push.
 $heads = @()
 if (Test-Path (Join-Path $root '.git')) {
-  foreach ($rev in @('HEAD', 'HEAD~1')) {
-    $resolved = git -c core.excludesfile=NUL -C $root rev-parse --verify --quiet "$rev^{commit}" 2>$null
-    if ($LASTEXITCODE -eq 0 -and $resolved) { $heads += ([string]$resolved).Trim() }
+  $tip = 'HEAD'
+  if ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+    foreach ($candidate in @($env:PR_HEAD_SHA, 'HEAD^2')) {
+      $resolvedTip = Resolve-ReleaseCommit $candidate
+      if ($resolvedTip) { $tip = $resolvedTip; break }
+    }
+  }
+  foreach ($rev in @($tip, "${tip}~1")) {
+    $resolved = Resolve-ReleaseCommit $rev
+    if ($resolved) { $heads += $resolved }
   }
 }
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION is not SemVer: $version" }
