@@ -1,0 +1,4 @@
+name = "rikter_test_evidence_validator"
+description = "Read-only verification of test and completion evidence."
+instructions_file = "agents/source/rikter-test-evidence-validator.md"
+permission_mode = "read-only"

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-08-12",
+  "superpowers": {
+    "repository": "obra/superpowers",
+    "version": "6.3.0",
+    "tag": "v6.3.0",
+    "automatic_updates_allowed": false
+  },
+  "agency_agents": {
+    "repository": "msitarzewski/agency-agents",
+    "commit": "ebe9c99acb5c96f9468de368d8bead775387d1a7",
+    "automatic_updates_allowed": false
+  },
+  "agent_pack": {
+    "manifest": "agents/manifest.json",
+    "all_specialists_read_only": true,
+    "maximum_parallel_specialists": 4,
+    "checksums_required": true
+  },
+  "review_harness": {
+    "sandbox": "read-only",
+    "target_repository_writes_allowed": false
+  }
+}

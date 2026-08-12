@@ -38,7 +38,7 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File tests/test_harness_structure.ps1
 
-      - name: Validate reports, release metadata, and workflow policy
+      - name: Run 100% of regression tests
         shell: pwsh
         run: |
           # A child pwsh exiting non-zero is not a PowerShell error, so
@@ -47,22 +47,8 @@ jobs:
           # checking $LASTEXITCODE after each one is what makes every failure
           # visible; running them all before exiting reports every failure in a
           # single run instead of only the first.
-          $checks = @(
-            'scripts/ci/Test-ReportContract.ps1',
-            'tests/test_review_artifacts.ps1',
-            'tests/test_security_regressions.ps1',
-            'tests/test_review_helpers.ps1',
-            'tests/test_report_consistency.ps1',
-            'tests/test_unicode_output.ps1',
-            'tests/test_runner_failure.ps1',
-            'tests/test_batch2_regressions.ps1',
-            'tests/test_clean_room.ps1',
-            'tests/test_workflow_preflight.ps1',
-            'tests/test_guide_digest.ps1',
-            'scripts/ci/Validate-Release.ps1',
-            'scripts/ci/Validate-WorkflowPolicy.ps1',
-            'scripts/ci/Test-GeneratedArtifacts.ps1'
-          )
+          $checks = @(Get-ChildItem -LiteralPath tests -Filter 'test_*.ps1' -File |
+            Sort-Object Name | ForEach-Object { $_.FullName })
           $failed = @()
           foreach ($check in $checks) {
             Write-Host "::group::$($check)"
@@ -81,6 +67,10 @@ jobs:
           }
           Write-Host "PASS: all $($checks.Count) checks succeeded."
           exit 0
+
+      - name: Enforce 100% production-source coverage
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/ci/Test-SourceCoverage.ps1 -MinimumCoverage 100
 
       - name: Validate PowerShell syntax
         shell: pwsh

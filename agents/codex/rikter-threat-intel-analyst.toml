@@ -1,0 +1,4 @@
+name = "rikter_threat_intel_analyst"
+description = "Read-only threat-intelligence evidence review."
+instructions_file = "agents/source/rikter-threat-intel-analyst.md"
+permission_mode = "read-only"

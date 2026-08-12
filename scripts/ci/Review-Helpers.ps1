@@ -141,7 +141,7 @@ function Test-ReviewPathPattern([string]$Path, [string]$Pattern) {
 }
 
 function Get-ReviewFileManifest([string]$RepositoryRoot, [object]$Config) {
-  $paths = @(git -c core.excludesfile=NUL -C $RepositoryRoot ls-files --cached --others --exclude-standard 2>$null | ForEach-Object { $_.Trim() -replace '\\','/' } | Where-Object { $_ })
+  $paths = @(git -c core.excludesfile= -C $RepositoryRoot ls-files --cached --others --exclude-standard 2>$null | ForEach-Object { $_.Trim() -replace '\\','/' } | Where-Object { $_ })
   $includes = @($Config.include_paths | Where-Object { $_ })
   $excludes = @($Config.exclude_paths | Where-Object { $_ })
   $selected = foreach ($path in $paths) {

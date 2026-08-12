@@ -1,0 +1,13 @@
+# Profiles are advisory routing only. The parent reviewer remains responsible for
+# evidence validation and may run no more than four specialists concurrently.
+profiles:
+  full: [rikter_repo_explorer, rikter_minimal_change_advisor, rikter_code_reviewer, rikter_test_evidence_validator]
+  security: [rikter_repo_explorer, rikter_appsec_reviewer, rikter_code_reviewer, rikter_test_evidence_validator]
+  architecture: [rikter_repo_explorer, rikter_system_architect, rikter_code_reviewer, rikter_test_evidence_validator]
+  documentation: [rikter_repo_explorer, rikter_docs_reviewer, rikter_test_evidence_validator]
+  implementation-plan: [rikter_repo_explorer, rikter_system_architect, rikter_minimal_change_advisor, rikter_test_evidence_validator]
+rules:
+  maximum_parallel_specialists: 4
+  exploration_must_complete_first: true
+  allow_zero_findings: true
+  failures_are_reported_as_degraded: true

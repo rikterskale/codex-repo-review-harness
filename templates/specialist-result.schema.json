@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["agent", "status", "files_inspected", "findings", "limitations"],
+  "properties": {
+    "agent": { "type": "string", "pattern": "^rikter_" },
+    "status": { "enum": ["completed", "degraded", "failed"] },
+    "files_inspected": { "type": "array", "items": { "type": "string" } },
+    "findings": { "type": "array", "items": { "type": "object", "required": ["severity", "title", "file", "symbol", "evidence", "impact", "recommended_fix", "confidence"] } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

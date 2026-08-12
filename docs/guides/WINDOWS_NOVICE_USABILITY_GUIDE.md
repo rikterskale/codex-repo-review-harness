@@ -6,7 +6,7 @@ canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "d1d6c589f1752db97c53e789a3043e6dc75ec24dff208e3e96274ab778736177"
+reviewed_digest: "47648ea1e4905990fa04b74cc232fab853e5d3ac7bfa9a6ae94de7b034e36beb"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
@@ -18,10 +18,9 @@ primary_shells:
   - "PowerShell 7 (pwsh) — optional; not required by any command in this project"
 maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, scripts/Run-Review.ps1"
 known_limitations:
-  - "Under Windows PowerShell 5.1 the runner launches Codex in the user's Documents folder instead of the repository under review (reproduced; finding REV-COR-001). The review may analyse the wrong directory."
-  - "The real OpenAI Codex CLI was not installed in the validation environment; every command that calls Codex is labelled Blocked and was validated with a simulated Codex executable instead."
+  - "The real OpenAI Codex CLI and account sign-in require a human user; CI validates the complete local workflow with a synthetic Codex executable but cannot validate authentication or service availability."
   - "PowerShell 7 (pwsh) is not present on a default Windows installation. As of 2026-08-11 nothing in this project requires it; README.md's self-test commands run under Windows PowerShell 5.1."
-  - "A review whose findings quote a credential assignment is rejected by the runner with exit code 5 and no report is written (defect REV-COR-002)."
+  - "Never include secrets in prompts or reports; report-redaction behavior is regression tested but is not a substitute for secret management."
 ---
 
 # Codex Repo Review Harness — Windows Novice Usability Guide
@@ -106,28 +105,11 @@ review.
 this guide. The harness tries to remove secret-looking text from the report
 (`scripts/ci/Review-Helpers.ps1` lines 1-19), but that filter is not a guarantee.
 
-**Known safety-relevant defect 1 — the wrong folder may be reviewed.** In release
-0.1.0, when the runner is started from Windows PowerShell 5.1 (the version built
-into Windows, and the one this guide uses), Codex is launched in your Documents
-folder rather than in the repository you are reviewing. This was reproduced during
-validation: a repository at a temporary path was requested, and Codex reported
-being started in `C:\Users\<you>\Documents`. Two consequences matter to you:
-
-- The review may describe the wrong code, or find nothing at all, while the report
-  header still names the repository you intended.
-- Whatever files are in your Documents folder may be sent to OpenAI instead of
-  your project.
-
-Until this is fixed, do not rely on the review's contents, and be aware of what
-your Documents folder contains before running one. Tracked as finding
-`REV-COR-001`. See troubleshooting row `WIN-TRB-015`.
-
-**Known safety-relevant defect 2 — reviews that mention credentials are thrown
-away.** If the review Codex produces contains a finding that quotes a credential —
-for example the text `PASSWORD=hunter2` copied out of your code — the harness
-detects its own redaction placeholder as if it were a real secret, aborts with
-exit code 5, and writes **no report at all**. This was reproduced during
-validation. See troubleshooting row `WIN-TRB-009`.
+**First-review safety check.** The automated new-user journey runs a review from
+a separate target repository and proves its Git status is unchanged before and
+after the run. After installing the real Codex CLI, you should still review the
+reported file paths and never send repositories that you are not authorized to
+share with OpenAI.
 
 ## 5. Platform Support Status
 
