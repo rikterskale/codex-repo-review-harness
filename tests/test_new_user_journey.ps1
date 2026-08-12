@@ -5,7 +5,7 @@
 #>
 $ErrorActionPreference = 'Stop'
 $psExe = (Get-Process -Id $PID).Path
-$isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
+$runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
 $root = Split-Path -Parent $PSScriptRoot
 $temp = Join-Path ([IO.Path]::GetTempPath()) ('codex-new-user-' + [guid]::NewGuid().ToString('N'))
 $harness = Join-Path $temp 'harness'
@@ -43,7 +43,7 @@ try {
 '@
     $reportPath = Join-Path $temp 'synthetic-report.md'
     Set-Content -LiteralPath $reportPath -Value $report -Encoding UTF8
-    if ($isWindows) {
+    if ($runningOnWindows) {
         Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`ntype `"$reportPath`"`nexit /b 0" -Encoding ASCII
     } else {
         $fakeCodex = Join-Path $bin 'codex'
