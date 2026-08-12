@@ -1,0 +1,4 @@
+name = "rikter_system_architect"
+description = "Read-only architecture and trust-boundary review."
+instructions_file = "agents/source/rikter-system-architect.md"
+permission_mode = "read-only"

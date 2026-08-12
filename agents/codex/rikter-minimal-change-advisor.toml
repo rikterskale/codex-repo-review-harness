@@ -1,0 +1,4 @@
+name = "rikter_minimal_change_advisor"
+description = "Read-only smallest-safe-change review."
+instructions_file = "agents/source/rikter-minimal-change-advisor.md"
+permission_mode = "read-only"

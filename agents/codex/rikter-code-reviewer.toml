@@ -1,0 +1,4 @@
+name = "rikter_code_reviewer"
+description = "Read-only code-quality review."
+instructions_file = "agents/source/rikter-code-reviewer.md"
+permission_mode = "read-only"

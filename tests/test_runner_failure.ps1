@@ -66,7 +66,7 @@ try {
   }
   & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10
   if ($LASTEXITCODE -ne 0) { throw "Expected successful local runner exit code 0, got $LASTEXITCODE." }
-  $json = Get-ChildItem (Join-Path $temp 'reports') -Filter '*.json' | Select-Object -First 1
+  $json = Get-ChildItem (Join-Path $temp 'reports') -Filter '*.json' -Recurse | Select-Object -First 1
   $document = Get-Content $json.FullName -Raw | ConvertFrom-Json
   if ($document.status -ne 'findings' -or @($document.findings).Count -ne 1) { throw 'Structured finding output regression.' }
   Write-Host 'PASS: local runner creates structured findings.'

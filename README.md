@@ -36,7 +36,22 @@ powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1
 .\scripts\Run-Review.ps1
 ```
 
-Reports appear under `reports/`.
+Reports appear under `reports/`. To review a separate local Git repository while
+keeping artifacts in this trusted harness, pass `-RepositoryPath`:
+
+```powershell
+.\scripts\Run-Review.ps1 -RepositoryPath C:\path\to\target-repository
+```
+
+The target's Git status is compared before and after the read-only review; a
+change fails the run. The optional governed specialist pack, integration pins,
+and install/remove tooling are documented in
+[the integration guide](docs/SUPERPOWERS_AGENCY_INTEGRATION.md).
+
+Before publishing or adopting the harness, use the enforceable
+[new-user release-readiness standard](docs/RELEASE_READINESS_STANDARD.md). It
+requires clean installation, first-review, recovery, documentation, and
+cross-platform evidence in addition to source coverage.
 
 ## Absolute beginners
 

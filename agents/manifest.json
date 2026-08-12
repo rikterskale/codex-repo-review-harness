@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "pack_name": "rikter-managed-specialists",
+  "reviewed_on": "2026-08-12",
+  "reviewer": "Rikter Skale",
+  "installation_root": "managed-agent-pack",
+  "agents": [
+    { "name": "rikter_repo_explorer", "source": "agents/source/rikter-repo-explorer.md", "codex_config": "agents/codex/rikter-repo-explorer.toml", "upstream_inspiration": "Codebase Onboarding Engineer", "purpose": "Repository map", "permission_mode": "read-only", "sha256": "1bbf0f8a610a0bccf4dd29001f1b8c916a814251e815262db5e9ad307c52e02d", "profiles": ["full", "security", "architecture", "documentation", "implementation-plan"] },
+    { "name": "rikter_system_architect", "source": "agents/source/rikter-system-architect.md", "codex_config": "agents/codex/rikter-system-architect.toml", "upstream_inspiration": "Software Architect", "purpose": "Architecture review", "permission_mode": "read-only", "sha256": "e9e09101d71619653f74b6a1ae44e4bb51075e3ab872712276ffa0b97bff5faf", "profiles": ["architecture", "implementation-plan"] },
+    { "name": "rikter_appsec_reviewer", "source": "agents/source/rikter-appsec-reviewer.md", "codex_config": "agents/codex/rikter-appsec-reviewer.toml", "upstream_inspiration": "AppSec Engineer", "purpose": "Security review", "permission_mode": "read-only", "sha256": "06bd978747a6f1048c980e783abd7ac08cb8c054aee21c4d5c97e0aadfc9bef7", "profiles": ["security"] },
+    { "name": "rikter_code_reviewer", "source": "agents/source/rikter-code-reviewer.md", "codex_config": "agents/codex/rikter-code-reviewer.toml", "upstream_inspiration": "Code Reviewer", "purpose": "Code review", "permission_mode": "read-only", "sha256": "e5638794478531666a2154d1ffc1cec2cb02e21273fc2caa1586b73b0e34a48d", "profiles": ["full", "security", "architecture"] },
+    { "name": "rikter_test_evidence_validator", "source": "agents/source/rikter-test-evidence-validator.md", "codex_config": "agents/codex/rikter-test-evidence-validator.toml", "upstream_inspiration": "Custom role", "purpose": "Evidence validation", "permission_mode": "read-only", "sha256": "089907361f60efcb0c82234eafdb33fd0ca228ad4cb4f270561dc40a0577e8e8", "profiles": ["full", "security", "architecture", "documentation", "implementation-plan"] },
+    { "name": "rikter_docs_reviewer", "source": "agents/source/rikter-docs-reviewer.md", "codex_config": "agents/codex/rikter-docs-reviewer.toml", "upstream_inspiration": "Technical Writer", "purpose": "Documentation review", "permission_mode": "read-only", "sha256": "b2e905bdcb090ed4869b8b23ab1c2c1b0bd51e199f9e211931539ed396bffb93", "profiles": ["documentation"] },
+    { "name": "rikter_threat_intel_analyst", "source": "agents/source/rikter-threat-intel-analyst.md", "codex_config": "agents/codex/rikter-threat-intel-analyst.toml", "upstream_inspiration": "Threat Intelligence Analyst", "purpose": "Threat intelligence review", "permission_mode": "read-only", "sha256": "4ca205ac031bb1b55985980f7fbf4043c3f44943d829cb9e051225a737bb4a46", "profiles": ["threat-intelligence"] },
+    { "name": "rikter_minimal_change_advisor", "source": "agents/source/rikter-minimal-change-advisor.md", "codex_config": "agents/codex/rikter-minimal-change-advisor.toml", "upstream_inspiration": "Minimal Change Engineer", "purpose": "Scope control", "permission_mode": "read-only", "sha256": "0ccecd8572b8ca64d3b25b5ad7177115afdc8fb34aaaaa72d911498ab2713350", "profiles": ["full", "implementation-plan"] }
+  ]
+}

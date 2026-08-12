@@ -6,7 +6,7 @@ canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "d1d6c589f1752db97c53e789a3043e6dc75ec24dff208e3e96274ab778736177"
+reviewed_digest: "25c6681ab41e55fe67221cc8db67a801af3190335b6b4ade2910f063b026ec97"
 support_status: unverified
 alternative_support_paths: []
 validation_status: partially_verified
@@ -20,7 +20,7 @@ maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, sc
 known_limitations:
   - "This project documents no Linux installation path for the OpenAI Codex CLI. Every command that installs or runs Codex is Blocked in this guide rather than invented."
   - "scripts/Run-Review.ps1 and scripts/Validate-Harness.ps1 have never been executed on Linux by the project's CI or by this review."
-  - "Three of the project's own test scripts fail on Linux because they invoke the Windows-only 'powershell' executable, and the CI job nevertheless reports success."
+  - "The real OpenAI Codex CLI and account sign-in require a human user; CI validates the complete local workflow with a synthetic Codex executable but cannot validate authentication or service availability."
 ---
 
 # Codex Repo Review Harness — Linux Novice Usability Guide

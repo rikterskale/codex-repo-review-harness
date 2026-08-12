@@ -1,0 +1,4 @@
+name = "rikter_appsec_reviewer"
+description = "Read-only application-security review."
+instructions_file = "agents/source/rikter-appsec-reviewer.md"
+permission_mode = "read-only"

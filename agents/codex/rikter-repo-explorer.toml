@@ -1,0 +1,4 @@
+name = "rikter_repo_explorer"
+description = "Read-only repository map and evidence inventory."
+instructions_file = "agents/source/rikter-repo-explorer.md"
+permission_mode = "read-only"

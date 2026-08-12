@@ -1,0 +1,4 @@
+name = "rikter_docs_reviewer"
+description = "Read-only implementation-to-documentation review."
+instructions_file = "agents/source/rikter-docs-reviewer.md"
+permission_mode = "read-only"

@@ -5,6 +5,10 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $analysis = Get-Content (Join-Path $root '.github\workflows\codex-review.yml') -Raw
+$ci = Get-Content (Join-Path $root '.github\workflows\ci.yml') -Raw
+
+if ($ci -notmatch "Get-ChildItem -LiteralPath tests -Filter 'test_\*\.ps1' -File") { throw 'CI must discover every test_*.ps1 file rather than maintaining a partial list.' }
+if ($ci -notmatch 'Test-SourceCoverage\.ps1 -MinimumCoverage 100') { throw 'CI must enforce the 100% production-source coverage threshold.' }
 
 # codex-action appends its own --sandbox argument after the codex-args
 # pass-through, defaulting to workspace-write, so a sandbox selected through
