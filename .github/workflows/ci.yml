@@ -72,6 +72,10 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File scripts/ci/Test-SourceCoverage.ps1 -MinimumCoverage 100
 
+      - name: Enforce new-user release readiness
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/ci/Test-ReleaseReadiness.ps1
+
       - name: Validate PowerShell syntax
         shell: pwsh
         run: pwsh -NoProfile -File scripts/ci/Test-PowerShellSyntax.ps1

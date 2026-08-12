@@ -48,6 +48,11 @@ change fails the run. The optional governed specialist pack, integration pins,
 and install/remove tooling are documented in
 [the integration guide](docs/SUPERPOWERS_AGENCY_INTEGRATION.md).
 
+Before publishing or adopting the harness, use the enforceable
+[new-user release-readiness standard](docs/RELEASE_READINESS_STANDARD.md). It
+requires clean installation, first-review, recovery, documentation, and
+cross-platform evidence in addition to source coverage.
+
 ## Absolute beginners
 
 Open the file:

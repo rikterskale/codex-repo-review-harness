@@ -27,6 +27,7 @@ $coverage = @{
   'scripts/ci/Test-GeneratedArtifacts.ps1' = @('tests/test_review_artifacts.ps1')
   'scripts/ci/Test-PowerShellSyntax.ps1' = @('tests/test_harness_structure.ps1')
   'scripts/ci/Test-ReportContract.ps1' = @('tests/test_review_artifacts.ps1')
+  'scripts/ci/Test-ReleaseReadiness.ps1' = @('tests/test_release_readiness.ps1')
   'scripts/ci/Update-GuideDigest.ps1' = @('tests/test_guide_digest.ps1')
   'scripts/ci/Validate-Release.ps1' = @('tests/test_clean_room.ps1')
   'scripts/ci/Validate-WorkflowPolicy.ps1' = @('tests/test_workflow_preflight.ps1')
