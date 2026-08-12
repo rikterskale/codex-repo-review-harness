@@ -72,9 +72,37 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File scripts/ci/Test-SourceCoverage.ps1 -MinimumCoverage 100
 
-      - name: Enforce new-user release readiness
+      # Coverage is useful supporting signal, but it cannot establish that a
+      # first-time user can install, use, troubleshoot, and recover the
+      # harness. These named gates make that release evidence visible and
+      # independently required on every supported platform.
+      - name: Prove clean new-user installation and first review
         shell: pwsh
-        run: pwsh -NoProfile -File scripts/ci/Test-ReleaseReadiness.ps1
+        run: pwsh -NoProfile -File tests/test_new_user_journey.ps1
+
+      - name: Validate the complete user-facing feature set
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tests/test_runner_failure.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File tests/test_review_artifacts.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File tests/test_security_regressions.ps1
+          exit $LASTEXITCODE
+
+      - name: Exercise installation recovery and safe removal
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/test_recovery_paths.ps1
+
+      - name: Verify troubleshooting and release documentation
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tests/test_guide_digest.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File scripts/ci/Validate-Release.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File scripts/ci/Test-ReleaseReadiness.ps1
+          exit $LASTEXITCODE
 
       - name: Validate PowerShell syntax
         shell: pwsh

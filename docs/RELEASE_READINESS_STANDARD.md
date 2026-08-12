@@ -2,7 +2,9 @@
 
 A release is eligible only when the evidence below is current for the release
 candidate. Source coverage is supporting evidence, never the release decision by
-itself.
+itself. Every automated row is a separately named, required CI gate on both
+Windows and Ubuntu; a passing aggregate test run or coverage percentage cannot
+substitute for it.
 
 ## Required release evidence
 
@@ -28,3 +30,11 @@ an individual account's entitlement, sign-in, billing, or service availability.
 
 Do not release when a critical or high supported finding is unresolved, a
 required GitHub check is absent, or any row in the table lacks current evidence.
+
+## CI enforcement
+
+The CI workflow must visibly run and require these gates: clean installation and
+first review, complete feature validation, recovery and safe removal, and
+troubleshooting plus release-documentation verification. `Test-ReleaseReadiness`
+fails if any of their evidence scripts are removed from CI. The source-coverage
+gate remains supplemental and must never be treated as approval to release.
