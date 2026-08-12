@@ -10,6 +10,14 @@ $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pa
 $manifestPath = Join-Path $HarnessRoot 'agents\manifest.json'
 
 function Fail([string]$Message) { throw "Managed agent-pack installation refused: $Message" }
+function Get-CanonicalSha256([string]$Path) {
+    $text = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($Path))
+    if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) { $text = $text.Substring(1) }
+    $text = $text -replace "`r`n", "`n"
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $bytes = (New-Object Text.UTF8Encoding($false)).GetBytes($text); return ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
 function Get-Manifest() {
     if (-not (Test-Path -LiteralPath $manifestPath)) { Fail "missing manifest: $manifestPath" }
     try { $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json } catch { Fail "invalid manifest: $($_.Exception.Message)" }
@@ -22,7 +30,7 @@ function Get-Manifest() {
             if ([IO.Path]::IsPathRooted($relative) -or $relative -match '(^|[\\/])\.\.([\\/]|$)') { Fail "unsafe manifest path: $relative" }
             if (-not (Test-Path -LiteralPath (Join-Path $HarnessRoot $relative))) { Fail "missing manifest file: $relative" }
         }
-        $actual = (Get-FileHash -LiteralPath (Join-Path $HarnessRoot $agent.source) -Algorithm SHA256).Hash.ToLowerInvariant()
+        $actual = Get-CanonicalSha256 (Join-Path $HarnessRoot $agent.source)
         if ($actual -ne $agent.sha256) { Fail "checksum mismatch: $($agent.source)" }
     }
     return $manifest

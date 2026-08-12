@@ -6,7 +6,7 @@ canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "47648ea1e4905990fa04b74cc232fab853e5d3ac7bfa9a6ae94de7b034e36beb"
+reviewed_digest: "a340d8d70e6a2feeceabcb935bc872429b2db7bec4cff6ba8339234b19a718a7"
 support_status: unverified
 alternative_support_paths: []
 validation_status: partially_verified

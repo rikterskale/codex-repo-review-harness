@@ -6,6 +6,14 @@ $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $failed = 0
 function Check([string]$Name, [bool]$Condition, [string]$Hint) { if ($Condition) { Write-Host "[PASS] $Name" } else { Write-Host "[FAIL] $Name - $Hint"; $script:failed++ } }
+function Get-CanonicalSha256([string]$Path) {
+    $text = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($Path))
+    if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) { $text = $text.Substring(1) }
+    $text = $text -replace "`r`n", "`n"
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $bytes = (New-Object Text.UTF8Encoding($false)).GetBytes($text); return ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
 $lockPath = Join-Path $HarnessRoot 'config\integrations.lock.json'
 $manifestPath = Join-Path $HarnessRoot 'agents\manifest.json'
 try { $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json; $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json } catch { throw "Cannot validate integrations: $($_.Exception.Message)" }
@@ -24,7 +32,7 @@ Check 'Personal Codex directory is accessible' $writable "Ensure the current use
 foreach ($agent in @($manifest.agents)) {
     $source = Join-Path $HarnessRoot $agent.source
     $expected = [string]$agent.sha256
-    $actual = if (Test-Path -LiteralPath $source) { (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() } else { '' }
+    $actual = if (Test-Path -LiteralPath $source) { Get-CanonicalSha256 $source } else { '' }
     Check "Checksum: $($agent.name)" ($actual -eq $expected) 'Restore the reviewed source or regenerate the manifest through an update PR.'
     if (Test-Path -LiteralPath $installRoot) { foreach ($relative in @($agent.source, $agent.codex_config)) { Check "Installed: $relative" (Test-Path -LiteralPath (Join-Path $installRoot ($relative -replace '^agents[\\/]',''))) 'Run the installer.' } }
 }
