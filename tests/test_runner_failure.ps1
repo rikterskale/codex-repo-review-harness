@@ -76,12 +76,24 @@ try {
   # promise and was likewise never checked at the point of invocation.
   $strictReport = Join-Path $temp 'strict-report.md'
   Set-Content -LiteralPath $strictReport -Value ($reportLines -join "`n") -Encoding ASCII
+  # Outside $temp on purpose: $temp is the repository under review, and a file
+  # appearing inside it mid-run is exactly what the runner's read-only check is
+  # built to catch. It caught this one.
+  $capture = Join-Path ([IO.Path]::GetTempPath()) ('codex-stdin-' + [guid]::NewGuid().ToString('N') + '.txt')
+  # Exit codes: 42/43/44 wrong subcommand or sandbox, 45 a prompt was passed as
+  # an argument, 46 no prompt arrived on stdin. 45 is the one that catches the
+  # quoting defect: a prompt containing a double quote used to split into extra
+  # arguments, which is indistinguishable from passing it as an argument at all.
   if ($isWin) {
     $strict = @(
       '@echo off',
       'if not "%1"=="exec" exit /b 42',
       'if not "%2"=="--sandbox" exit /b 43',
       'if not "%3"=="read-only" exit /b 44',
+      'if not "%4"=="" exit /b 45',
+      "findstr `"^`" > `"$capture`"",
+      "findstr /C:`"BEGIN PROMPT`" `"$capture`" >nul",
+      'if errorlevel 1 exit /b 46',
       "type `"$strictReport`"",
       'exit /b 0'
     ) -join "`n"
@@ -92,6 +104,9 @@ try {
       'if [ "$1" != "exec" ]; then exit 42; fi',
       'if [ "$2" != "--sandbox" ]; then exit 43; fi',
       'if [ "$3" != "read-only" ]; then exit 44; fi',
+      'if [ -n "$4" ]; then exit 45; fi',
+      "cat > `"$capture`"",
+      "grep -q 'BEGIN PROMPT' `"$capture`" || exit 46",
       "cat `"$strictReport`"",
       'exit 0'
     ) -join "`n"
@@ -99,11 +114,17 @@ try {
     Set-Content -LiteralPath $strictPath -Value $strict -Encoding ASCII
     & chmod +x $strictPath | Out-Null
   }
+  # A quote in the prompt is the exact shape of the defect, so put one there:
+  # Windows PowerShell 5.1 does not escape embedded quotes into a native command
+  # line, and passing the prompt as an argument split it at this character.
+  $promptPath = Join-Path $temp 'prompts\system-review.md'
+  Add-Content -LiteralPath $promptPath -Value 'Apply every rule under "## Code Review Rules" that is in scope.'
+
   & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10
   if ($LASTEXITCODE -ne 0) {
-    throw "The runner did not invoke 'codex exec --sandbox read-only'; the strict fake rejected its arguments (runner exit $LASTEXITCODE, where 4 means the fake refused)."
+    throw "The runner did not invoke 'codex exec --sandbox read-only' with the prompt on stdin; the strict fake refused (runner exit $LASTEXITCODE, where 4 means the fake rejected the invocation)."
   }
-  Write-Host 'PASS: the runner invokes codex exec with the read-only sandbox.'
+  Write-Host 'PASS: the runner invokes codex exec read-only and sends a quoted prompt on stdin.'
   $json = Get-ChildItem (Join-Path $temp 'reports') -Filter '*.json' -Recurse | Select-Object -First 1
   $document = Get-Content $json.FullName -Raw | ConvertFrom-Json
   if ($document.status -ne 'findings' -or @($document.findings).Count -ne 1) { throw 'Structured finding output regression.' }
@@ -111,4 +132,5 @@ try {
 } finally {
   $env:PATH = $oldPath
   Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
+  if ($capture) { Remove-Item -LiteralPath $capture -Force -ErrorAction SilentlyContinue }
 }

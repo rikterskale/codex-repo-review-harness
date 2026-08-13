@@ -100,16 +100,24 @@ Follow this trusted prompt exactly:
 $promptContent
 ----- END PROMPT -----
 "@
-$codexArgs = @('exec', '--sandbox', 'read-only', $fullPrompt)
-if ($config.model) { $codexArgs = @('exec', '--sandbox', 'read-only', '--model', $config.model, $fullPrompt) }
+# The prompt goes to Codex on stdin, never as an argument. Windows PowerShell
+# 5.1 does not escape embedded double quotes when it builds a native command
+# line, so a single quote character anywhere in the prompt — prompts/ files, or
+# extra_instructions from a user's own config — split the argument and Codex
+# rejected the fragments. Windows also caps a command line near 32,000
+# characters, which the assembled prompt can approach. `codex exec` reads the
+# prompt from stdin when no PROMPT argument is given.
+$codexArgs = @('exec', '--sandbox', 'read-only')
+if ($config.model) { $codexArgs += @('--model', $config.model) }
 if ($DryRun) {
     Write-Host "Prepared bounded read-only review; prompt length=$($fullPrompt.Length), timeout=$TimeoutSeconds seconds, max_output_bytes=$MaxOutputBytes."
     exit 0
 }
 
-$jobArguments = New-Object object[] 2
+$jobArguments = New-Object object[] 3
 $jobArguments[0] = [object[]]$codexArgs
 $jobArguments[1] = $targetRoot
+$jobArguments[2] = $fullPrompt
 # The first parameter must not be named $Args. It is a PowerShell automatic
 # variable, so it cannot be bound: the job received it empty while every other
 # parameter bound normally, `@Args` splatted nothing, and the job ran bare
@@ -118,9 +126,9 @@ $jobArguments[1] = $targetRoot
 # from the commit that introduced Start-Job until it was found by a manual smoke
 # test; CI missed it because the synthetic codex ignored its arguments.
 $job = Start-Job -ScriptBlock {
-    param($CodexArgs, $WorkingDirectory)
+    param($CodexArgs, $WorkingDirectory, $Prompt)
     Set-Location -LiteralPath $WorkingDirectory
-    $jobOutput = (& codex @CodexArgs 2>&1 | Out-String)
+    $jobOutput = ($Prompt | & codex @CodexArgs 2>&1 | Out-String)
     [pscustomobject]@{ Output = $jobOutput; ExitCode = $LASTEXITCODE }
 } -ArgumentList $jobArguments
 try {

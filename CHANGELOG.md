@@ -15,6 +15,14 @@ that printed its title twice — are covered by
 
 ### Fixed
 
+- **The prompt is sent to Codex on stdin, not as an argument.** Windows
+  PowerShell 5.1 does not escape embedded double quotes when it builds a native
+  command line, so the quoted phrase in `prompts/system-review.md` split the
+  prompt into fragments and Codex rejected them with
+  `unexpected argument 'Code' found`. A quote in a user's own
+  `extra_instructions` would have done the same. Sending the prompt on stdin
+  also removes the ~32,000-character Windows command-line limit, which the
+  assembled prompt was growing towards (`REV-COR-006`).
 - **Real reviews work again.** The runner passed Codex no arguments at all, so
   every real review launched the interactive TUI inside a background job and
   died with `Error: stdin is not a terminal`. The job's first parameter was
