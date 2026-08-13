@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Documentation
+
+- Refreshed the source-verified documentation set, including the CLI reference,
+  installation, usage, troubleshooting, contributor, and architecture guides.
+
 ## [0.2.0] - 2026-08-13
 
 RR-11 (real-Codex smoke test) satisfied on 2026-08-13: harness 0.2.0, reviewed
