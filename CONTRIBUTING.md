@@ -36,8 +36,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/test_guide_digest.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ci/Validate-Release.ps1
 ```
 
-## Reporting security issues
+## Security reports
 
-Do not report suspected vulnerabilities in a public issue. Follow
-`SECURITY.md`; its private reporting channel is currently marked for maintainer
-verification.
+This repository does not accept vulnerability reports. Do not submit suspected
+vulnerabilities through issues, pull requests, or repository contacts; see
+`SECURITY.md`.

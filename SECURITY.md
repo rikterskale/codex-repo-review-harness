@@ -1,14 +1,10 @@
 # Security Policy
 
-## Reporting a vulnerability
+## Vulnerability reports
 
-Do not open a public issue for a suspected vulnerability.
-
-[VERIFY: a confirmed private vulnerability-reporting contact or enabled GitHub
-Security Advisories route for this repository.]
-
-Include reproduction steps, the affected commit, impact, and a safe disclosure
-contact.
+This repository does not accept vulnerability reports and does not provide a
+security support or disclosure channel. Do not submit suspected vulnerabilities
+through issues, pull requests, or repository contacts.
 
 Do not include real API keys, tokens, credentials, customer data, or target data
 in reports. Use synthetic fixtures. The CI review workflow treats pull-request
@@ -16,4 +12,4 @@ content as untrusted data and keeps commenting permissions in a separate job.
 
 ## Supported versions
 
-Only the latest release listed in `CHANGELOG.md` is currently supported.
+The repository does not provide a security-support policy for any release.
