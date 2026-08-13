@@ -110,10 +110,17 @@ if ($DryRun) {
 $jobArguments = New-Object object[] 2
 $jobArguments[0] = [object[]]$codexArgs
 $jobArguments[1] = $targetRoot
+# The first parameter must not be named $Args. It is a PowerShell automatic
+# variable, so it cannot be bound: the job received it empty while every other
+# parameter bound normally, `@Args` splatted nothing, and the job ran bare
+# `codex` — the interactive TUI — which fails with "stdin is not a terminal"
+# because a background job has no console. Every real review failed this way
+# from the commit that introduced Start-Job until it was found by a manual smoke
+# test; CI missed it because the synthetic codex ignored its arguments.
 $job = Start-Job -ScriptBlock {
-    param($Args, $WorkingDirectory)
+    param($CodexArgs, $WorkingDirectory)
     Set-Location -LiteralPath $WorkingDirectory
-    $jobOutput = (& codex @Args 2>&1 | Out-String)
+    $jobOutput = (& codex @CodexArgs 2>&1 | Out-String)
     [pscustomobject]@{ Output = $jobOutput; ExitCode = $LASTEXITCODE }
 } -ArgumentList $jobArguments
 try {

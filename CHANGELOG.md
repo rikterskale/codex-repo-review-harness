@@ -15,6 +15,14 @@ that printed its title twice — are covered by
 
 ### Fixed
 
+- **Real reviews work again.** The runner passed Codex no arguments at all, so
+  every real review launched the interactive TUI inside a background job and
+  died with `Error: stdin is not a terminal`. The job's first parameter was
+  named `$Args`, a PowerShell automatic variable that cannot be bound, so it
+  arrived empty and `@Args` splatted nothing. Broken since `Start-Job` was
+  introduced; found by the first real-Codex smoke test (`REV-COR-005`).
+  `tests/test_runner_failure.ps1` now uses a synthetic Codex that rejects a
+  wrong invocation, and pins `exec --sandbox read-only` at the call site.
 - `-DryRun` no longer requires the Codex CLI. The prerequisite ran before the
   dry-run branch, so the one switch that exists to check a setup *before*
   installing Codex could not run without it (`REV-UX-001`). Git is still

@@ -133,6 +133,21 @@ CI uses a synthetic Codex command on purpose. It cannot prove an account's
 entitlement, sign-in, billing, or the service being reachable, so this
 requirement stays human. Record the date, harness version, and repository used.
 
+**This requirement has already earned its place.** The first time it was
+performed, against 0.2.0, it found that no real review had worked since the
+runner moved to `Start-Job`: the job's first parameter was named `$Args`, a
+PowerShell automatic variable that cannot be bound, so Codex was invoked with no
+arguments and launched its interactive TUI inside a job that has no terminal.
+Every automated gate passed throughout, because the synthetic Codex accepted any
+arguments and printed a valid report regardless (`REV-COR-005`).
+
+**Substitutes must be strict.** The lesson is not "add another test" but that a
+test double which accepts anything proves nothing about how it was called. Any
+stand-in for a real dependency must reject an invocation the real one would
+reject — the synthetic Codex now fails unless it receives
+`exec --sandbox read-only`, which also pins the sandbox at the call site rather
+than trusting the code that builds the argument list.
+
 ## RR-12 — No unresolved blocking findings (Human)
 
 **Pass condition.** No supported critical or high finding is open, and the
