@@ -6,21 +6,21 @@ canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "3786f2617464ffd4108481472bcca496747912515746412878619b8fa036ffad"
+reviewed_digest: "4491956c9517a21ce987e6253cc8febe87fdb76b89c56f032caf7dc042a59f84"
 support_status: unverified
 alternative_support_paths: []
 validation_status: partially_verified
 validated_on: 2026-08-04
 validated_environments:
   - "Ubuntu 24.04.4 LTS, x64, PowerShell 7 (/usr/bin/pwsh), GitHub Actions hosted runner image ubuntu-24.04 20260720.247.2 — evidence from workflow run 30662430133, job 91261545707"
+  - "Ubuntu 24.04, x64, PowerShell 7 — the complete new-user journey, including scripts/Validate-Harness.ps1 and scripts/Run-Review.ps1 against a synthetic Codex, from workflow run 31644228173, job 94273888421"
 primary_shells:
   - "PowerShell 7 (pwsh)"
   - "Bash (only to install prerequisites and to start pwsh)"
 maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, scripts/Run-Review.ps1, .github/workflows/ci.yml"
 known_limitations:
   - "This project documents no Linux installation path for the OpenAI Codex CLI. Every command that installs or runs Codex is Blocked in this guide rather than invented."
-  - "scripts/Run-Review.ps1 and scripts/Validate-Harness.ps1 have never been executed on Linux by the project's CI or by this review."
-  - "The real OpenAI Codex CLI and account sign-in require a human user; CI validates the complete local workflow with a synthetic Codex executable but cannot validate authentication or service availability."
+  - "The real OpenAI Codex CLI and account sign-in require a human user; CI runs scripts/Run-Review.ps1 end to end on Ubuntu against a synthetic Codex executable, which proves the harness but cannot prove authentication, entitlement, or service availability."
 ---
 
 # Codex Repo Review Harness — Linux Novice Usability Guide
@@ -125,36 +125,33 @@ review runner has never been verified on Linux. Support status: `unverified`.**
 This is not a formatting technicality. Here is precisely what is and is not known.
 
 **What is proven to work on Linux.** The project's continuous-integration
-workflow runs on `ubuntu-latest` (`.github/workflows/ci.yml` line 27). In workflow
-run 30662430133, job 91261545707, on Ubuntu 24.04 with PowerShell 7, these
-scripts ran and printed a `PASS` line:
+workflow runs every check on `ubuntu-latest` as well as Windows
+(`.github/workflows/ci.yml` line 27), and each requirement in
+`docs/RELEASE_READINESS_STANDARD.md` is a separately named, required step on both.
+In workflow run 31644228173, job 94273888421, on Ubuntu 24.04 with PowerShell 7,
+every one of those steps succeeded. That includes the whole first-time-user
+journey — `scripts/Validate-Harness.ps1`, `scripts/Install-AgentPack.ps1`,
+`scripts/Run-Review.ps1` against a separate target repository, artifact
+retrieval, and `scripts/Remove-AgentPack.ps1` — plus the file layout,
+configuration parser, report contract, and secret redaction.
 
-- `tests/test_harness_structure.ps1`
-- `scripts/ci/Test-ReportContract.ps1`
-- `tests/test_security_regressions.ps1`
-- `tests/test_review_helpers.ps1`
-- `scripts/ci/Validate-Release.ps1`
-- `scripts/ci/Validate-WorkflowPolicy.ps1`
-- `scripts/ci/Test-PowerShellSyntax.ps1`
+So the two scripts you actually use, `scripts/Validate-Harness.ps1` and
+`scripts/Run-Review.ps1`, do run on Linux.
 
-So the harness's file layout, configuration parser, report contract, and secret
-redaction all work under PowerShell 7 on Linux.
+**An earlier version of this guide said three test scripts fail on Linux with**
+`The term 'powershell' is not recognized`. That was true of release 0.1.0 and is
+no longer true: `tests/test_review_artifacts.ps1`,
+`tests/test_runner_failure.ps1`, and `tests/test_clean_room.ps1` now start the
+*running* PowerShell host with `(Get-Process -Id $PID).Path` instead of naming
+the Windows-only `powershell` executable, and all three pass on Ubuntu. Finding
+`REV-TEST-002` is resolved.
 
-**What is proven to fail on Linux.** In the same job, three test scripts failed
-with `The term 'powershell' is not recognized`:
-
-- `tests/test_review_artifacts.ps1` (line 28)
-- `tests/test_runner_failure.ps1` (line 15)
-- `tests/test_clean_room.ps1` (line 10)
-
-They call `powershell`, which is the *Windows* PowerShell executable and does not
-exist on Linux. The job still reported success, so this failure is currently
-invisible to the maintainers.
-
-**What has never been tried on Linux.** `scripts/Run-Review.ps1` and
-`scripts/Validate-Harness.ps1` — the two scripts you actually use — are not
-executed by any Linux test. Their behaviour on Linux is therefore inferred from
-their source code only.
+**What is still not proven on Linux.** Everything that needs the real Codex CLI.
+CI substitutes a synthetic `codex` command, so it proves the harness's own
+behaviour — the prompt it builds, the read-only contract, the artifacts, the
+target being left unchanged — and proves nothing about installing Codex, signing
+in, your plan's entitlement, or the service being reachable. That gap is why
+section 12.5 below is `Unsupported` rather than merely untested.
 
 **What is missing entirely.** The repository contains no Linux installation
 instructions for the OpenAI Codex CLI. `README.md` line 29 documents only a
@@ -162,10 +159,11 @@ Windows PowerShell installer, and `docs/WINDOWS_BEGINNER_GUIDE.md` is
 Windows-only. This guide will **not** invent a Linux Codex installation command.
 Section 12.4 tells you where to get the authoritative instructions instead.
 
-**Consequence.** You can install the harness, validate it, and read its
-configuration on Linux with reasonable confidence. You cannot rely on this project
-for a documented, tested Linux review run. Section 30 records this as a
-portability finding.
+**Consequence.** You can install the harness, validate it, run its self-tests,
+and — if you obtain the Codex CLI yourself — run a review, all with the harness
+side proven on Ubuntu. What this project still does not give you is a documented
+way to *install Codex* on Linux. Section 30 records this as a portability
+finding.
 
 ## 6. What You Will Accomplish
 
@@ -667,9 +665,9 @@ Representative output — **Unverified — Runtime Blocked**: a version number.
 - **Safe to copy and paste:** Yes
 - **Replace before running:** Nothing
 - **Expected side effects:** None — the script only reads
-- **Validation status:** Statically verified — this script is not run by the
-  project's Linux CI and has never been executed on Linux. Its cmdlets are
-  cross-platform, so it is expected to work, but that expectation is unproven.
+- **Validation status:** Verified — the project's Ubuntu CI job runs this script
+  as part of the required new-user installation gate (run 31644228173, job
+  94273888421).
 
 ```powershell
 ./scripts/Validate-Harness.ps1
@@ -722,9 +720,11 @@ than print a command that has never been run.**
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates exactly three files in `reports/`. Never
   modifies your source code.
-- **Validation status:** **Blocked** — requires the Codex CLI, which has no
-  documented Linux installation path in this repository. The script has never been
-  executed on Linux by the project's CI or by this review.
+- **Validation status:** **Blocked for you, verified for the harness** — the
+  script itself runs on Ubuntu in the project's CI against a synthetic Codex
+  (run 31644228173, job 94273888421), so the harness side is proven. This step is
+  still blocked because it also requires the real Codex CLI, which this
+  repository gives no documented way to install on Linux.
 
 ```powershell
 ./scripts/Run-Review.ps1
@@ -742,25 +742,28 @@ Review finished. Markdown: .../reports/review-20260731-213440-423-e4a65858.md; J
 **Success would mean:** a closing line beginning `Review finished.` naming three
 files.
 
-**What is genuinely unknown on Linux:**
+**What is now proven on Linux:** the background-job mechanism the runner uses
+launches Codex in the repository under review, not in your home folder. On
+Windows PowerShell 5.1 this was **reproduced as broken** (finding `REV-COR-001`);
+the Ubuntu run of `tests/test_new_user_journey.ps1` reviews a target repository
+outside the harness and checks the produced artifacts, so the working-directory
+behaviour is exercised on this platform.
 
-- Whether `codex exec --sandbox read-only` behaves the same way.
-- Whether the background-job mechanism the runner uses
-  (`scripts/Run-Review.ps1` lines 86-97) launches Codex in the repository folder.
-  On Windows PowerShell 5.1 this was **reproduced as broken** — Codex was launched
-  in the user's Documents folder instead of the repository under review
-  (finding `REV-COR-001`). PowerShell 7 is documented to behave differently, so
-  Linux may be unaffected, but this has not been proven.
+**What is genuinely unknown on Linux:** whether the real
+`codex exec --sandbox read-only` behaves like the synthetic command CI uses.
+Nothing in this project can answer that without a Codex CLI installed.
 
-**What you should do instead, today:**
+**What you should do, today:**
 
 1. Complete section 21.3, the self-tests. Those *are* proven on Linux and confirm
    the harness itself is healthy.
-2. For a real review, use the Windows path in
-   `docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md`, on a Windows machine or a
-   Windows virtual machine.
-3. Ask the maintainer to add a tested Linux path. This is recorded as findings
-   `REV-COMPAT-001` and `REV-LNX-GUIDE-001`.
+2. Install the Codex CLI from OpenAI's own documentation (section 12.5), then
+   return here. The harness side of this command is proven; only the Codex
+   installation is undocumented by this project.
+3. If you would rather stay on a fully documented path, use
+   `docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md` on a Windows machine or VM.
+4. Ask the maintainer to document a Linux Codex installation. This is recorded as
+   findings `REV-COMPAT-001` and `REV-LNX-GUIDE-001`.
 
 ## 20. Understand the Screen Output, Exit Status, and Result Files
 
@@ -1048,12 +1051,19 @@ PASS: review helper contract tests passed.
 **Completion criteria for this workflow:** all four commands print a line
 beginning `PASS:`.
 
-**Three further test scripts exist and will fail on Linux.**
-`tests/test_review_artifacts.ps1`, `tests/test_runner_failure.ps1`, and
-`tests/test_clean_room.ps1` call the Windows-only `powershell` executable and stop
-with `The term 'powershell' is not recognized`. Do not run them on Linux and do
-not treat their failure as a problem with your setup. This is finding
-`REV-TEST-002`.
+**The remaining test scripts also run on Linux.** `tests/test_review_artifacts.ps1`,
+`tests/test_runner_failure.ps1`, and `tests/test_clean_room.ps1` used to fail here
+with `The term 'powershell' is not recognized`; they no longer name that
+Windows-only executable and now pass on Ubuntu, so finding `REV-TEST-002` is
+resolved. To run every self-test the way CI does:
+
+```powershell
+Get-ChildItem tests -Filter 'test_*.ps1' | ForEach-Object { pwsh -NoProfile -File $_.FullName }
+```
+
+Expect a `PASS:` line from each. `tests/test_new_user_journey.ps1` takes the
+longest because it installs the harness into a temporary folder and runs a whole
+review against a synthetic Codex.
 
 ## 22. Configuration, Environment Variables, and Credentials
 
@@ -1503,32 +1513,34 @@ scripts it executed and silent about the rest.
 1. **No documented Linux installation path for the Codex CLI.** The repository's
    only installation instruction is Windows PowerShell. Finding
    `REV-LNX-GUIDE-001`.
-2. **Three test scripts are hard-broken on Linux.** They invoke the Windows-only
-   `powershell` executable. Observed directly in CI job 91261545707. Finding
-   `REV-TEST-002`.
-3. **Those failures are invisible to CI.** The Ubuntu job reported `success`
-   despite three scripts erroring, because the workflow step runs several commands
-   in one block and only the last one's exit code is used. Finding `REV-CI-001`.
-4. **The review runner has never run on Linux.** `scripts/Run-Review.ps1` and
-   `scripts/Validate-Harness.ps1` are excluded from every Linux test. Finding
-   `REV-COMPAT-001`.
+2. ~~**Three test scripts are hard-broken on Linux.**~~ **Resolved.** They no
+   longer invoke the Windows-only `powershell` executable and all three pass on
+   Ubuntu in run 31644228173, job 94273888421. Finding `REV-TEST-002` is closed.
+3. ~~**Those failures are invisible to CI.**~~ **Resolved.** The workflow now
+   checks `$LASTEXITCODE` after every script in a multi-command step and reports
+   each failure, so a failing script fails the job. Finding `REV-CI-001` is
+   closed.
+4. ~~**The review runner has never run on Linux.**~~ **Resolved for the harness.**
+   `scripts/Validate-Harness.ps1` and `scripts/Run-Review.ps1` both run on Ubuntu
+   as part of the required new-user installation gate, against a synthetic Codex.
+   What remains open under `REV-COMPAT-001` is the *real* Codex CLI: this project
+   still documents no way to install it on Linux.
 5. **The validator prints a Windows fix on Linux.** When Codex is missing,
    `scripts/Validate-Harness.ps1` line 49 suggests a Windows PowerShell command
    that cannot work on Linux. Finding `REV-DOC-005`.
 6. **Reviews that quote credentials are discarded.** Reproduced on Windows; the
    same code path runs on Linux. Finding `REV-COR-002`.
 7. **A working-directory defect exists on Windows PowerShell 5.1** in which Codex
-   is launched outside the repository under review (finding `REV-COR-001`).
-   PowerShell 7 is documented to behave differently, so Linux is probably
-   unaffected — but this has not been proven, and it should be verified before any
-   Linux support claim is made.
+   is launched outside the repository under review (finding `REV-COR-001`). Linux
+   is unaffected: the Ubuntu new-user gate reviews a target repository outside the
+   harness and verifies the resulting artifacts.
 
 ### 30.5 Support boundaries
 
 - Best available: Ubuntu 24.04 on x64 with PowerShell 7, for the harness
-  self-tests and health check only.
-- Unverified: every other distribution, every other architecture, and the review
-  runner itself on all Linux systems.
+  self-tests, the health check, and the review runner against an installed Codex.
+- Unverified: every other distribution, every other architecture, and the real
+  Codex CLI on all Linux systems.
 - Not documented by this project, and therefore not covered here: containers,
   virtual machines, `systemd` integration, and macOS.
 - For a proven end-to-end review today, use

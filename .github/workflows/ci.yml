@@ -74,13 +74,22 @@ jobs:
 
       # Coverage is useful supporting signal, but it cannot establish that a
       # first-time user can install, use, troubleshoot, and recover the
-      # harness. These named gates make that release evidence visible and
-      # independently required on every supported platform.
-      - name: Prove clean new-user installation and first review
+      # harness. The gates below are the requirements in
+      # docs/RELEASE_READINESS_STANDARD.md, one named step each, so a red build
+      # names the requirement that broke rather than a test file. Each runs on
+      # every platform in the matrix; evidence from one never covers the other.
+      # Test-ReleaseReadiness.ps1 reads this file back and fails if any of these
+      # steps is deleted, renamed off its evidence script, made
+      # continue-on-error, or made conditional.
+      - name: 'RR-01/02/03: prove clean new-user installation, first review, and target safety'
         shell: pwsh
         run: pwsh -NoProfile -File tests/test_new_user_journey.ps1
 
-      - name: Validate the complete user-facing feature set
+      - name: 'RR-04: prove clean-room installation and upgrade'
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/test_clean_room.ps1
+
+      - name: 'RR-05: validate the complete user-facing feature set'
         shell: pwsh
         run: |
           pwsh -NoProfile -File tests/test_runner_failure.ps1
@@ -90,19 +99,22 @@ jobs:
           pwsh -NoProfile -File tests/test_security_regressions.ps1
           exit $LASTEXITCODE
 
-      - name: Exercise installation recovery and safe removal
+      - name: 'RR-06: exercise installation recovery and safe removal'
         shell: pwsh
         run: pwsh -NoProfile -File tests/test_recovery_paths.ps1
 
-      - name: Verify troubleshooting and release documentation
+      - name: 'RR-08: verify release documentation against this tree'
         shell: pwsh
         run: |
           pwsh -NoProfile -File tests/test_guide_digest.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           pwsh -NoProfile -File scripts/ci/Validate-Release.ps1
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          pwsh -NoProfile -File scripts/ci/Test-ReleaseReadiness.ps1
           exit $LASTEXITCODE
+
+      # Last, so it reports on the workflow that actually ran the gates above.
+      - name: 'RR-07/09/10: enforce the new-user release-readiness standard'
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/ci/Test-ReleaseReadiness.ps1
 
       - name: Validate PowerShell syntax
         shell: pwsh

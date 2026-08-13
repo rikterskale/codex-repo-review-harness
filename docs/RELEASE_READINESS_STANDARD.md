@@ -1,40 +1,147 @@
 # New-user release-readiness standard
 
-A release is eligible only when the evidence below is current for the release
-candidate. Source coverage is supporting evidence, never the release decision by
-itself. Every automated row is a separately named, required CI gate on both
-Windows and Ubuntu; a passing aggregate test run or coverage percentage cannot
-substitute for it.
+A release is eligible only when every requirement below holds for the release
+candidate. Each requirement states an **exact pass condition** — something that
+is either true or false about this tree — and names the gate that decides it.
 
-## Required release evidence
+Source coverage is supporting evidence and never the release decision. A release
+candidate with 100% coverage and a failing requirement below is not releasable.
 
-| Outcome | Required proof | Automated gate |
-| --- | --- | --- |
-| Proven installation | Clean temporary user environment validates the harness and installs the managed pack without elevated rights. | `test_new_user_journey.ps1` |
-| First successful review | A separate Git target is reviewed with a deterministic Codex substitute; Markdown, JSON, and SHA-256 artifacts exist. | `test_new_user_journey.ps1` |
-| Full feature set | Full, security, and PR-diff prompts; central target review; artifact contract; zero findings and structured findings are exercised. | `test_runner_failure.ps1`, `test_review_artifacts.ps1` |
-| Target safety | Target Git status is unchanged before and after review. | `test_new_user_journey.ps1` |
-| Guided troubleshooting | Every stable runner exit code has an exact corrective action and verification command in the novice guides. | `test_release_readiness.ps1` |
-| Recovery | Tampered prompts are rejected; repeated installation preserves a backup; removal restores only manifest-owned files and preserves unrelated agents. | `test_recovery_paths.ps1` |
-| Documentation | Windows and Linux novice guides, a release digest, update, uninstall, and rollback instructions match the current harness. | `test_guide_digest.ps1`, `Validate-Release.ps1` |
-| Cross-platform support | The whole suite passes on Windows and Ubuntu. | GitHub Actions matrix |
-| Independent review | The read-only GitHub review workflow completes successfully. | Required `analyze` check |
+`scripts/ci/Test-ReleaseReadiness.ps1` enforces every requirement marked
+*Automated*. It reads `.github/workflows/ci.yml` structurally, so a gate that is
+deleted, renamed away from its evidence script, made `continue-on-error`, or made
+conditional fails the readiness check itself.
 
-## Human release checklist
+## RR-01 — Proven installation (Automated)
 
-Before publishing, a maintainer must additionally perform one real-Codex smoke
-test using an authorized non-sensitive repository: install/sign in, run a
-read-only review, inspect the file paths and artifacts, and confirm the target
-is unchanged. CI deliberately uses a synthetic Codex command and cannot prove
-an individual account's entitlement, sign-in, billing, or service availability.
+**Pass condition.** A temporary directory that has never held the harness runs
+`Validate-Harness.ps1`, `Install-AgentPack.ps1`, and `Validate-Integrations.ps1`
+to exit 0 with no elevated rights and no pre-existing Codex home.
 
-Do not release when a critical or high supported finding is unresolved, a
-required GitHub check is absent, or any row in the table lacks current evidence.
+**Gate.** `tests/test_new_user_journey.ps1`, run as its own CI step.
 
-## CI enforcement
+## RR-02 — First successful review (Automated)
 
-The CI workflow must visibly run and require these gates: clean installation and
-first review, complete feature validation, recovery and safe removal, and
-troubleshooting plus release-documentation verification. `Test-ReleaseReadiness`
-fails if any of their evidence scripts are removed from CI. The source-coverage
-gate remains supplemental and must never be treated as approval to release.
+**Pass condition.** A Git repository *other than* the harness is reviewed end to
+end against a deterministic Codex substitute, exits 0, and leaves exactly one
+`review.md`, one `review.json`, and one `review.sha256` under `reports/`.
+
+**Gate.** `tests/test_new_user_journey.ps1`.
+
+## RR-03 — Target safety (Automated)
+
+**Pass condition.** `git status --porcelain` of the reviewed repository is
+byte-identical before and after the review.
+
+**Gate.** `tests/test_new_user_journey.ps1`.
+
+## RR-04 — Clean-room installation and upgrade (Automated)
+
+**Pass condition.** A copy of the tree with no `.git`, no `reports/`, and no
+review state passes structural validation and release validation.
+
+**Gate.** `tests/test_clean_room.ps1`, run as its own CI step.
+
+## RR-05 — Full user-facing feature set (Automated)
+
+**Pass condition.** Every feature a new user can reach is exercised: the full,
+security, and PR-diff prompts; a review of a central target; the artifact
+contract; the zero-findings and structured-findings paths; and each runner
+failure mode.
+
+**Gate.** `tests/test_runner_failure.ps1`, `tests/test_review_artifacts.ps1`,
+and `tests/test_security_regressions.ps1`, run as their own CI step.
+
+## RR-06 — Tested recovery paths (Automated)
+
+**Pass condition.** A tampered manifest-owned prompt is rejected before
+installation; a repeated installation preserves a restorable backup;
+`Remove-AgentPack.ps1 -RestoreLatest` restores that backup and leaves every file
+the manifest does not own untouched.
+
+**Gate.** `tests/test_recovery_paths.ps1`, run as its own CI step.
+
+## RR-07 — Guided troubleshooting for every failure the user can hit (Automated)
+
+**Pass condition.** For every stable exit code the runner can return — the set is
+read out of `scripts/Run-Review.ps1`, not hard-coded — both novice guides:
+
+1. list the code in an exit-code table,
+2. point that row at one or more troubleshooting rows by ID, and
+3. give each of those rows a non-empty corrective action **and** a non-empty
+   verification command the user can run to confirm the fix worked.
+
+Adding a new `Fail <code>` to the runner therefore fails CI until both guides
+document it.
+
+**Gate.** `scripts/ci/Test-ReleaseReadiness.ps1`.
+
+## RR-08 — Documentation that resolves against this tree (Automated)
+
+**Pass condition.** Both novice guides carry a `validation_status`, name the
+current `VERSION` and its dated `CHANGELOG.md` entry, and record a
+`reviewed_digest` equal to the digest of the harness surface they describe. Every
+repository path either guide cites in backticks exists. Update, uninstall, and
+rollback instructions are present.
+
+**Gate.** `tests/test_guide_digest.ps1`, `scripts/ci/Validate-Release.ps1`, and
+`scripts/ci/Test-ReleaseReadiness.ps1`.
+
+## RR-09 — Cross-platform evidence (Automated)
+
+**Pass condition.** The CI matrix for the validation job contains both
+`windows-latest` and `ubuntu-latest`, and every gate above runs on both. Evidence
+from one platform never stands in for the other.
+
+**Gate.** `scripts/ci/Test-ReleaseReadiness.ps1` asserts the matrix; GitHub
+Actions produces the evidence.
+
+## RR-10 — Independent review workflow (Automated)
+
+**Pass condition.** `.github/workflows/codex-review.yml` defines the read-only
+`analyze` job.
+
+**Gate.** `scripts/ci/Test-ReleaseReadiness.ps1`.
+
+**Deliberate gap.** This requirement does *not* ask for `analyze` to be a
+required status check. Branch protection is unavailable on this repository
+today, so requiring it would be a rule nobody could satisfy. The cost is real
+and worth stating plainly: nothing blocks a merge while `analyze` is red. RR-12
+is what catches that, and it is a human reading the commit's checks, not a rule
+enforcing them. Restore the branch-protection clause here as soon as protection
+becomes available.
+
+## RR-11 — Real-Codex smoke test (Human, not automatable)
+
+**Pass condition.** A maintainer installs the harness on a clean machine, signs
+in to a real Codex account, runs one read-only review of an authorized
+non-sensitive repository, opens the generated report, and confirms the target is
+unchanged.
+
+CI uses a synthetic Codex command on purpose. It cannot prove an account's
+entitlement, sign-in, billing, or the service being reachable, so this
+requirement stays human. Record the date, harness version, and repository used.
+
+## RR-12 — No unresolved blocking findings (Human)
+
+**Pass condition.** No supported critical or high finding is open, and the
+`analyze` check is present and green on the release commit.
+
+Open the release commit on GitHub and look at its checks. Because RR-10 no
+longer requires `analyze` as a status check, a red or missing `analyze` will not
+have stopped anything on its own — this reading is the only thing that catches
+it.
+
+## Coverage is supplemental
+
+`scripts/ci/Test-SourceCoverage.ps1` runs at 100% and stays a required step, but
+it answers "is every production source file exercised", not "can a new user
+succeed". It must never be presented as release approval, and readiness
+enforcement fails if the requirement gates above are removed while coverage
+remains.
+
+## Release decision
+
+Release only when RR-01 through RR-10 are green on the release commit for both
+platforms, and RR-11 and RR-12 are recorded by a maintainer. Any single failing
+requirement blocks the release; there is no aggregate score that overrides one.
