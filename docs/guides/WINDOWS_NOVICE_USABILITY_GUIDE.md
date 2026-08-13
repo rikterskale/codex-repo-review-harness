@@ -5,8 +5,7 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
-target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "d3a6569d63c0aca501254ff905bbe27e1667eee6db688e265a6968bd39c34985"
+reviewed_digest: "3f5fd7747e627e6a93cdf3466a690451a3740d7df44d16e398b112ef8532bf79"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
@@ -32,8 +31,9 @@ Git, and never installed a developer tool. Every step tells you which program to
 open, which folder to be in, exactly what to type, and how to tell whether it
 worked.
 
-The guide describes release **0.2.0** of the Codex Repo Review Harness at commit
-`26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`. If your copy of the project is newer,
+The guide describes release **0.2.0** of the Codex Repo Review Harness. The
+exact tree it was checked against is recorded as `reviewed_digest` in the front
+matter above; `scripts/ci/Validate-Release.ps1` fails if the two drift apart. If your copy of the project is newer,
 some screen output may differ.
 
 Each command in this guide has an identifier such as `WIN-CMD-001`. When you ask
@@ -62,7 +62,7 @@ you install yourself. The harness's job is to call Codex in a deliberately
 restricted way:
 
 - It forces Codex into `read-only` mode, so Codex is not permitted to change,
-  create, or delete any of your files (`scripts/Run-Review.ps1` line 79).
+  create, or delete any of your files (the `--sandbox read-only` argument `scripts/Run-Review.ps1` always builds).
 - It sends Codex the same reviewed instructions every time, from the `prompts/`
   folder.
 - It checks the report Codex sends back against a fixed structure, and refuses to
@@ -96,7 +96,7 @@ on it. The project states this in `docs/WINDOWS_BEGINNER_GUIDE.md` line 367.
 
 **What the harness writes.** Only three files per run, all inside the `reports\`
 folder. Your source code is never modified. This was confirmed by reading
-`scripts/Run-Review.ps1` lines 111, 123, and 124, and by running the tool.
+the runner comparing `git status` before and after the review, and by running the tool.
 
 **Authorization.** Only review repositories you own or have written permission to
 review.
@@ -117,7 +117,7 @@ share with OpenAI.
 
 Evidence:
 
-- `scripts/Run-Review.ps1` line 1 and `scripts/Validate-Harness.ps1` line 1 both
+- `scripts/Run-Review.ps1` and `scripts/Validate-Harness.ps1` both
   declare `#Requires -Version 5.1`, which is the version of Windows PowerShell
   built into Windows 10 and Windows 11.
 - The project's automated tests run on `windows-latest` in
@@ -187,10 +187,10 @@ code anywhere in `scripts/`.
 |---|---|---|---|
 | Operating system | Windows 10 or 11, 64-bit | The scripts are PowerShell and the documented Codex installer is the Windows one | `WIN-CMD-001` |
 | CPU architecture | x64 (or ARM64 if your tools support it) | Not restricted by this project | `WIN-CMD-001` |
-| Windows PowerShell | 5.1 or newer | Declared by `#Requires -Version 5.1` in `scripts/Run-Review.ps1` line 1 | `WIN-CMD-002` |
+| Windows PowerShell | 5.1 or newer | Declared by `#Requires -Version 5.1` in `scripts/Run-Review.ps1` | `WIN-CMD-002` |
 | PowerShell 7 (`pwsh`) | Not required | Optional convenience only; every script declares `#Requires -Version 5.1` and all self-tests pass under Windows PowerShell 5.1 | `WIN-CMD-003` |
-| Git | Any recent version | `scripts/Run-Review.ps1` line 26 refuses to run without it | `WIN-CMD-004` |
-| Codex CLI | Any version that supports `codex exec --sandbox read-only` | `scripts/Run-Review.ps1` lines 79-80 build exactly that command | `WIN-CMD-008` |
+| Git | Any recent version | `scripts/Run-Review.ps1` refuses to run without it | `WIN-CMD-004` |
+| Codex CLI | Any version that supports `codex exec --sandbox read-only` | the arguments `scripts/Run-Review.ps1` builds0 build exactly that command | `WIN-CMD-008` |
 | Account | A ChatGPT plan that includes Codex, **or** an OpenAI API key for the CI workflow | `docs/WINDOWS_BEGINNER_GUIDE.md` line 109; `README.md` line 102 | Sign-in prompt on first Codex run |
 | Disk | ~500 MB for tools | Installer sizes | Not enforced by the project |
 
@@ -825,7 +825,7 @@ review would cover.
 - **Replace before running:** Nothing
 - **Expected side effects:** Creates exactly three files in `reports\`. Never
   modifies your source code. Codex is forced into `read-only` mode by
-  `scripts/Run-Review.ps1` line 79.
+  the `--sandbox read-only` argument `scripts/Run-Review.ps1` always builds.
 - **Validation status:** Partially verified — the full pipeline was run end to end
   against a simulated Codex executable and produced correct artifacts. It was not
   run against the real Codex CLI, which was unavailable in the validation
@@ -873,7 +873,7 @@ Every successful run writes **three** files into `reports\`, all sharing one nam
 
 The timestamp is UTC in the form `yyyyMMdd-HHmmss-fff` and the id is eight random
 characters, so runs never overwrite each other
-(`scripts/Run-Review.ps1` lines 57-61).
+(see how `scripts/Run-Review.ps1` builds the report path from a UTC timestamp and a run id).
 
 > Note: `docs/WINDOWS_BEGINNER_GUIDE.md` line 284 states that the report is "the
 > only new file that was created". That is inaccurate for release 0.2.0 — three
@@ -935,7 +935,7 @@ Expected exit status: `0`.
 ### 20.2 What the exit code means
 
 The runner returns a specific number so scripts can react to failures
-(`scripts/Run-Review.ps1` lines 7-8). To see the number from the last command, run
+(the exit codes documented in the header of `scripts/Run-Review.ps1`). To see the number from the last command, run
 `$LASTEXITCODE`.
 
 | Exit code | Meaning | What to do |
@@ -1021,7 +1021,7 @@ authentication problems.
 - **Replace before running:** Nothing
 - **Expected side effects:** Three new files in `reports\`
 - **Validation status:** Statically verified — the switch is implemented at
-  `scripts/Run-Review.ps1` lines 11 and 53
+  the `-Prompt` parameter of `scripts/Run-Review.ps1`
 
 ```powershell
 .\scripts\Run-Review.ps1 -Prompt security-focus.md
@@ -1079,7 +1079,7 @@ Expected exit status: `0`.
   Example value: `develop`
 - **Expected side effects:** Three new files in `reports\`
 - **Validation status:** Statically verified — the switch is implemented at
-  `scripts/Run-Review.ps1` lines 12 and 47
+  the `-RepositoryPath` parameter of `scripts/Run-Review.ps1`
 
 ```powershell
 .\scripts\Run-Review.ps1 -BaseBranch YOUR_BASE_BRANCH
@@ -1163,7 +1163,7 @@ All settings live in one file, `config\review-config.yaml`. Open it with
 | Setting | Default | What it does |
 |---|---|---|
 | `base_branch` | `main` | The branch a diff review compares against. |
-| `sandbox` | `read-only` | **Leave this alone.** The runner forces `read-only` regardless, and warns you if you changed it (`scripts/Run-Review.ps1` line 48). |
+| `sandbox` | `read-only` | **Leave this alone.** The runner forces `read-only` regardless, and warns you if you changed it (the runner warns and forces `read-only` regardless). |
 | `min_severity` | `medium` | Findings less severe than this are dropped from the JSON file. Allowed values: `critical`, `high`, `medium`, `low`, `info`. |
 | `focus_areas` | seven areas | Topics the AI is told to prioritise. |
 | `include_paths` | empty | Limit the review to certain folders. Empty means the whole repository. |
@@ -1233,7 +1233,7 @@ background job the runner created. As a last resort, run
 
 **A known limitation:** if a review exceeds its timeout, the runner stops waiting
 and exits with code 6, but the underlying Codex process is not guaranteed to be
-terminated (`scripts/Run-Review.ps1` lines 92-95). Use `WIN-CMD-024` to check, and
+terminated (see the timeout branch of `scripts/Run-Review.ps1`). Use `WIN-CMD-024` to check, and
 close the window if one is left behind.
 
 **There are no services, scheduled tasks, listeners, or containers to stop.** This
@@ -1443,7 +1443,7 @@ but doing so reinstates three fixed defects: `REV-COR-001`, `REV-COR-002`, and
 | `WIN-TRB-012` | `pwsh : The term 'pwsh' is not recognized...` | Windows PowerShell | PowerShell 7 is not installed. You are running an older copy of a command, or documentation from before 2026-08-11, that called `pwsh`. No current command needs it | Replace `pwsh -NoProfile` with `powershell -NoProfile -ExecutionPolicy Bypass` and re-run. The scripts declare `#Requires -Version 5.1` and pass under Windows PowerShell 5.1 | `powershell -NoProfile -ExecutionPolicy Bypass -File tests\test_review_helpers.ps1` | Exit status `0` | Install PowerShell 7 with `WIN-CMD-004`, then reopen PowerShell | Output of `WIN-CMD-003` and `$PSVersionTable.PSVersion` |
 | `WIN-TRB-013` | Windows Defender or SmartScreen warns about the downloaded Codex installer | Windows | Windows flags files downloaded from the internet | Do **not** disable Defender or SmartScreen. Inspect the file first (`WIN-CMD-007`), confirm it came from `chatgpt.com`, and use **More info → Run anyway** only if you are satisfied it is genuine | `codex --version` (`WIN-CMD-009`) | A version number is printed | Ask your IT administrator to approve the installer | The exact warning text, the file name, and its `Get-FileHash` value |
 | `WIN-TRB-014` | `Set-Location : Cannot find path ...` | Windows PowerShell | The folder name is misspelled, or contains a space and was not quoted | Run `Get-ChildItem -Name` to see the exact names, then quote any name containing a space: `Set-Location "My Project"` | `Get-Location` | The path shown ends with your folder name | Use Tab completion: type the first letters and press Tab | Output of `Get-ChildItem -Name` from the parent folder |
-| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | This was a defect in 0.1.0: Windows PowerShell 5.1 starts background jobs in your Documents folder, so Codex reviewed the wrong directory. Fixed in 0.2.0, where the runner sets the directory explicitly inside the job (`scripts/Run-Review.ps1` lines 109-112). No automated test covers it, because the tests use a synthetic Codex that ignores its working directory | Do not trust the report's contents. Reopen finding `REV-COR-001` with the maintainer, quoting your `$PSVersionTable.PSVersion` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead: `pwsh -NoProfile -File .\scripts\Run-Review.ps1` | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
+| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | This was a defect in 0.1.0: Windows PowerShell 5.1 starts background jobs in your Documents folder, so Codex reviewed the wrong directory. Fixed in 0.2.0, where the runner sets the directory explicitly inside the job (the `Set-Location` inside the background job in `scripts/Run-Review.ps1`). No automated test covers it, because the tests use a synthetic Codex that ignores its working directory | Do not trust the report's contents. Reopen finding `REV-COR-001` with the maintainer, quoting your `$PSVersionTable.PSVersion` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead: `pwsh -NoProfile -File .\scripts\Run-Review.ps1` | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
 
 **When to stop and ask for help.** If a command fails twice with the same error
 after you have applied the fix and the verification command still disagrees, stop.
@@ -1454,7 +1454,7 @@ key, or password from the text first.
 ## 27. Frequently Asked Questions
 
 **Can the AI change or delete my code?**
-No. `scripts/Run-Review.ps1` line 79 always passes `--sandbox read-only` to Codex,
+No. `scripts/Run-Review.ps1` always passes `--sandbox read-only` to Codex,
 and it does so even if you edit the configuration file to say otherwise
 (line 48 warns you and overrides it).
 
@@ -1590,7 +1590,7 @@ standard user account.
 | Codex CLI | **Not installed** |
 | Privilege | Standard user |
 | Date | 2026-08-13 |
-| Commit under test | `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9` |
+| Tree under test | recorded as `reviewed_digest` in this guide's front matter |
 
 ### 30.2 Command validation totals
 
@@ -1628,7 +1628,7 @@ standard user account.
    reported being started in `C:\Users\<user>\Documents`, because Windows
    PowerShell 5.1 does not give background jobs the caller's working directory.
    The runner now sets the directory explicitly inside the background job
-   (`scripts/Run-Review.ps1` lines 109-112), so the host's default no longer
+   (the `Set-Location` inside the background job in `scripts/Run-Review.ps1`), so the host's default no longer
    applies. **Code-derived, not re-reproduced:** the automated tests substitute
    a synthetic Codex command that ignores its working directory, so no test
    would catch a regression here. If a report ever names files outside your
@@ -1656,7 +1656,7 @@ standard user account.
    0.2.0.** Previously recorded: a two-finding report produced one JSON finding
    under the default `min_severity: medium`, because only the JSON was filtered.
    The runner now filters the Markdown to the same set and asserts the two agree
-   before writing either (`scripts/Run-Review.ps1` lines 131-133). `REV-COR-004`
+   before writing either (the finding-filter and consistency assertion in `scripts/Run-Review.ps1`). `REV-COR-004`
    is closed.
 6. **~~Two self-tests fail under Windows PowerShell 5.1.~~ NO LONGER REPRODUCES.**
    Previously recorded: `tests\test_review_artifacts.ps1` and
@@ -1669,7 +1669,7 @@ standard user account.
    `README.md` no longer invokes `pwsh`. If you see this failure again, reopen
    the finding and record your `$PSVersionTable.PSVersion`.
 7. **A timed-out review may leave a Codex process running.** Code-derived from
-   `scripts/Run-Review.ps1` lines 92-95. Use `WIN-CMD-024` to check.
+   the timeout branch of `scripts/Run-Review.ps1`. Use `WIN-CMD-024` to check.
 
 ### 30.5 Support boundaries
 
@@ -1678,6 +1678,7 @@ standard user account.
   Desktop, containers, virtual machines, macOS, and Command Prompt.
 - The Linux position is recorded separately in
   `docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md`.
-- This guide describes commit `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`. Re-verify
-  after any update.
+- This guide describes the tree recorded as `reviewed_digest` in its front
+  matter. `scripts/ci/Validate-Release.ps1` fails if the harness moves on
+  without the guide being re-read.
 

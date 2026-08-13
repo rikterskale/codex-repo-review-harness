@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+. (Join-Path $HarnessRoot 'scripts\ci\Review-Helpers.ps1')
 $manifestPath = Join-Path $HarnessRoot 'agents\manifest.json'
 
 function Fail([string]$Message) { throw "Managed agent-pack installation refused: $Message" }
@@ -22,6 +23,9 @@ function Get-Manifest() {
     if (-not (Test-Path -LiteralPath $manifestPath)) { Fail "missing manifest: $manifestPath" }
     try { $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json } catch { Fail "invalid manifest: $($_.Exception.Message)" }
     if ($manifest.schema_version -ne 1 -or [string]::IsNullOrWhiteSpace($manifest.installation_root) -or @($manifest.agents).Count -eq 0) { Fail 'manifest is incomplete.' }
+    # installation_root decides where every other path lands, so it is checked
+    # the same way agent.source and agent.codex_config already were.
+    try { Assert-ManagedRelativePath ([string]$manifest.installation_root) 'installation_root' } catch { Fail $_.Exception.Message }
     $names = @($manifest.agents | ForEach-Object { [string]$_.name })
     if (($names | Select-Object -Unique).Count -ne $names.Count -or @($names | Where-Object { $_ -notmatch '^rikter_[a-z0-9_]+$' }).Count) { Fail 'agent names are not unique managed names.' }
     foreach ($agent in @($manifest.agents)) {
@@ -38,15 +42,23 @@ function Get-Manifest() {
 
 $manifest = Get-Manifest
 if ([string]::IsNullOrWhiteSpace($DestinationRoot) -or -not [IO.Path]::IsPathRooted($DestinationRoot)) { Fail 'DestinationRoot must be an absolute path.' }
-$installRoot = Join-Path $DestinationRoot $manifest.installation_root
+try { $installRoot = Resolve-ContainedPath $DestinationRoot (Join-Path $DestinationRoot $manifest.installation_root) 'installation_root' } catch { Fail $_.Exception.Message }
 $stamp = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss')
 $backupRoot = Join-Path $installRoot (Join-Path 'backups' $stamp)
 $actions = @()
 foreach ($agent in @($manifest.agents)) {
     foreach ($relative in @($agent.source, $agent.codex_config)) {
         $source = Join-Path $HarnessRoot $relative
-        $destination = Join-Path $installRoot ($relative -replace '^agents[\\/]','')
-        $actions += [pscustomobject]@{ Source = $source; Destination = $destination; Backup = (Join-Path $backupRoot ($relative -replace '^agents[\\/]','')) }
+        $trimmed = $relative -replace '^agents[\\/]',''
+        # Re-checked after the agents/ prefix is stripped and again after the
+        # join: validating the manifest value alone would not catch a path that
+        # only escapes once it is combined with the root.
+        try {
+            Assert-ManagedRelativePath $trimmed "agent path ($relative)"
+            $destination = Resolve-ContainedPath $installRoot (Join-Path $installRoot $trimmed) "agent destination ($relative)"
+            $backup = Resolve-ContainedPath $installRoot (Join-Path $backupRoot $trimmed) "agent backup ($relative)"
+        } catch { Fail $_.Exception.Message }
+        $actions += [pscustomobject]@{ Source = $source; Destination = $destination; Backup = $backup }
     }
 }
 foreach ($action in $actions) { Write-Host "INSTALL: $($action.Source) -> $($action.Destination)" }

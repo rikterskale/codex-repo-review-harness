@@ -18,6 +18,39 @@ function ConvertTo-RedactedText([string]$Text) {
   return $Text
 }
 
+# Managed agent-pack destinations are built from a JSON manifest, so a manifest
+# that has been edited or swapped must not be able to steer a copy or a delete
+# outside the directory the pack owns. Join-Path does not resolve anything: it
+# concatenates, so `..\..\Windows` survives as text and only escapes once the
+# filesystem resolves the result. These two functions are the check that was
+# missing — the installer validated agent.source and agent.codex_config but not
+# installation_root, and the remover validated nothing before Remove-Item.
+function Assert-ManagedRelativePath([string]$Path, [string]$Field) {
+  if ([string]::IsNullOrWhiteSpace($Path)) { throw "manifest field is empty: $Field" }
+  if ([IO.Path]::IsPathRooted($Path)) { throw "manifest field must be a relative path: $Field ($Path)" }
+  if ($Path -match '(^|[\\/])\.\.([\\/]|$)') { throw "manifest field must not traverse upwards: $Field ($Path)" }
+  # A drive-qualified value such as C:foo is not "rooted" by .NET's definition
+  # but still leaves the destination when resolved.
+  if ($Path -match '^[A-Za-z]:') { throw "manifest field must not be drive-qualified: $Field ($Path)" }
+}
+
+function Resolve-ContainedPath([string]$Root, [string]$Candidate, [string]$Field) {
+  # GetFullPath collapses `..` and normalises separators, which is what makes
+  # the comparison meaningful. Test-Path is deliberately not used: the
+  # destination usually does not exist yet.
+  $separator = [IO.Path]::DirectorySeparatorChar
+  $fullRoot = [IO.Path]::GetFullPath($Root)
+  if (-not $fullRoot.EndsWith($separator)) { $fullRoot += $separator }
+  $full = [IO.Path]::GetFullPath($Candidate)
+  $comparison = if ([Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([Runtime.InteropServices.OSPlatform]::Windows)) {
+    [StringComparison]::OrdinalIgnoreCase
+  } else { [StringComparison]::Ordinal }
+  if (-not $full.StartsWith($fullRoot, $comparison)) {
+    throw "path escapes the managed agent-pack root: $Field ($Candidate)"
+  }
+  return $full
+}
+
 function ConvertTo-ReviewJsonPortableValue([object]$Value) {
   # PowerShell 7's ConvertFrom-Json coerces ISO-8601 strings into [datetime] (or
   # [datetimeoffset]); Windows PowerShell 5.1 leaves them as [string]. Without

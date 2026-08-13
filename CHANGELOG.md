@@ -13,8 +13,31 @@ avoid, a validator that told Linux users to run a Windows command, and a report
 that printed its title twice — are covered by
 `tests/test_novice_defect_regressions.ps1`.
 
+### Security
+
+- **Manifest paths can no longer escape the managed agent-pack directory.**
+  `Install-AgentPack.ps1` validated `agent.source` and `agent.codex_config` for
+  rooted and `..` values but never `installation_root`, which decides where
+  every other path lands. `Remove-AgentPack.ps1` validated nothing beyond the
+  schema version and then passed its derived paths straight to `Remove-Item`, so
+  an edited manifest could delete arbitrary files. Both scripts now reject
+  rooted, drive-qualified, and traversing manifest values, and canonicalise every
+  computed destination and require it to resolve under the managed-pack root
+  (`REV-SEC-001`). Covered by `tests/test_agent_pack_traversal.ps1`, which also
+  asserts a file outside the destination root survives each attempt.
+
+  Found by the first real-Codex review of this repository — the same smoke test
+  that RR-11 requires.
+
 ### Fixed
 
+- **Guides no longer pin commit SHAs or cite source line numbers.** The front
+  matter named one commit and the body another, and both guides cited
+  `Run-Review.ps1` lines 79-80 for the read-only sandbox long after that code
+  had moved. Freshness is tracked by `reviewed_digest`, so a commit SHA can only
+  go stale or contradict it; citations now name parameters and behaviour instead
+  of line numbers. `Test-ReleaseReadiness.ps1` rejects both from now on
+  (`REV-DOC-006`).
 - **The report is Codex's final message, not its console output.** The runner
   captured everything Codex printed and wrote it into the artifact as the
   review: the startup banner, the entire prompt echoed back including the

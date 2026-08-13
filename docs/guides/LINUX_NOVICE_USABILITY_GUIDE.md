@@ -5,8 +5,7 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
-target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "d3a6569d63c0aca501254ff905bbe27e1667eee6db688e265a6968bd39c34985"
+reviewed_digest: "3f5fd7747e627e6a93cdf3466a690451a3740d7df44d16e398b112ef8532bf79"
 # The harness itself is proven natively on Ubuntu: every release-readiness gate,
 # including the full new-user journey, is a required CI step there. What is not
 # supported is installing the Codex CLI, for which this project documents no
@@ -38,8 +37,9 @@ Git, and never installed a developer tool on Linux. Every step tells you which
 program to open, which folder to be in, exactly what to type, and how to tell
 whether it worked.
 
-The guide describes release **0.2.0** of the Codex Repo Review Harness at commit
-`26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`.
+The guide describes release **0.2.0** of the Codex Repo Review Harness. The
+exact tree it was checked against is recorded as `reviewed_digest` in the front
+matter above; `scripts/ci/Validate-Release.ps1` fails if the two drift apart.
 
 Each command has an identifier such as `LNX-CMD-001`. Quoting that identifier
 tells a maintainer exactly which step failed.
@@ -70,7 +70,7 @@ It does not contain the AI. The AI is the separate **OpenAI Codex CLI**, a progr
 you install yourself. The harness's job is to call Codex in a restricted way:
 
 - It forces Codex into `read-only` mode so Codex cannot change, create, or delete
-  your files (`scripts/Run-Review.ps1` line 79).
+  your files (the `--sandbox read-only` argument `scripts/Run-Review.ps1` always builds).
 - It sends the same reviewed instructions every time, from `prompts/`.
 - It checks the returned report against a fixed structure and refuses to save one
   that does not match.
@@ -100,7 +100,7 @@ sends what it needs to OpenAI to produce the review. Do not use this tool on cod
 you are not allowed to send to a third party.
 
 **What the harness writes.** Three files per run, inside the `reports/` folder.
-Your source code is never modified (`scripts/Run-Review.ps1` lines 111, 123, 124).
+Your source code is never modified (the runner compares `git status` before and after, and aborts if anything changed).
 
 **Privileges.** Nothing in this project needs `sudo` or a root shell. `sudo` is
 needed only to *install* prerequisites such as PowerShell and Git, and each such
@@ -216,8 +216,8 @@ Type paths exactly as shown, including capital letters.
 | Architecture | x64 | The CI runner is x64. No other architecture has evidence | `LNX-CMD-002` |
 | Shell for installation | Bash | Standard on Ubuntu | `LNX-CMD-002` |
 | Shell for the harness | PowerShell 7 (`pwsh`) | Every harness script is PowerShell | `LNX-CMD-004` |
-| Git | Any recent version | `scripts/Run-Review.ps1` line 26 refuses to run without it | `LNX-CMD-003` |
-| Codex CLI | A version supporting `codex exec --sandbox read-only` | `scripts/Run-Review.ps1` lines 79-80 | `LNX-CMD-011` |
+| Git | Any recent version | `scripts/Run-Review.ps1` refuses to run without it | `LNX-CMD-003` |
+| Codex CLI | A version supporting `codex exec --sandbox read-only` | the arguments `scripts/Run-Review.ps1` builds | `LNX-CMD-011` |
 | Account | A ChatGPT plan including Codex | Codex requires sign-in | Sign-in prompt |
 | Privilege | Standard user to run; `sudo` to install | No harness script requires elevation | — |
 
@@ -752,7 +752,7 @@ files.
 
 **What is fixed but not runtime-proven:** the background-job mechanism the
 runner uses now sets its working directory explicitly
-(`scripts/Run-Review.ps1` lines 109-112), so Codex starts in the repository
+(the `Set-Location` inside the background job in `scripts/Run-Review.ps1`), so Codex starts in the repository
 under review rather than the shell's default. On Windows PowerShell 5.1 the old
 behaviour was **reproduced as broken** (finding `REV-COR-001`). This is a
 code-derived claim, not a tested one: the Ubuntu CI run substitutes a synthetic
@@ -792,7 +792,7 @@ Every successful run writes three files into `reports/`, sharing one name:
 
 The timestamp is UTC in the form `yyyyMMdd-HHmmss-fff` and the id is eight random
 characters, so runs never overwrite each other
-(`scripts/Run-Review.ps1` lines 57-61).
+(see how `scripts/Run-Review.ps1` builds the report path from a UTC timestamp and a run id).
 
 - **Command ID:** `LNX-CMD-014`
 - **Purpose:** List the reports you have.
@@ -1089,7 +1089,7 @@ config/review-config.yaml` in Bash. The settings the harness reads are:
 | Setting | Default | What it does |
 |---|---|---|
 | `base_branch` | `main` | The branch a diff review compares against. |
-| `sandbox` | `read-only` | **Leave this alone.** The runner forces `read-only` regardless and warns if you changed it (`scripts/Run-Review.ps1` line 48). |
+| `sandbox` | `read-only` | **Leave this alone.** The runner forces `read-only` regardless and warns if you changed it (the runner warns and forces `read-only` regardless). |
 | `min_severity` | `medium` | Findings below this are dropped from the JSON file. Values: `critical`, `high`, `medium`, `low`, `info`. |
 | `focus_areas` | seven areas | Topics the AI prioritises. |
 | `include_paths` | empty | Limit the review to certain folders. Empty means everything. |
@@ -1155,7 +1155,7 @@ job. As a last resort run `pkill codex`.
 
 **A known limitation:** if a review exceeds its timeout the runner stops waiting
 and exits with code 6, but the underlying Codex process is not guaranteed to be
-terminated (`scripts/Run-Review.ps1` lines 92-95). Use `LNX-CMD-023` to check.
+terminated (see the timeout branch of `scripts/Run-Review.ps1`). Use `LNX-CMD-023` to check.
 
 **There are no services, timers, listeners, or containers to stop.** This project
 creates none, so there is nothing for `systemctl` to do here.
@@ -1357,7 +1357,7 @@ No. Support status is `unverified`. Part of the harness is proven to run on Ubun
 by the project's own CI; the review runner is not. See section 5.
 
 **Can the AI change or delete my code?**
-No. `scripts/Run-Review.ps1` line 79 always passes `--sandbox read-only`, even if
+No. `scripts/Run-Review.ps1` always passes `--sandbox read-only`, even if
 you edit the configuration file to say otherwise.
 
 **Do I need `sudo`?**
@@ -1487,7 +1487,7 @@ project's CI runs.
 | Codex CLI | **Not installed — no documented Linux installation path** |
 | Privilege | Ordinary user (`runner`) |
 | Date | 2026-08-13 |
-| Commit under test | `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9` |
+| Tree under test | recorded as `reviewed_digest` in this guide's front matter |
 | Evidence | GitHub Actions workflow run 30662430133, job 91261545707 |
 
 No interactive Linux desktop was available to this review. All Linux runtime
@@ -1551,7 +1551,7 @@ scripts it executed and silent about the rest.
    Finding `REV-COR-002` is closed.
 7. ~~**A working-directory defect exists on Windows PowerShell 5.1**~~ **Fixed in
    0.2.0** for every platform: the runner sets the job's working directory
-   explicitly (`scripts/Run-Review.ps1` lines 109-112) instead of inheriting the
+   explicitly (the `Set-Location` inside the background job in `scripts/Run-Review.ps1`) instead of inheriting the
    host's default (finding `REV-COR-001`). Code-derived only — the tests use a
    synthetic Codex that ignores its working directory, so a regression would go
    unnoticed. If a report ever names files outside your repository, reopen the
@@ -1567,6 +1567,7 @@ scripts it executed and silent about the rest.
   virtual machines, `systemd` integration, and macOS.
 - For a proven end-to-end review today, use
   `docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md`.
-- This guide describes commit `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`. Re-verify
-  after any update.
+- This guide describes the tree recorded as `reviewed_digest` in its front
+  matter. `scripts/ci/Validate-Release.ps1` fails if the harness moves on
+  without the guide being re-read.
 

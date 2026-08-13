@@ -249,6 +249,20 @@ foreach ($guide in $guides.Keys) {
     }
   }
 
+  # A guide that names a commit is a guide that starts lying on the next commit.
+  # The project already replaced commit pinning with reviewed_digest, and the
+  # leftover SHAs had drifted into contradicting each other: the front matter and
+  # the body named different commits (REV-DOC-006).
+  foreach ($sha in @([regex]::Matches($text, '(?<![0-9a-fA-F])[0-9a-f]{40}(?![0-9a-fA-F])') | ForEach-Object { $_.Value } | Sort-Object -Unique)) {
+    Add-Failure 'RR-08' "$guide pins commit ${sha}; freshness is tracked by reviewed_digest, so a commit SHA can only go stale or contradict it."
+  }
+  # Line numbers in a file that changes every release rot silently. The same
+  # finding caught both guides citing Run-Review.ps1 lines 79-80 for the
+  # read-only sandbox long after that code had moved.
+  foreach ($citation in @([regex]::Matches($text, '`(scripts/[A-Za-z0-9_.-]+\.ps1)`\s+lines?\s+\d+') | ForEach-Object { $_.Value } | Sort-Object -Unique)) {
+    Add-Failure 'RR-08' "$guide cites a line number that will not survive the next edit: $citation. Reference a parameter, function, or behaviour instead."
+  }
+
   foreach ($topic in @(@{ Label = 'update'; Pattern = '(?i)##[^\n]*(update|upgrade)' }, @{ Label = 'uninstall'; Pattern = '(?i)##[^\n]*(uninstall|cleanup|remove)' }, @{ Label = 'rollback'; Pattern = '(?i)rollback' })) {
     if ($text -notmatch $topic.Pattern) { Add-Failure 'RR-08' "$guide documents no $($topic.Label) path." }
   }

@@ -132,6 +132,19 @@ try {
     $text + "`nRun ``scripts/Nonexistent-Step.ps1`` to finish.`n"
   }
 
+  # RR-08: freshness is tracked by reviewed_digest, so a commit SHA in a guide
+  # can only go stale or contradict it — which is exactly what happened.
+  Assert-Rejects 'RR-08 (guide pins a commit SHA)' $linuxGuidePath {
+    param($text)
+    $text + "`nThis guide describes commit ``26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9``.`n"
+  }
+
+  # RR-08: and a line-number citation rots on the next edit of the file it names.
+  Assert-Rejects 'RR-08 (guide cites a source line number)' $windowsGuidePath {
+    param($text)
+    $text + "`nThe sandbox is forced by ``scripts/Run-Review.ps1`` lines 79-80.`n"
+  }
+
   # RR-10: the independent review job the standard requires as a status check.
   Assert-Rejects 'RR-10 (analyze job removed)' $reviewWorkflowPath {
     param($text)
