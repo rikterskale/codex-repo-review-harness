@@ -4,9 +4,9 @@ guide_schema_version: 1
 platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
-target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
+target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "da21e607a50b55ea16c39b8a4dfa2edc48ecfedf10ee4efe59eabd88cf80ca33"
+reviewed_digest: "acddc552dfddb82e3606cb0c85af3ac8d2cd7fc8f9a3c411cdba02fbf97d0810"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
@@ -32,7 +32,7 @@ Git, and never installed a developer tool. Every step tells you which program to
 open, which folder to be in, exactly what to type, and how to tell whether it
 worked.
 
-The guide describes release **0.1.0** of the Codex Repo Review Harness at commit
+The guide describes release **0.2.0** of the Codex Repo Review Harness at commit
 `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`. If your copy of the project is newer,
 some screen output may differ.
 
@@ -805,7 +805,7 @@ repository, in read-only mode.
 The project documents a `-DryRun` switch as a way to "just check what the script
 would do without calling the AI" (`docs/WINDOWS_BEGINNER_GUIDE.md` line 304).
 
-**Be aware:** in release 0.1.0 the dry run still refuses to start unless the Codex
+**Be aware:** in release 0.2.0 the dry run still refuses to start unless the Codex
 CLI is installed. This was confirmed during validation — running
 `.\scripts\Run-Review.ps1 -DryRun` on a machine without Codex produced
 `Codex CLI is not installed or not on PATH.` and exit code `3`, even though a dry
@@ -874,7 +874,7 @@ characters, so runs never overwrite each other
 (`scripts/Run-Review.ps1` lines 57-61).
 
 > Note: `docs/WINDOWS_BEGINNER_GUIDE.md` line 284 states that the report is "the
-> only new file that was created". That is inaccurate for release 0.1.0 — three
+> only new file that was created". That is inaccurate for release 0.2.0 — three
 > files are created. This guide reflects the actual behaviour.
 
 - **Command ID:** `WIN-CMD-016`
@@ -962,15 +962,17 @@ The report always contains these sections, in this order:
 
 Start with the Executive Summary, then read the `CRITICAL` and `HIGH` findings.
 
-**Two things that will look odd, and are known defects in release 0.1.0:**
+**One thing that will look odd, and is a known defect in release 0.2.0:** the
+title line `# Codex Repository Review Report` appears **twice** near the top —
+once from the harness's own header and once from the AI's report. It is
+harmless. Tracked as `REV-DOC-004`.
 
-1. The title line `# Codex Repository Review Report` appears **twice** near the
-   top — once from the harness's own header and once from the AI's report. This
-   is harmless.
-2. The `.json` file may contain **fewer** findings than the `.md` file. The JSON
-   drops any finding below the `min_severity` setting in
-   `config/review-config.yaml` (default `medium`), while the Markdown keeps them
-   all. Trust the Markdown for the complete list.
+**The `.md` and `.json` files now agree.** In 0.1.0 the JSON could hold fewer
+findings than the Markdown, because only the JSON dropped findings below
+`min_severity` (default `medium`, set in `config/review-config.yaml`). Both are
+filtered to the same set in 0.2.0, and the run fails rather than writing two
+files that disagree. Findings below `min_severity` appear in neither: lower the
+setting if you want them.
 
 ### 20.4 Checking that a report was not tampered with
 
@@ -1330,7 +1332,7 @@ Expected exit status: `0`.
 Representative output — **Verified Runtime Output**:
 
 ```text
-0.1.0
+0.2.0
 ```
 
 **Success means:** you see three numbers separated by dots. Compare that with the
@@ -1382,8 +1384,8 @@ Expected exit status: `0`.
 
 **Next step:** re-run `WIN-CMD-014` and `WIN-CMD-027`.
 
-**Migrations:** release 0.1.0 has no data to migrate. Reports written by an older
-version stay readable. If a future release changes `schema_version` in the JSON
+**Migrations:** release 0.2.0 has no data to migrate, and none of its fixes change
+the report format. Reports written by 0.1.0 stay readable. If a future release changes `schema_version` in the JSON
 file (currently `1.0`, `schemas/review-report.schema.json` line 7), check that
 release's `CHANGELOG.md` entry.
 
@@ -1416,8 +1418,9 @@ Expected exit status: `0`.
 **What cannot be rolled back:** reviews already sent to OpenAI, and any report you
 deleted.
 
-**Downgrade note:** release 0.1.0 is the first release, so there is nothing to
-downgrade to. This section will apply once a second release exists.
+**Downgrade note:** you can return to 0.1.0 with `git checkout` of that commit,
+but doing so reinstates three fixed defects: `REV-COR-001`, `REV-COR-002`, and
+`REV-COR-004`. See section 30.4.
 
 ## 26. Troubleshooting Matrix
 
@@ -1431,13 +1434,13 @@ downgrade to. This section will apply once a second release exists.
 | `WIN-TRB-006` | `Codex review timed out after 900 seconds.` and exit code `6` | Windows PowerShell | The repository is large, or the model is slow | Re-run with a longer limit: `.\scripts\Run-Review.ps1 -TimeoutSeconds 1800`. Or narrow the review by setting `include_paths` in `config\review-config.yaml` | `.\scripts\Run-Review.ps1 -TimeoutSeconds 1800` | `Review finished. ...` | Review a subfolder by setting `include_paths` | The timeout value used and the repository's file count |
 | `WIN-TRB-007` | `Review Markdown is missing required section: ## Findings` and exit code `5` | Windows PowerShell | Codex did not follow the required report structure | Re-run the review; the model's output varies between runs. If it recurs, confirm `prompts\system-review.md` is unmodified | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Try `-Prompt security-focus.md`, which uses the same structure | The exact error line and `git status` for the `prompts` folder |
 | `WIN-TRB-008` | `report.output_dir must be a repository-relative path.` and exit code `2` | Windows PowerShell | `output_dir` in the config is an absolute path or contains `..` | Open `config\review-config.yaml` and set the nested `output_dir` back to `reports` | `.\scripts\Validate-Harness.ps1` (`WIN-CMD-014`) | All `[PASS]` lines | Restore the file with `git checkout config/review-config.yaml` | The `report:` block from your config file |
-| `WIN-TRB-009` | `Potential secret detected in the generated review artifact.` and exit code `5`, with no report written | Windows PowerShell | **Known defect in release 0.1.0.** The report contained a finding that quotes a credential assignment such as `PASSWORD=...`. The harness redacts it to `PASSWORD: [REDACTED]` and then its own detector matches that placeholder, so the whole report is discarded | There is no user-side setting that avoids this. Re-run the review and hope the wording differs, or narrow the review with `include_paths` so the credential-bearing file is excluded. Report the defect to the maintainer | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Use `-Prompt pr-diff-review.md` on a change set that does not touch credential-bearing files | The exact error text, the `min_severity` setting, and a note that finding `REV-COR-002` is suspected |
+| `WIN-TRB-009` | `Potential secret detected in the generated review artifact.` and exit code `5`, with no report written | Windows PowerShell | The report appears to contain an unredacted credential, so the harness refuses to write it. In 0.1.0 this also fired on the harness's *own* redaction placeholder, discarding harmless reports; that defect is fixed in 0.2.0 (`REV-COR-002` closed), so in 0.2.0 this means a credential really did survive redaction | Find the credential in your own code and remove it — the review is telling you it is there. If your code is clean, this is a redaction gap: narrow the review with `include_paths` to exclude the file, and report it to the maintainer | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Use `-Prompt pr-diff-review.md` on a change set that does not touch credential-bearing files | The exact error text, the `min_severity` setting, and whether the flagged value is a real credential |
 | `WIN-TRB-010` | `Codex output exceeded 5242880 bytes.` and exit code `7` | Windows PowerShell | The review produced more than 5 MB of text | Narrow the scope using `include_paths` in `config\review-config.yaml`, or raise the limit for one run with `-MaxOutputBytes 10485760` | `.\scripts\Run-Review.ps1` (`WIN-CMD-015`) | `Review finished. ...` | Review one subfolder at a time | The repository size and the limit you used |
 | `WIN-TRB-011` | `This folder is not inside a Git repository.` and exit code `3` | Windows PowerShell | The current folder is not a Git repository | Move into the repository with `Set-Location`, or create one with `git init` | `git rev-parse --is-inside-work-tree` | `true` | Clone a repository first (`WIN-CMD-011`) | Output of `Get-Location` and `WIN-CMD-013` |
 | `WIN-TRB-012` | `pwsh : The term 'pwsh' is not recognized...` | Windows PowerShell | PowerShell 7 is not installed. You are running an older copy of a command, or documentation from before 2026-08-11, that called `pwsh`. No current command needs it | Replace `pwsh -NoProfile` with `powershell -NoProfile -ExecutionPolicy Bypass` and re-run. The scripts declare `#Requires -Version 5.1` and pass under Windows PowerShell 5.1 | `powershell -NoProfile -ExecutionPolicy Bypass -File tests\test_review_helpers.ps1` | Exit status `0` | Install PowerShell 7 with `WIN-CMD-004`, then reopen PowerShell | Output of `WIN-CMD-003` and `$PSVersionTable.PSVersion` |
 | `WIN-TRB-013` | Windows Defender or SmartScreen warns about the downloaded Codex installer | Windows | Windows flags files downloaded from the internet | Do **not** disable Defender or SmartScreen. Inspect the file first (`WIN-CMD-007`), confirm it came from `chatgpt.com`, and use **More info → Run anyway** only if you are satisfied it is genuine | `codex --version` (`WIN-CMD-009`) | A version number is printed | Ask your IT administrator to approve the installer | The exact warning text, the file name, and its `Get-FileHash` value |
 | `WIN-TRB-014` | `Set-Location : Cannot find path ...` | Windows PowerShell | The folder name is misspelled, or contains a space and was not quoted | Run `Get-ChildItem -Name` to see the exact names, then quote any name containing a space: `Set-Location "My Project"` | `Get-Location` | The path shown ends with your folder name | Use Tab completion: type the first letters and press Tab | Output of `Get-ChildItem -Name` from the parent folder |
-| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | **Known defect in release 0.1.0.** The runner starts Codex through a background job, and Windows PowerShell 5.1 starts background jobs in your Documents folder rather than the current folder, so Codex reviews the wrong directory (`scripts/Run-Review.ps1` lines 86-90) | There is no user-side workaround in 0.1.0. Do not trust the report's contents. Report the defect to the maintainer, citing finding `REV-COR-001` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead (`pwsh -NoProfile -File .\scripts\Run-Review.ps1`), which starts background jobs in the current folder — untested for this project, so verify the report's paths afterwards | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
+| `WIN-TRB-015` | The review succeeds but describes files that are not in your project, or reports almost nothing for a large project | Windows PowerShell 5.1 | This was a defect in 0.1.0: Windows PowerShell 5.1 starts background jobs in your Documents folder, so Codex reviewed the wrong directory. Fixed in 0.2.0, where the runner sets the directory explicitly inside the job (`scripts/Run-Review.ps1` lines 109-112). No automated test covers it, because the tests use a synthetic Codex that ignores its working directory | Do not trust the report's contents. Reopen finding `REV-COR-001` with the maintainer, quoting your `$PSVersionTable.PSVersion` | Compare the file paths named in the report's findings against `Get-ChildItem -Recurse -Name` in your repository | Every path named in the report exists in your repository | Run the review from PowerShell 7 instead: `pwsh -NoProfile -File .\scripts\Run-Review.ps1` | The report file, the output of `Get-Location`, and `$PSVersionTable.PSVersion` |
 
 **When to stop and ask for help.** If a command fails twice with the same error
 after you have applied the fix and the verification command still disagrees, stop.
@@ -1465,7 +1468,7 @@ No. It is entirely optional and needs a separate `OPENAI_API_KEY` secret
 configured on GitHub. Everything in this guide works without it.
 
 **Why are there two title lines at the top of my report?**
-A known cosmetic defect in release 0.1.0. It is harmless.
+A known cosmetic defect, still present in release 0.2.0. It is harmless.
 
 **Why does my JSON file have fewer findings than my Markdown report?**
 Findings below the `min_severity` setting are filtered out of the JSON only. Read
@@ -1583,7 +1586,7 @@ standard user account.
 | PowerShell 7 (`pwsh`) | **Not installed** |
 | Codex CLI | **Not installed** |
 | Privilege | Standard user |
-| Date | 2026-07-31 |
+| Date | 2026-08-13 |
 | Commit under test | `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9` |
 
 ### 30.2 Command validation totals
@@ -1615,25 +1618,41 @@ standard user account.
 | Update verified | **Statically verified** — `git pull` is standard Git behaviour, not executed here |
 | Rollback verified | **Statically verified** — `git checkout` is standard Git behaviour, not executed here |
 
-### 30.4 Known limitations of release 0.1.0
+### 30.4 Known limitations of release 0.2.0
 
-1. **Codex is launched in the wrong directory.** Reproduced: with the repository
-   under review at a temporary path, Codex reported being started in
-   `C:\Users\<user>\Documents`. Windows PowerShell 5.1 does not give background
-   jobs the caller's working directory. The review therefore analyses the wrong
-   folder while the report header names the intended repository. Tracked as
-   finding `REV-COR-001`. **This is the most serious defect in release 0.1.0.**
-2. **Reviews that quote credentials are discarded.** Reproduced: a report whose
-   finding contained `PASSWORD=hunter2` caused exit code 5 and wrote zero files.
-   Tracked as finding `REV-COR-002`.
-3. **`-DryRun` requires the Codex CLI.** Reproduced: exit code 3 on a machine
-   without Codex, contradicting the documented purpose of the switch. Tracked as
-   `REV-UX-001`.
-4. **The report title appears twice.** Reproduced. Cosmetic. Tracked as
+1. **~~Codex is launched in the wrong directory.~~ FIXED in 0.2.0.** Previously
+   recorded: with the repository under review at a temporary path, Codex
+   reported being started in `C:\Users\<user>\Documents`, because Windows
+   PowerShell 5.1 does not give background jobs the caller's working directory.
+   The runner now sets the directory explicitly inside the background job
+   (`scripts/Run-Review.ps1` lines 109-112), so the host's default no longer
+   applies. **Code-derived, not re-reproduced:** the automated tests substitute
+   a synthetic Codex command that ignores its working directory, so no test
+   would catch a regression here. If a report ever names files outside your
+   repository, reopen `REV-COR-001`.
+2. **~~Reviews that quote credentials are discarded.~~ FIXED in 0.2.0.**
+   Previously recorded: a report whose finding contained `PASSWORD=hunter2`
+   caused exit code 5 and wrote zero files, because the secret detector matched
+   the harness's own redaction placeholder. The detector now strips its
+   placeholders before scanning, and `tests/test_review_helpers.ps1` asserts
+   that a redacted credential finding stays publishable. `REV-COR-002` is
+   closed.
+3. **`-DryRun` requires the Codex CLI.** Still present in 0.2.0. The
+   prerequisite check runs before the dry-run branch
+   (`scripts/Run-Review.ps1` lines 28 and 101), so a dry run exits `3` on a
+   machine without Codex, contradicting the documented purpose of the switch.
+   Tracked as `REV-UX-001`.
+4. **The report title appears twice.** Still present in 0.2.0. The harness
+   header and the model's own report each supply the title
+   (`scripts/Run-Review.ps1` line 136, and the title that
+   `Assert-ReviewMarkdown` requires of the model). Cosmetic. Tracked as
    `REV-DOC-004`.
-5. **The JSON file can contain fewer findings than the Markdown.** Reproduced: a
-   two-finding report produced one JSON finding under the default
-   `min_severity: medium`. Tracked as `REV-COR-004`.
+5. **~~The JSON file can contain fewer findings than the Markdown.~~ FIXED in
+   0.2.0.** Previously recorded: a two-finding report produced one JSON finding
+   under the default `min_severity: medium`, because only the JSON was filtered.
+   The runner now filters the Markdown to the same set and asserts the two agree
+   before writing either (`scripts/Run-Review.ps1` lines 131-133). `REV-COR-004`
+   is closed.
 6. **~~Two self-tests fail under Windows PowerShell 5.1.~~ NO LONGER REPRODUCES.**
    Previously recorded: `tests\test_review_artifacts.ps1` and
    `tests\test_runner_failure.ps1` exited `1` under `powershell` and only passed

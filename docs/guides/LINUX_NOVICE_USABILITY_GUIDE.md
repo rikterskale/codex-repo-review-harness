@@ -4,11 +4,17 @@ guide_schema_version: 1
 platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
-target_release: "0.1.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
+target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "da21e607a50b55ea16c39b8a4dfa2edc48ecfedf10ee4efe59eabd88cf80ca33"
-support_status: unverified
-alternative_support_paths: []
+reviewed_digest: "acddc552dfddb82e3606cb0c85af3ac8d2cd7fc8f9a3c411cdba02fbf97d0810"
+# The harness itself is proven natively on Ubuntu: every release-readiness gate,
+# including the full new-user journey, is a required CI step there. What is not
+# supported is installing the Codex CLI, for which this project documents no
+# Linux path. Neither `native_supported` nor `unverified` describes that
+# accurately, so the status names the split.
+support_status: native_supported_except_codex_install
+alternative_support_paths:
+  - "Windows, natively supported end to end: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"
 validation_status: partially_verified
 validated_on: 2026-08-04
 validated_environments:
@@ -32,7 +38,7 @@ Git, and never installed a developer tool on Linux. Every step tells you which
 program to open, which folder to be in, exactly what to type, and how to tell
 whether it worked.
 
-The guide describes release **0.1.0** of the Codex Repo Review Harness at commit
+The guide describes release **0.2.0** of the Codex Repo Review Harness at commit
 `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9`.
 
 Each command has an identifier such as `LNX-CMD-001`. Quoting that identifier
@@ -119,8 +125,9 @@ Linux. See troubleshooting row `LNX-TRB-008`.
 
 ## 5. Platform Support Status
 
-**This repository does not currently document native Linux execution, and the
-review runner has never been verified on Linux. Support status: `unverified`.**
+**The harness runs natively on Linux and is verified there by CI. Installing the
+Codex CLI, which the harness depends on, is not documented for Linux by this
+project. Support status: `native_supported_except_codex_install`.**
 
 This is not a formatting technicality. Here is precisely what is and is not known.
 
@@ -698,7 +705,8 @@ output; the Linux output should be identical apart from path separators):
 
 **Expected failure on Linux:** the `Codex CLI is installed` check will fail unless
 you installed Codex yourself, and its suggested fix is a Windows command. That
-mismatch is a documentation defect in release 0.1.0 (finding `REV-DOC-005`), not a
+mismatch is a documentation defect, still present in release 0.2.0 (finding
+`REV-DOC-005`), not a
 problem with your system.
 
 **Common failure:** `./scripts/Validate-Harness.ps1: The term ... is not
@@ -742,12 +750,14 @@ Review finished. Markdown: .../reports/review-20260731-213440-423-e4a65858.md; J
 **Success would mean:** a closing line beginning `Review finished.` naming three
 files.
 
-**What is now proven on Linux:** the background-job mechanism the runner uses
-launches Codex in the repository under review, not in your home folder. On
-Windows PowerShell 5.1 this was **reproduced as broken** (finding `REV-COR-001`);
-the Ubuntu run of `tests/test_new_user_journey.ps1` reviews a target repository
-outside the harness and checks the produced artifacts, so the working-directory
-behaviour is exercised on this platform.
+**What is fixed but not runtime-proven:** the background-job mechanism the
+runner uses now sets its working directory explicitly
+(`scripts/Run-Review.ps1` lines 109-112), so Codex starts in the repository
+under review rather than the shell's default. On Windows PowerShell 5.1 the old
+behaviour was **reproduced as broken** (finding `REV-COR-001`). This is a
+code-derived claim, not a tested one: the Ubuntu CI run substitutes a synthetic
+Codex command that ignores its working directory, so no test would notice a
+regression here.
 
 **What is genuinely unknown on Linux:** whether the real
 `codex exec --sandbox read-only` behaves like the synthetic command CI uses.
@@ -851,12 +861,14 @@ The report always contains `## Executive Summary`, `## Findings`,
 finding starts with `### [SEVERITY] Title` and carries Location, Why it matters,
 Evidence, and Suggested fix lines.
 
-Two known oddities in release 0.1.0, both verified on Windows:
+One known oddity in release 0.2.0, verified on Windows: the title
+`# Codex Repository Review Report` appears **twice**, once from the harness
+header and once from the model's report. Harmless, tracked as `REV-DOC-004`.
 
-1. The title `# Codex Repository Review Report` appears **twice**. Harmless.
-2. The `.json` file may hold **fewer** findings than the `.md`, because findings
-   below `min_severity` (default `medium`) are dropped from the JSON only. Trust
-   the Markdown.
+The `.md` and `.json` files agree in 0.2.0. In 0.1.0 the JSON could hold fewer
+findings, because only it dropped findings below `min_severity` (default
+`medium`); both are now filtered to the same set and the run fails rather than
+writing two files that disagree.
 
 ### 20.4 Verify a report was not altered
 
@@ -1225,7 +1237,7 @@ Expected exit status: `0`.
 Representative output — **Code-Derived Output Shape**:
 
 ```text
-0.1.0
+0.2.0
 ```
 
 **Success means:** three numbers separated by dots, matching the newest heading in
@@ -1275,8 +1287,8 @@ Expected exit status: `0`.
 
 **Next step:** re-run `LNX-CMD-025` and `LNX-CMD-012`.
 
-**Migrations:** release 0.1.0 has no data to migrate. Older reports remain
-readable. If a future release changes `schema_version` in the JSON report
+**Migrations:** release 0.2.0 has no data to migrate, and none of its fixes
+change the report format. Reports written by 0.1.0 remain readable. If a future release changes `schema_version` in the JSON report
 (currently `1.0`, `schemas/review-report.schema.json` line 7), read that release's
 `CHANGELOG.md` entry.
 
@@ -1309,8 +1321,9 @@ passes.
 **What cannot be rolled back:** reviews already sent to OpenAI, and deleted
 reports.
 
-**Downgrade note:** 0.1.0 is the first release, so there is nothing to downgrade
-to yet.
+**Downgrade note:** you can return to 0.1.0 with `git checkout` of that commit,
+but you would be reinstating three fixed defects: `REV-COR-001`, `REV-COR-002`,
+and `REV-COR-004`. See section 30.4.
 
 ## 26. Troubleshooting Matrix
 
@@ -1323,7 +1336,7 @@ to yet.
 | `LNX-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Linux / pwsh | Codex itself failed — commonly sign-in, plan access, or no internet | Run `codex --version` and complete any sign-in prompt. Confirm your ChatGPT plan includes Codex | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Retry later; the service may be unavailable | The full `Output:` text with tokens removed |
 | `LNX-TRB-006` | `Review Markdown is missing required section: ## Findings` and exit code `5` | Linux / pwsh | Codex did not follow the required report structure | Re-run; model output varies. If it recurs, confirm `prompts/system-review.md` is unmodified with `git status` | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Try `-Prompt security-focus.md`, same structure | The exact error line and `git status` output |
 | `LNX-TRB-007` | `report.output_dir must be a repository-relative path.` and exit code `2` | Linux / pwsh | `output_dir` is absolute or contains `..` | Edit `config/review-config.yaml` and set the nested `output_dir` back to `reports` | `./scripts/Validate-Harness.ps1` (`LNX-CMD-012`) | All `[PASS]` lines | Restore with `git checkout config/review-config.yaml` | The `report:` block of your config |
-| `LNX-TRB-008` | `Potential secret detected in the generated review artifact.` and exit code `5`, no report written | Linux / pwsh | **Known defect in release 0.1.0.** The report quoted a credential such as `PASSWORD=...`; the harness redacts it, then its own detector matches the redaction placeholder and discards the whole report | No user-side setting avoids this. Re-run and hope the wording differs, or use `include_paths` to exclude the credential-bearing file. Report it to the maintainer | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Use `-Prompt pr-diff-review.md` on a change set that avoids those files | The exact error text and a note that finding `REV-COR-002` is suspected |
+| `LNX-TRB-008` | `Potential secret detected in the generated review artifact.` and exit code `5`, no report written | Linux / pwsh | The report appears to hold an unredacted credential, so the harness refuses to write it. In 0.1.0 this also fired on the harness's own redaction placeholder, discarding harmless reports; that defect is fixed in 0.2.0 (`REV-COR-002` closed), so in 0.2.0 it means a credential really did survive redaction | Find the credential in your own code and remove it — the review is telling you it is there. If your code is clean, this is a redaction gap: exclude the file with `include_paths` and report it to the maintainer | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Use `-Prompt pr-diff-review.md` on a change set that avoids those files | The exact error text and whether the flagged value is a real credential |
 | `LNX-TRB-009` | `Codex review timed out after 900 seconds.` and exit code `6` | Linux / pwsh | Large repository or slow model | Re-run with `./scripts/Run-Review.ps1 -TimeoutSeconds 1800`, or narrow the review with `include_paths` | `./scripts/Run-Review.ps1 -TimeoutSeconds 1800` | `Review finished. ...` | Review one subfolder at a time | The timeout used and the repository's file count |
 | `LNX-TRB-010` | `Codex output exceeded 5242880 bytes.` and exit code `7` | Linux / pwsh | The review produced more than 5 MB of text | Narrow the scope with `include_paths`, or raise the limit for one run with `-MaxOutputBytes 10485760` | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Review one subfolder at a time | The repository size and the limit used |
 | `LNX-TRB-011` | `This folder is not inside a Git repository.` and exit code `3` | Linux / pwsh | The current folder is not a repository | `cd` into the repository, or create one with `git init` | `git rev-parse --is-inside-work-tree` | `true` | Clone a repository first (`LNX-CMD-007`) | Output of `pwd` and `ls -a` |
@@ -1361,7 +1374,7 @@ They call the Windows-only `powershell` program. It is a defect in the project,
 not in your system. See row `LNX-TRB-012`.
 
 **Why are there two title lines in the report?**
-A known cosmetic defect in release 0.1.0.
+A known cosmetic defect, still present in release 0.2.0.
 
 **Can I use Docker instead?**
 The project provides no container definition, so this guide does not describe one.
@@ -1471,7 +1484,7 @@ project's CI runs.
 | Git | 2.54.0 |
 | Codex CLI | **Not installed — no documented Linux installation path** |
 | Privilege | Ordinary user (`runner`) |
-| Date | 2026-07-31 |
+| Date | 2026-08-13 |
 | Commit under test | `26cc06cf96cd2a854fe1f3fc9bc3c461b45f73c9` |
 | Evidence | GitHub Actions workflow run 30662430133, job 91261545707 |
 
@@ -1508,7 +1521,7 @@ scripts it executed and silent about the rest.
 | Update verified | **Statically verified** — `git pull` is standard Git behaviour |
 | Rollback verified | **Statically verified** — `git checkout` is standard Git behaviour |
 
-### 30.4 Known limitations of release 0.1.0 on Linux
+### 30.4 Known limitations of release 0.2.0 on Linux
 
 1. **No documented Linux installation path for the Codex CLI.** The repository's
    only installation instruction is Windows PowerShell. Finding
@@ -1530,10 +1543,13 @@ scripts it executed and silent about the rest.
    that cannot work on Linux. Finding `REV-DOC-005`.
 6. **Reviews that quote credentials are discarded.** Reproduced on Windows; the
    same code path runs on Linux. Finding `REV-COR-002`.
-7. **A working-directory defect exists on Windows PowerShell 5.1** in which Codex
-   is launched outside the repository under review (finding `REV-COR-001`). Linux
-   is unaffected: the Ubuntu new-user gate reviews a target repository outside the
-   harness and verifies the resulting artifacts.
+7. ~~**A working-directory defect exists on Windows PowerShell 5.1**~~ **Fixed in
+   0.2.0** for every platform: the runner sets the job's working directory
+   explicitly (`scripts/Run-Review.ps1` lines 109-112) instead of inheriting the
+   host's default (finding `REV-COR-001`). Code-derived only — the tests use a
+   synthetic Codex that ignores its working directory, so a regression would go
+   unnoticed. If a report ever names files outside your repository, reopen the
+   finding.
 
 ### 30.5 Support boundaries
 

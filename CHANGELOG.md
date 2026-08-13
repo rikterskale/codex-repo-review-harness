@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-13
+
+Three defects the novice guides recorded against 0.1.0 are fixed in this
+release; the guides now say so and name what replaced them. `REV-UX-001`
+(`-DryRun` still requires the Codex CLI) and `REV-DOC-004` (the report title
+appears twice) are still open and still documented as present.
+
+### Fixed
+
+- The runner sets the working directory explicitly inside its background job, so
+  Codex reviews the intended repository rather than the shell's default. Windows
+  PowerShell 5.1 does not give background jobs the caller's directory, which
+  made reviews analyse the user's Documents folder (`REV-COR-001`). Code-derived:
+  the tests substitute a synthetic Codex that ignores its working directory, so
+  no test covers this.
+- The secret detector no longer matches the harness's own redaction placeholder,
+  which discarded any report that quoted a credential (`REV-COR-002`).
+- The Markdown and JSON reports are filtered to the same finding set and checked
+  against each other before either is written, instead of the JSON silently
+  holding fewer findings than the Markdown (`REV-COR-004`).
+
+### Changed
+
 - Replaced the prose release-readiness table with twelve numbered requirements,
   each stating an exact pass condition and the gate that decides it, in
   `docs/RELEASE_READINESS_STANDARD.md`.
