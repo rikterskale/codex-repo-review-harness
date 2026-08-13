@@ -6,13 +6,27 @@ All notable changes to this project are documented here.
 
 ## [0.2.0] - 2026-08-13
 
-Three defects the novice guides recorded against 0.1.0 are fixed in this
-release; the guides now say so and name what replaced them. `REV-UX-001`
-(`-DryRun` still requires the Codex CLI) and `REV-DOC-004` (the report title
-appears twice) are still open and still documented as present.
+Every defect the novice guides recorded against 0.1.0 is fixed in this release,
+and the guides now say so rather than carrying an old version number. The three
+user-facing ones — a dry run that refused to run without the tool it exists to
+avoid, a validator that told Linux users to run a Windows command, and a report
+that printed its title twice — are covered by
+`tests/test_novice_defect_regressions.ps1`.
 
 ### Fixed
 
+- `-DryRun` no longer requires the Codex CLI. The prerequisite ran before the
+  dry-run branch, so the one switch that exists to check a setup *before*
+  installing Codex could not run without it (`REV-UX-001`). Git is still
+  required, because a dry run resolves the repository and builds the manifest.
+- `Validate-Harness.ps1` reads the platform at runtime and prints Git and Codex
+  hints that apply to it. On Linux it printed a Windows PowerShell installer the
+  reader could not act on; it now points at OpenAI's own instructions rather
+  than inventing a command (`REV-DOC-005`).
+- The report title is written once. The harness header and the model's report
+  each supplied it, so every artifact opened with two identical H1 lines. The
+  model's copy is stripped after the contract checks, leaving the header that
+  carries the timestamp, base branch, and sandbox mode (`REV-DOC-004`).
 - The runner sets the working directory explicitly inside its background job, so
   Codex reviews the intended repository rather than the shell's default. Windows
   PowerShell 5.1 does not give background jobs the caller's directory, which

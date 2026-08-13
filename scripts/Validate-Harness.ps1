@@ -38,15 +38,32 @@ foreach ($rel in $required) {
     Check "File exists: $rel" (Test-Path $full) "Restore the missing file from the harness template."
 }
 
+# A fix hint the reader cannot act on is worse than none. This script runs on
+# Linux too, where it used to print a Windows PowerShell installer command
+# (REV-DOC-005). $IsWindows does not exist in Windows PowerShell 5.1, so the
+# platform is read from the runtime instead.
+$onWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
+
 # Git
-Check "Git is installed" (Get-Command git -ErrorAction SilentlyContinue) "Install Git for Windows: https://git-scm.com/download/win"
+$gitHint = if ($onWindows) {
+    "Install Git for Windows: https://git-scm.com/download/win"
+} else {
+    "Install Git with your system package manager, for example: sudo apt install git"
+}
+Check "Git is installed" (Get-Command git -ErrorAction SilentlyContinue) $gitHint
 if (Get-Command git -ErrorAction SilentlyContinue) {
     $inside = git rev-parse --is-inside-work-tree 2>$null
     Check "Inside a Git repository" ($inside -eq "true") "Run 'git init' or clone a repository first."
 }
 
-# Codex
-Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) "Install with: powershell -ExecutionPolicy ByPass -c `"irm https://chatgpt.com/codex/install.ps1 | iex`""
+# Codex. This project documents a Windows installer only, so on every other
+# platform the honest hint points at the vendor rather than inventing a command.
+$codexHint = if ($onWindows) {
+    "Install with: powershell -ExecutionPolicy ByPass -c `"irm https://chatgpt.com/codex/install.ps1 | iex`""
+} else {
+    "This project documents no Codex CLI installation path for this platform. Follow OpenAI's official Codex CLI instructions, then re-run this script."
+}
+Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) $codexHint
 
 # Config sanity
 $config = Get-Content (Join-Path $HarnessRoot "config\review-config.yaml") -Raw

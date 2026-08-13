@@ -6,7 +6,7 @@ canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "acddc552dfddb82e3606cb0c85af3ac8d2cd7fc8f9a3c411cdba02fbf97d0810"
+reviewed_digest: "393e9cd29982c14db0c931c2d7bcd588153cc5708bda75bc367393ca817fc6c3"
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified
@@ -805,11 +805,13 @@ repository, in read-only mode.
 The project documents a `-DryRun` switch as a way to "just check what the script
 would do without calling the AI" (`docs/WINDOWS_BEGINNER_GUIDE.md` line 304).
 
-**Be aware:** in release 0.2.0 the dry run still refuses to start unless the Codex
-CLI is installed. This was confirmed during validation — running
-`.\scripts\Run-Review.ps1 -DryRun` on a machine without Codex produced
-`Codex CLI is not installed or not on PATH.` and exit code `3`, even though a dry
-run never calls Codex. Install Codex first (section 12.6).
+**Fixed in 0.2.0.** In 0.1.0 the dry run refused to start unless the Codex CLI
+was installed — running `.\scripts\Run-Review.ps1 -DryRun` on a machine without
+Codex produced `Codex CLI is not installed or not on PATH.` and exit code `3`,
+even though a dry run never calls Codex. It now completes without Codex, so you
+can use it to check your configuration before section 12.6. Git is still
+required, because the dry run resolves your repository and lists the files a
+review would cover.
 
 ### 19.2 Run the review
 
@@ -962,10 +964,11 @@ The report always contains these sections, in this order:
 
 Start with the Executive Summary, then read the `CRITICAL` and `HIGH` findings.
 
-**One thing that will look odd, and is a known defect in release 0.2.0:** the
-title line `# Codex Repository Review Report` appears **twice** near the top —
-once from the harness's own header and once from the AI's report. It is
-harmless. Tracked as `REV-DOC-004`.
+**The title now appears once.** In 0.1.0 the line
+`# Codex Repository Review Report` was printed **twice** near the top, once from
+the harness header and once from the AI's report. In 0.2.0 the harness strips
+the AI's copy, so the title you see is the one carrying the timestamp, base
+branch, and sandbox mode. `REV-DOC-004` is closed.
 
 **The `.md` and `.json` files now agree.** In 0.1.0 the JSON could hold fewer
 findings than the Markdown, because only the JSON dropped findings below
@@ -1468,7 +1471,7 @@ No. It is entirely optional and needs a separate `OPENAI_API_KEY` secret
 configured on GitHub. Everything in this guide works without it.
 
 **Why are there two title lines at the top of my report?**
-A known cosmetic defect, still present in release 0.2.0. It is harmless.
+There are not, in 0.2.0. That was a cosmetic defect in 0.1.0 (`REV-DOC-004`).
 
 **Why does my JSON file have fewer findings than my Markdown report?**
 Findings below the `min_severity` setting are filtered out of the JSON only. Read
@@ -1637,16 +1640,18 @@ standard user account.
    placeholders before scanning, and `tests/test_review_helpers.ps1` asserts
    that a redacted credential finding stays publishable. `REV-COR-002` is
    closed.
-3. **`-DryRun` requires the Codex CLI.** Still present in 0.2.0. The
-   prerequisite check runs before the dry-run branch
-   (`scripts/Run-Review.ps1` lines 28 and 101), so a dry run exits `3` on a
-   machine without Codex, contradicting the documented purpose of the switch.
-   Tracked as `REV-UX-001`.
-4. **The report title appears twice.** Still present in 0.2.0. The harness
-   header and the model's own report each supply the title
-   (`scripts/Run-Review.ps1` line 136, and the title that
-   `Assert-ReviewMarkdown` requires of the model). Cosmetic. Tracked as
-   `REV-DOC-004`.
+3. **~~`-DryRun` requires the Codex CLI.~~ FIXED in 0.2.0.** Previously
+   recorded: a dry run exited `3` on a machine without Codex, contradicting the
+   one switch that exists to check things *before* installing it. The
+   prerequisite is now skipped for a dry run and still enforced for a real one.
+   Covered by `tests/test_novice_defect_regressions.ps1`, which asserts both
+   halves. `REV-UX-001` is closed.
+4. **~~The report title appears twice.~~ FIXED in 0.2.0.** Previously recorded:
+   the harness header and the model's own report each supplied the title. The
+   runner now strips the model's copy after the contract checks have run, so the
+   header — the copy carrying the timestamp, base branch, and sandbox mode — is
+   the one written. Covered by the same regression test. `REV-DOC-004` is
+   closed.
 5. **~~The JSON file can contain fewer findings than the Markdown.~~ FIXED in
    0.2.0.** Previously recorded: a two-finding report produced one JSON finding
    under the default `min_severity: medium`, because only the JSON was filtered.

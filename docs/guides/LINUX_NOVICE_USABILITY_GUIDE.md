@@ -6,7 +6,7 @@ canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "acddc552dfddb82e3606cb0c85af3ac8d2cd7fc8f9a3c411cdba02fbf97d0810"
+reviewed_digest: "393e9cd29982c14db0c931c2d7bcd588153cc5708bda75bc367393ca817fc6c3"
 # The harness itself is proven natively on Ubuntu: every release-readiness gate,
 # including the full new-user journey, is a required CI step there. What is not
 # supported is installing the Codex CLI, for which this project documents no
@@ -692,7 +692,7 @@ output; the Linux output should be identical apart from path separators):
 [PASS] File exists: prompts\system-review.md
 ...
 [FAIL] Codex CLI is installed
-       Install with: powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"
+       This project documents no Codex CLI installation path for this platform. Follow OpenAI's official Codex CLI instructions, then re-run this script.
 [PASS] Config declares sandbox: read-only
 [PASS] Config has a base_branch
 [PASS] reports/ directory exists
@@ -703,11 +703,11 @@ output; the Linux output should be identical apart from path separators):
 **Success means:** every line reads `[PASS]` and the closing line says
 `All checks passed.`
 
-**Expected failure on Linux:** the `Codex CLI is installed` check will fail unless
-you installed Codex yourself, and its suggested fix is a Windows command. That
-mismatch is a documentation defect, still present in release 0.2.0 (finding
-`REV-DOC-005`), not a
-problem with your system.
+**Expected failure on Linux:** the `Codex CLI is installed` check will fail
+unless you installed Codex yourself. That is a gap in this project, not a
+problem with your system — see section 12.5. In 0.1.0 this check also printed a
+Windows PowerShell installer that a Linux user could not run; 0.2.0 prints the
+platform-appropriate hint shown above, and `REV-DOC-005` is closed.
 
 **Common failure:** `./scripts/Validate-Harness.ps1: The term ... is not
 recognized` usually means you are still in Bash. Run `LNX-CMD-010` first. See row
@@ -861,9 +861,10 @@ The report always contains `## Executive Summary`, `## Findings`,
 finding starts with `### [SEVERITY] Title` and carries Location, Why it matters,
 Evidence, and Suggested fix lines.
 
-One known oddity in release 0.2.0, verified on Windows: the title
-`# Codex Repository Review Report` appears **twice**, once from the harness
-header and once from the model's report. Harmless, tracked as `REV-DOC-004`.
+The title `# Codex Repository Review Report` appeared **twice** in 0.1.0, once
+from the harness header and once from the model's report. In 0.2.0 the model's
+copy is stripped, so the title you see is the one carrying the timestamp, base
+branch, and sandbox mode. `REV-DOC-004` is closed.
 
 The `.md` and `.json` files agree in 0.2.0. In 0.1.0 the JSON could hold fewer
 findings, because only it dropped findings below `min_severity` (default
@@ -1332,7 +1333,7 @@ and `REV-COR-004`. See section 30.4.
 | `LNX-TRB-001` | `./scripts/Validate-Harness.ps1: command not found` | Linux / Bash | You are in Bash, but harness scripts are PowerShell | Type `pwsh` and press Enter to switch shells (`LNX-CMD-010`), then re-run the command | `$PSVersionTable.PSVersion` | A table with `Major` = `7` | Run it in one step from Bash: `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | The prompt text and the output of `echo $SHELL` |
 | `LNX-TRB-002` | `fatal: repository 'URL' not found` | Linux / Bash | Wrong URL, or a private repository you are not signed in to | Re-copy the address from the green **Code** button on the GitHub page; sign in to Git for private repositories | `git clone YOUR_REPOSITORY_URL` (`LNX-CMD-007`) | `Cloning into '...'... done.` | Download a ZIP from GitHub and unzip it with `unzip` | The URL used, with any token removed |
 | `LNX-TRB-003` | `pwsh: command not found` | Linux / Bash | PowerShell 7 is not installed | Install PowerShell 7 using Microsoft's official instructions for your distribution. This project documents none, so do not guess a package command | `pwsh --version` (`LNX-CMD-004`) | Output begins `PowerShell 7` | Use the Windows guide on a Windows machine or VM | Output of `LNX-CMD-001` and `LNX-CMD-004` |
-| `LNX-TRB-004` | `Codex CLI is not installed or not on PATH.` and exit code `3` | Linux / pwsh | The Codex CLI is absent. **Expected on Linux** — this project documents no Linux installation path | Follow the official OpenAI Codex CLI documentation. Do not follow the Windows command shown by the validator | `codex --version` (`LNX-CMD-011`) | A version number | Complete only the self-tests in section 21.3, which need no Codex | Output of `LNX-CMD-012`, noting finding `REV-LNX-GUIDE-001` |
+| `LNX-TRB-004` | `Codex CLI is not installed or not on PATH.` and exit code `3` | Linux / pwsh | The Codex CLI is absent. **Expected on Linux** — this project documents no Linux installation path | Follow the official OpenAI Codex CLI documentation, which is also what the validator now points you to on Linux | `codex --version` (`LNX-CMD-011`) | A version number | Complete only the self-tests in section 21.3, which need no Codex | Output of `LNX-CMD-012`, noting finding `REV-LNX-GUIDE-001` |
 | `LNX-TRB-005` | `Codex review failed with exit code N. Output: ...` and exit code `4` | Linux / pwsh | Codex itself failed — commonly sign-in, plan access, or no internet | Run `codex --version` and complete any sign-in prompt. Confirm your ChatGPT plan includes Codex | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Retry later; the service may be unavailable | The full `Output:` text with tokens removed |
 | `LNX-TRB-006` | `Review Markdown is missing required section: ## Findings` and exit code `5` | Linux / pwsh | Codex did not follow the required report structure | Re-run; model output varies. If it recurs, confirm `prompts/system-review.md` is unmodified with `git status` | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Try `-Prompt security-focus.md`, same structure | The exact error line and `git status` output |
 | `LNX-TRB-007` | `report.output_dir must be a repository-relative path.` and exit code `2` | Linux / pwsh | `output_dir` is absolute or contains `..` | Edit `config/review-config.yaml` and set the nested `output_dir` back to `reports` | `./scripts/Validate-Harness.ps1` (`LNX-CMD-012`) | All `[PASS]` lines | Restore with `git checkout config/review-config.yaml` | The `report:` block of your config |
@@ -1340,7 +1341,7 @@ and `REV-COR-004`. See section 30.4.
 | `LNX-TRB-009` | `Codex review timed out after 900 seconds.` and exit code `6` | Linux / pwsh | Large repository or slow model | Re-run with `./scripts/Run-Review.ps1 -TimeoutSeconds 1800`, or narrow the review with `include_paths` | `./scripts/Run-Review.ps1 -TimeoutSeconds 1800` | `Review finished. ...` | Review one subfolder at a time | The timeout used and the repository's file count |
 | `LNX-TRB-010` | `Codex output exceeded 5242880 bytes.` and exit code `7` | Linux / pwsh | The review produced more than 5 MB of text | Narrow the scope with `include_paths`, or raise the limit for one run with `-MaxOutputBytes 10485760` | `./scripts/Run-Review.ps1` (`LNX-CMD-013`) | `Review finished. ...` | Review one subfolder at a time | The repository size and the limit used |
 | `LNX-TRB-011` | `This folder is not inside a Git repository.` and exit code `3` | Linux / pwsh | The current folder is not a repository | `cd` into the repository, or create one with `git init` | `git rev-parse --is-inside-work-tree` | `true` | Clone a repository first (`LNX-CMD-007`) | Output of `pwd` and `ls -a` |
-| `LNX-TRB-012` | `The term 'powershell' is not recognized` while running a test | Linux / pwsh | **Known defect.** `tests/test_review_artifacts.ps1`, `tests/test_runner_failure.ps1`, and `tests/test_clean_room.ps1` call the Windows-only `powershell` executable | Do not run these three on Linux. Run only the four commands in section 21.3. Nothing is wrong with your system | `pwsh -NoProfile -File tests/test_harness_structure.ps1` (`LNX-CMD-019`) | `PASS: All structural tests succeeded.` | Run the full suite on Windows with PowerShell 7 | The script name and line number, noting finding `REV-TEST-002` |
+| `LNX-TRB-012` | `The term 'powershell' is not recognized` while running a test | Linux / pwsh | Fixed in 0.2.0. In 0.1.0 three test scripts named the Windows-only `powershell` executable; they now start the host they are already running under. Seeing this means you are on 0.1.0 | Update to 0.2.0 or later with `git pull`, then re-run. Nothing is wrong with your system | `pwsh -NoProfile -File tests/test_harness_structure.ps1` (`LNX-CMD-019`) | `PASS: All structural tests succeeded.` | Run the full suite on Windows with PowerShell 7 | The script name and line number, noting finding `REV-TEST-002` |
 | `LNX-TRB-013` | `Permission denied` when running a script | Linux / Bash | You tried to execute the `.ps1` file directly | Do not `chmod` the file. Run it through PowerShell: `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | `pwsh -NoProfile -File ./scripts/Validate-Harness.ps1` | The validation banner appears | Start `pwsh` first, then use `./scripts/...` | The exact command you typed and `ls -l` of the script |
 | `LNX-TRB-014` | `cd: no such file or directory` | Linux / Bash | Wrong capitalisation — Linux paths are case-sensitive — or a space in the name | Run `ls` to see the exact name, then type it exactly. Quote names with spaces: `cd "My Project"` | `pwd` | The path ends with your folder name | Use Tab completion: type a few letters and press Tab | Output of `ls` in the parent folder |
 
@@ -1370,11 +1371,12 @@ Into `reports/` inside the repository folder. Change it with the nested
 `output_dir` setting; it must stay a relative path.
 
 **Why do three of the tests fail on my machine?**
-They call the Windows-only `powershell` program. It is a defect in the project,
-not in your system. See row `LNX-TRB-012`.
+They did in 0.1.0, because they called the Windows-only `powershell` program.
+Fixed: every test now starts the PowerShell host it is already running under,
+and all of them pass on Ubuntu. See row `LNX-TRB-012`.
 
 **Why are there two title lines in the report?**
-A known cosmetic defect, still present in release 0.2.0.
+There are not, in 0.2.0. That was a cosmetic defect in 0.1.0 (`REV-DOC-004`).
 
 **Can I use Docker instead?**
 The project provides no container definition, so this guide does not describe one.
@@ -1538,11 +1540,15 @@ scripts it executed and silent about the rest.
    as part of the required new-user installation gate, against a synthetic Codex.
    What remains open under `REV-COMPAT-001` is the *real* Codex CLI: this project
    still documents no way to install it on Linux.
-5. **The validator prints a Windows fix on Linux.** When Codex is missing,
-   `scripts/Validate-Harness.ps1` line 49 suggests a Windows PowerShell command
-   that cannot work on Linux. Finding `REV-DOC-005`.
-6. **Reviews that quote credentials are discarded.** Reproduced on Windows; the
-   same code path runs on Linux. Finding `REV-COR-002`.
+5. ~~**The validator prints a Windows fix on Linux.**~~ **Fixed in 0.2.0.**
+   `scripts/Validate-Harness.ps1` now reads the platform at runtime and prints
+   the Git and Codex hints that apply to it, pointing non-Windows users at
+   OpenAI's own instructions rather than inventing a command.
+   `tests/test_novice_defect_regressions.ps1` asserts on Linux that no Windows
+   installer appears. Finding `REV-DOC-005` is closed.
+6. ~~**Reviews that quote credentials are discarded.**~~ **Fixed in 0.2.0.** The
+   secret detector no longer matches the harness's own redaction placeholder.
+   Finding `REV-COR-002` is closed.
 7. ~~**A working-directory defect exists on Windows PowerShell 5.1**~~ **Fixed in
    0.2.0** for every platform: the runner sets the job's working directory
    explicitly (`scripts/Run-Review.ps1` lines 109-112) instead of inheriting the
