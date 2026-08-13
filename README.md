@@ -26,12 +26,12 @@ What this harness adds is a **repeatable, documented, safe-by-default workflow**
 ## Quick start (experienced users)
 
 ```powershell
-# 1. Obtain this harness from the repository URL below.
+# 1. Install Git and make the external `codex` command available through your
+#    approved platform process.
+# 2. Obtain this harness from the repository URL below.
 git clone https://github.com/rikterskale/codex-repo-review-harness.git
 Set-Location codex-repo-review-harness
 
-# 2. Install Git and make the external `codex` command available through your
-#    approved platform process.
 # 3. Validate
 .\scripts\Validate-Harness.ps1
 
@@ -123,7 +123,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/test_security_regressi
 
 These checks do not require an active Codex authentication and verify that the files and safety defaults are correct.
 
-Every script in this repository declares `#Requires -Version 5.1` and runs on the
+The runnable entry-point scripts declare `#Requires -Version 5.1` and run on the
 **Windows PowerShell 5.1** that ships with Windows 10 and 11. PowerShell 7
 (`pwsh`) is **optional**: it is not installed by default on Windows, and no
 command in this README needs it. If you do have it, substitute `pwsh -NoProfile`

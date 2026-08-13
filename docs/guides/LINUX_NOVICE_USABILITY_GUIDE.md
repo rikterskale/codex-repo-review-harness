@@ -5,7 +5,7 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "03fb8bd6a439d3d30c8da7d69e00fe0ce1e40172b7a8117f593c88a7bf7bc7fd"
+reviewed_digest: "98c299e7ec1af910bc13f8a95156a648706a7a968e572e35459036f926399464"
 support_status: native_supported_except_codex_install
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -49,7 +49,7 @@ pwsh -NoProfile -File scripts/Run-Review.ps1 -DryRun
 The dry run requires Git but does not invoke Codex. It resolves the target,
 configuration, prompt, and review manifest, then prints preparation details.
 
-## Install and sign in on Debian, Ubuntu, or Kali
+## Install Git on Debian, Ubuntu, or Kali
 
 Install Git with the distribution package manager:
 
@@ -57,16 +57,13 @@ Install Git with the distribution package manager:
 sudo apt install git
 ```
 
-Install or update the external `codex` command using your approved platform
-process. The following command is retained as a maintainer-approved setup path:
+This repository does not contain evidence for a current Codex installation,
+authentication, account, or service procedure on Linux.
 
-```bash
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
-```
+[VERIFY: maintainer-approved current Codex installation and authentication instructions for Debian, Ubuntu, and Kali.]
 
-Open a project directory and run `codex` to complete the external setup required
-by your environment. This repository does not establish account, authentication,
-or service requirements.
+After completing the approved external setup, open a project directory and run
+`codex` as required by that environment.
 
 Confirm the commands are available before starting a real harness review:
 

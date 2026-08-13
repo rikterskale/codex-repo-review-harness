@@ -4,7 +4,7 @@
 
 The local review runner requires:
 
-- Windows PowerShell 5.1 or a compatible PowerShell runtime;
+- a PowerShell runtime compatible with `#Requires -Version 5.1`;
 - Git available on `PATH`; and
 - the `codex` command available on `PATH` for a real review.
 
