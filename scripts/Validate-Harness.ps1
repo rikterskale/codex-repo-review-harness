@@ -56,13 +56,12 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Check "Inside a Git repository" ($inside -eq "true") "Run 'git init' or clone a repository first."
 }
 
-# Codex installation and authentication are external to this repository. The
-# platform guides provide an approved starting point without the validator
-# claiming that it can establish the external tool's current requirements.
+# Codex installation and authentication are external to this repository. Do not
+# present an unverified external installer as a supported setup procedure.
 $codexHint = if ($onWindows) {
-    "Install with: powershell -ExecutionPolicy ByPass -c `"irm https://chatgpt.com/codex/install.ps1 | iex`""
+    'Obtain your maintainer-approved Codex setup instructions for Windows, then re-run this script.'
 } else {
-    "See docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md for the documented Linux setup path, then re-run this script."
+    'This repository has no verified Linux Codex setup procedure. Obtain maintainer-approved instructions, then re-run this script.'
 }
 Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) $codexHint
 

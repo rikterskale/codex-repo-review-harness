@@ -5,7 +5,7 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "98c299e7ec1af910bc13f8a95156a648706a7a968e572e35459036f926399464"
+reviewed_digest: "4c5797d180e799a8029d63cdcdc56c41cf693fcbce2de63b4acd1ced976fdae3"
 support_status: native_supported_except_codex_install
 validation_status: partially_verified
 validated_on: 2026-08-13

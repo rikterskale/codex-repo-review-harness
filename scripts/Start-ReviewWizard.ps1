@@ -77,11 +77,16 @@ if ((Read-MenuChoice 'Write a redacted diagnostic log?' @('Yes', 'No') 0) -eq 0)
     if ([string]::IsNullOrWhiteSpace($diagnosticLogPath)) { $diagnosticLogPath = $defaultLog }
 }
 
-$runnerArguments = @('-Prompt', $prompt, '-TimeoutSeconds', $timeout, '-MaxOutputBytes', $maxOutputBytes)
-if ($repositoryPath) { $runnerArguments += @('-RepositoryPath', $repositoryPath) }
-if ($baseBranch) { $runnerArguments += @('-BaseBranch', $baseBranch) }
-if ($diagnosticLogPath) { $runnerArguments += @('-DiagnosticLogPath', $diagnosticLogPath) }
-if ($modeChoice -eq 0) { $runnerArguments += '-DryRun' }
+$runnerParameters = @{ Prompt = $prompt; TimeoutSeconds = $timeout; MaxOutputBytes = $maxOutputBytes }
+if ($repositoryPath) { $runnerParameters.RepositoryPath = $repositoryPath }
+if ($baseBranch) { $runnerParameters.BaseBranch = $baseBranch }
+if ($diagnosticLogPath) { $runnerParameters.DiagnosticLogPath = $diagnosticLogPath }
+if ($modeChoice -eq 0) { $runnerParameters.DryRun = $true }
+$previewArguments = @('-Prompt', $prompt, '-TimeoutSeconds', $timeout, '-MaxOutputBytes', $maxOutputBytes)
+if ($repositoryPath) { $previewArguments += @('-RepositoryPath', $repositoryPath) }
+if ($baseBranch) { $previewArguments += @('-BaseBranch', $baseBranch) }
+if ($diagnosticLogPath) { $previewArguments += @('-DiagnosticLogPath', $diagnosticLogPath) }
+if ($modeChoice -eq 0) { $previewArguments += '-DryRun' }
 
 Write-Host "`nReview plan" -ForegroundColor Cyan
 Write-Host "  Prompt: $prompt"
@@ -90,8 +95,8 @@ Write-Host ('  Mode: {0}' -f $(if ($modeChoice -eq 0) { 'Dry run' } else { 'Real
 Write-Host "  Timeout: $timeout seconds"
 Write-Host "  Output limit: $maxOutputBytes bytes"
 Write-Host ('  Diagnostics: {0}' -f $(if ($diagnosticLogPath) { $diagnosticLogPath } else { 'disabled' }))
-$previewArguments = @($runnerArguments | ForEach-Object { Format-Argument ([string]$_) }) -join ' '
-Write-Host "`nCommand preview: powershell -NoProfile -ExecutionPolicy Bypass -File $(Format-Argument $RunnerPath) $previewArguments"
+$previewText = @($previewArguments | ForEach-Object { Format-Argument ([string]$_) }) -join ' '
+Write-Host "`nCommand preview: powershell -NoProfile -ExecutionPolicy Bypass -File $(Format-Argument $RunnerPath) $previewText"
 
 if ($modeChoice -eq 1) {
     $confirmation = Read-Host 'Type REVIEW to start the real read-only review'
@@ -107,7 +112,7 @@ if ($modeChoice -eq 1) {
     }
 }
 
-& $RunnerPath @runnerArguments
+& $RunnerPath @runnerParameters
 $exitCode = $LASTEXITCODE
 if ($exitCode -eq 0) {
     Write-Host "`nCompleted. Review artifacts, when produced, are listed above." -ForegroundColor Green
