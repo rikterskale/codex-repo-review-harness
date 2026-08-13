@@ -6,6 +6,12 @@ All notable changes to this project are documented here.
 
 ## [0.2.0] - 2026-08-13
 
+RR-11 (real-Codex smoke test) satisfied on 2026-08-13: harness 0.2.0, reviewed
+`codex-repo-review-harness` with Codex CLI v0.147.0 on Windows 11. The review
+completed, wrote all three artifacts, produced evidence-backed findings against
+real files, and left the target unchanged. It found `REV-SEC-001` and
+`REV-DOC-006`, both fixed below.
+
 Every defect the novice guides recorded against 0.1.0 is fixed in this release,
 and the guides now say so rather than carrying an old version number. The three
 user-facing ones — a dry run that refused to run without the tool it exists to
