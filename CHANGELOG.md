@@ -8,6 +8,13 @@ All notable changes to this project are documented here.
 
 - Refreshed the source-verified documentation set, including the CLI reference,
   installation, usage, troubleshooting, contributor, and architecture guides.
+- Recorded post-release readiness evidence on 2026-08-13. A real Codex CLI
+  v0.147.0 read-only review of this repository at harness commit `3d58e4d`
+  completed and left the target Git status unchanged. This was a workstation
+  smoke test, not new clean-machine evidence. GitHub also recorded a successful
+  `analyze` job for the `v0.2.0` release commit `75da840`:
+  https://github.com/rikterskale/codex-repo-review-harness/actions/runs/31753090434
+  GitHub returned no open issues at the time of the check.
 
 ## [0.2.0] - 2026-08-13
 
