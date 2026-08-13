@@ -1,8 +1,5 @@
 # Codex Repository Review Report
 
-**Date:** YYYY-MM-dd  
-**Base branch:** main  
-**Sandbox:** read-only  
 **Scope:** full repository / PR diff  
 
 ## Executive Summary

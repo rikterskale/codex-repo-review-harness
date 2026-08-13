@@ -54,8 +54,8 @@ report:
   # Maximum number of findings to keep in the report (0 = unlimited)
   max_findings: 50
 
-# Codex model preference (leave empty for default)
-# Examples: "o3", "gpt-5", etc. Check current Codex /model options.
+# Codex model preference (leave empty for the external command's default)
+# This repository does not enumerate externally supported model names.
 model: ""
 
 # Extra instructions that are always prepended to the review prompt

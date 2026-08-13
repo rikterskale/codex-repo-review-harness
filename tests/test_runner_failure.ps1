@@ -53,6 +53,12 @@ try {
   $diagnosticLog = Join-Path $temp 'diagnostics\failure.log'
   if (-not (Test-Path -LiteralPath $diagnosticLog) -or (Get-Content -LiteralPath $diagnosticLog -Raw) -notmatch 'simulated Codex failure') { throw 'Diagnostic logging did not retain the redacted Codex failure transcript.' }
   Write-Host 'PASS: local runner propagates Codex failure.'
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -Prompt '..\README.md' -DryRun 2>&1 | Out-Null
+  $ErrorActionPreference = $previousErrorAction
+  if ($LASTEXITCODE -ne 2) { throw "Expected escaping prompt path to exit 2, got $LASTEXITCODE." }
+  Write-Host 'PASS: local runner rejects a prompt path that escapes prompts/.'
   $reportLines = @(
     '# Codex Repository Review Report',
     '',

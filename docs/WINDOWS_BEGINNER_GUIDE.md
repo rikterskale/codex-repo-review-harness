@@ -24,9 +24,9 @@ for a human to assess.
 - Keep the harness files in their own trusted repository when reviewing another
   local repository with `-RepositoryPath`.
 
-The project supplies a Windows Codex installation command in the
-[README](../README.md). `[VERIFY: the appropriate current Codex account,
-authentication, and service requirements for your environment.]`
+Use your approved platform process to make the external `codex` command available.
+This repository does not establish current Codex account, authentication, or
+service requirements.
 
 ## First review
 

@@ -35,7 +35,7 @@
 
 .PARAMETER Path
   Files to repair. Relative paths resolve against the repository root. Defaults
-  to the two canonical novice guides.
+  to the tracked user-facing Markdown files known to contain repaired text.
 
 .PARAMETER DryRun
   Report what would change without writing to disk.
@@ -52,6 +52,8 @@
 [CmdletBinding()]
 param(
     [string[]]$Path = @(
+        'README.md',
+        'docs\TROUBLESHOOTING.md',
         'docs\guides\WINDOWS_NOVICE_USABILITY_GUIDE.md',
         'docs\guides\LINUX_NOVICE_USABILITY_GUIDE.md'
     ),

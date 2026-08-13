@@ -1,7 +1,7 @@
 # Review runner
 
 `scripts/Run-Review.ps1` is the local review entry point. It reads
-`config/review-config.yaml`, selects a prompt from `prompts/`, and creates
+`config/review-config.yaml`, selects a contained prompt file from `prompts/`, and creates
 `review-input/review-manifest.txt` from the configured target's Git-visible
 files.
 

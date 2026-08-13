@@ -1,6 +1,6 @@
 # Codex Repo Review Harness
 
-**Tested, read-only-by-default repository review harness for OpenAI Codex CLI.**
+**Tested, read-only-by-default repository review harness for the `codex` command.**
 
 This project gives you:
 
@@ -26,10 +26,12 @@ What this harness adds is a **repeatable, documented, safe-by-default workflow**
 ## Quick start (experienced users)
 
 ```powershell
-# 1. Install Codex (Windows)
-powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"
+# 1. Obtain this harness from the repository URL below.
+git clone https://github.com/rikterskale/codex-repo-review-harness.git
+Set-Location codex-repo-review-harness
 
-# 2. Clone or copy this harness into your repository root
+# 2. Install Git and make the external `codex` command available through your
+#    approved platform process.
 # 3. Validate
 .\scripts\Validate-Harness.ps1
 
@@ -165,9 +167,6 @@ whether `OPENAI_API_KEY` is set, never its value. The workflow sets the Codex
 action's `sandbox` input to `read-only` and does not set a sandbox through
 `codex-args`.
 
-`[VERIFY: current openai/codex-action triggering-user access requirement and
-supported allow-users configuration.]`
-
 ## Report contract and exit codes
 
 Reports follow `schemas/review-report.schema.json`. The local runner writes
@@ -188,12 +187,12 @@ failure, `5` contract failure, `6` timeout, and `7` output-size limit.
 ## Scope
 
 This repository documents its own PowerShell runner, prompts, configuration,
-tests, and workflow files. `[VERIFY: current Codex CLI installation,
-authentication, account, and service requirements.]`
+tests, and workflow files. External installation, authentication, account, and
+service requirements are outside this repository's source of truth.
 
 ## License
 
-Apache-2.0 (same spirit as the official Codex CLI). Use freely.
+Apache-2.0. Use freely.
 
 ---
 

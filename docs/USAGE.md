@@ -30,6 +30,18 @@ The security prompt emphasizes secrets, injection, authorization, unsafe
 deserialization, input validation, dependency patterns, and sensitive logging.
 The PR-diff prompt asks for issues introduced or worsened by a change.
 
+## Capture diagnostics
+
+Use `-DiagnosticLogPath` to retain redacted runner diagnostics for a real run.
+The path may be absolute or relative, but must resolve beneath the harness root:
+
+```powershell
+.\scripts\Run-Review.ps1 -DiagnosticLogPath reports\diagnostics\review.log
+```
+
+Review the log before sharing it; redaction is a safeguard, not a substitute for
+secret management.
+
 ## Restrict the review scope
 
 Edit `config/review-config.yaml` to set `include_paths` or `exclude_paths`.

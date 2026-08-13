@@ -56,12 +56,13 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Check "Inside a Git repository" ($inside -eq "true") "Run 'git init' or clone a repository first."
 }
 
-# Codex. This project documents a Windows installer only, so on every other
-# platform the honest hint points at the vendor rather than inventing a command.
+# Codex installation and authentication are external to this repository. The
+# platform guides provide an approved starting point without the validator
+# claiming that it can establish the external tool's current requirements.
 $codexHint = if ($onWindows) {
     "Install with: powershell -ExecutionPolicy ByPass -c `"irm https://chatgpt.com/codex/install.ps1 | iex`""
 } else {
-    "This project documents no Codex CLI installation path for this platform. Follow OpenAI's official Codex CLI instructions, then re-run this script."
+    "See docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md for the documented Linux setup path, then re-run this script."
 }
 Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) $codexHint
 

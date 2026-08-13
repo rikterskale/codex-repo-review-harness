@@ -5,13 +5,13 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "34050a04ea83d046bfb0ec0134450bad697976057467423b2f62ef3456c0357c"
+reviewed_digest: "a77cdf05d30eea8dc85ab39152f007976ca1976d2a759b0c2dd896e7c33da689"
 support_status: native_supported_except_codex_install
 validation_status: partially_verified
 validated_on: 2026-08-13
 maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, scripts/Run-Review.ps1, .github/workflows/ci.yml"
 known_limitations:
-  - "The repository provides no Linux installation path for the Codex CLI."
+  - "The repository documents a Linux setup path but cannot verify current external Codex installation, account, authentication, or service requirements."
 ---
 
 # Linux novice guide
@@ -23,9 +23,8 @@ checked against.
 ## Linux support boundary
 
 The CI workflow runs the harness checks on `ubuntu-latest` with PowerShell 7.
-OpenAI's current Codex CLI guide documents the same standalone installer for
-macOS and Linux. This repository's CI evidence remains Ubuntu-only; Debian and
-Kali use the same documented Linux flow but are not CI-tested by this project.
+This repository's CI evidence remains Ubuntu-only; Debian and Kali are not
+CI-tested by this project.
 
 ## What the harness does
 
@@ -58,15 +57,16 @@ Install Git with the distribution package manager:
 sudo apt install git
 ```
 
-Install or update Codex using OpenAI's Linux installer:
+Install or update the external `codex` command using your approved platform
+process. The following command is retained as a maintainer-approved setup path:
 
 ```bash
 curl -fsSL https://chatgpt.com/codex/install.sh | sh
 ```
 
-Open a project directory and run `codex`. On its first run, select **Sign in
-with ChatGPT** or another sign-in method that Codex offers. These steps come
-from the [official Codex CLI guide](https://developers.openai.com/codex/cli/).
+Open a project directory and run `codex` to complete the external setup required
+by your environment. This repository does not establish account, authentication,
+or service requirements.
 
 Confirm the commands are available before starting a real harness review:
 
@@ -129,8 +129,8 @@ backup when one exists. See [Agent pack](../modules/agent-pack.md).
 
 ## Diagnostic logging
 
-Pass `-DiagnosticLogPath` to preserve redacted runner diagnostics. The path is
-relative to the harness root and must remain beneath it.
+Pass `-DiagnosticLogPath` to preserve redacted runner diagnostics. The path may
+be absolute or relative, but it must resolve beneath the harness root.
 
 ```bash
 pwsh -NoProfile -File scripts/Run-Review.ps1 \

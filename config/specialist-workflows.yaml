@@ -1,5 +1,5 @@
 # Profiles are advisory routing only. The parent reviewer remains responsible for
-# evidence validation and may run no more than four specialists concurrently.
+# evidence validation and for enforcing the stated maximum of four specialists.
 profiles:
   full: [rikter_repo_explorer, rikter_minimal_change_advisor, rikter_code_reviewer, rikter_test_evidence_validator]
   security: [rikter_repo_explorer, rikter_appsec_reviewer, rikter_code_reviewer, rikter_test_evidence_validator]

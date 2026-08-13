@@ -12,7 +12,7 @@ review, and writes successful artifacts under the configured output directory.
 
 | Option | Default | Verified behavior |
 | --- | --- | --- |
-| `-Prompt <string>` | `system-review.md` | Selects a file below `prompts/`. A missing file exits `2`. |
+| `-Prompt <string>` | `system-review.md` | Selects an existing file below `prompts/`. A missing or escaping path exits `2`. |
 | `-RepositoryPath <string>` | Harness root | Selects an existing target directory inside a Git repository. |
 | `-BaseBranch <string>` | `config.base_branch` | Overrides the configured base branch in the assembled prompt and report header. |
 | `-TimeoutSeconds <int>` | `900` | Must be at least `1`; timeout exits `6`. |

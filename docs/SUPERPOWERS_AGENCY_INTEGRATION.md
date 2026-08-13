@@ -20,11 +20,12 @@ valid result when the inspected scope and limitations are stated.
 
 ## Profiles
 
-The routing definitions live in `config/specialist-workflows.yaml`. Start with
-the smallest applicable profile. Add appsec only for sensitive boundaries,
-architecture only for cross-component changes, and threat intelligence only for
-attribution, ATT&CK, detection, or intelligence claims. At most four specialists
-run in parallel, and repository exploration completes before later reviews.
+The advisory routing definitions live in `config/specialist-workflows.yaml`.
+Start with the smallest applicable profile. Add appsec only for sensitive
+boundaries, architecture only for cross-component changes, and threat
+intelligence only for attribution, ATT&CK, detection, or intelligence claims.
+The file expresses a maximum of four specialists and requires exploration first;
+this repository does not include a dispatcher that enforces those choices.
 
 ## Attribution and updates
 

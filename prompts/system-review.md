@@ -21,9 +21,6 @@ Produce a Markdown report with exactly these sections:
 
 # Codex Repository Review Report
 
-**Date:** (ISO timestamp)
-**Base branch:** ...
-**Sandbox:** read-only
 **Scope:** ...
 
 ## Executive Summary

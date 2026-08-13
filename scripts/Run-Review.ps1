@@ -69,8 +69,11 @@ if ([IO.Path]::IsPathRooted($cfgOutDir) -or $cfgOutDir.Contains('..')) { Fail 2 
 if ($config.min_severity -notin @('critical','high','medium','low','info')) { Fail 2 "Unsupported min_severity: $($config.min_severity)" }
 if ($config.report.max_findings -lt 0) { Fail 2 'report.max_findings cannot be negative.' }
 
-$promptPath = Join-Path $HarnessRoot (Join-Path 'prompts' $Prompt)
-if (-not (Test-Path -LiteralPath $promptPath)) { Fail 2 "Prompt file not found: $Prompt" }
+$promptsRoot = Join-Path $HarnessRoot 'prompts'
+try {
+    $promptPath = Resolve-ContainedPath $promptsRoot (Join-Path $promptsRoot $Prompt) 'Prompt'
+} catch { Fail 2 "Prompt must resolve beneath prompts: $($_.Exception.Message)" }
+if (-not (Test-Path -LiteralPath $promptPath -PathType Leaf)) { Fail 2 "Prompt file not found: $Prompt" }
 $reportsDir = Join-Path $HarnessRoot $cfgOutDir
 New-Item -ItemType Directory -Path $reportsDir -Force | Out-Null
 $reviewInputDir = Join-Path $HarnessRoot 'review-input'

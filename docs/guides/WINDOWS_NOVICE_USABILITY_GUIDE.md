@@ -5,7 +5,7 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "34050a04ea83d046bfb0ec0134450bad697976057467423b2f62ef3456c0357c"
+reviewed_digest: "a77cdf05d30eea8dc85ab39152f007976ca1976d2a759b0c2dd896e7c33da689"
 support_status: native_supported
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -103,12 +103,25 @@ See [CLI reference](../CLI_REFERENCE.md) for every option and default.
 | ID | Symptom | Likely cause | Exact corrective steps | Expected result | Verification command |
 | --- | --- | --- | --- | --- | --- |
 | `WIN-TRB-001` | Exit `0` | The operation completed. | Open the printed `review.md` path after a real run, or use the dry-run output to confirm preparation. | Report paths or prepared-review message are shown. | `Get-ChildItem reports -Recurse -File` |
-| `WIN-TRB-002` | Exit `2` | Invalid option value, configuration, prompt, or output directory. | Read the error; restore a prompt beneath `prompts/`, use a positive timeout, use an output limit of at least 1024, and keep `report.output_dir` relative. | The runner starts or completes. | `.\scripts\Run-Review.ps1 -DryRun` |
+| `WIN-TRB-002` | Exit `2` | Invalid option value, configuration, prompt, or output directory. | Read the error; use a prompt beneath `prompts/`, use a positive timeout, use an output limit of at least 1024, and keep `report.output_dir` relative. | The runner starts or completes. | `.\scripts\Run-Review.ps1 -DryRun` |
 | `WIN-TRB-003` | Exit `3` | Git, Codex, or a Git repository is unavailable. | Confirm Git first. For a real run, make the `codex` command available. Move into a Git repository or pass `-RepositoryPath` to one. | The prerequisite error is gone. | `git --version` |
 | `WIN-TRB-004` | Exit `4` | Codex failed or returned no final message. | Preserve the runner error. Confirm the external Codex setup required by your environment, then retry. | A valid final message is received. | `.\scripts\Run-Review.ps1 -DryRun` |
 | `WIN-TRB-005` | Exit `5` | The target changed, output failed the report contract, a secret was detected, findings were inconsistent, or the finding limit was exceeded. | Do not treat the run as a report. Inspect the error and `git status`; restore the target if it changed, then rerun with a valid prompt and safe scope. | The run completes with consistent artifacts. | `git status --porcelain` |
 | `WIN-TRB-006` | Exit `6` | The review exceeded its timeout. | Increase `-TimeoutSeconds` or narrow `include_paths` in `config/review-config.yaml`. | The review completes before the limit. | `.\scripts\Run-Review.ps1 -DryRun -TimeoutSeconds 1800` |
 | `WIN-TRB-007` | Exit `7` | The final message exceeded `-MaxOutputBytes`. | Narrow `include_paths` or choose a larger limit of at least 1024 bytes. | Output fits the configured limit. | `.\scripts\Run-Review.ps1 -DryRun -MaxOutputBytes 10485760` |
+
+## Diagnostic logging
+
+To preserve redacted runner diagnostics for a real run, pass a path that resolves
+beneath the harness root. It may be absolute or relative:
+
+```powershell
+.\scripts\Run-Review.ps1 -DiagnosticLogPath reports\diagnostics\review.log
+```
+
+The log records target resolution, dry-run preparation, the redacted Codex
+console transcript, failures, and successful artifact paths. Review it before
+sharing it; redaction is a safeguard, not a substitute for secret management.
 
 ## Update, cleanup, and rollback
 

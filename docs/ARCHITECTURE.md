@@ -6,7 +6,7 @@ The harness is a PowerShell-first repository review system.
 flowchart LR
   C[config/review-config.yaml] --> R[scripts/Run-Review.ps1]
   P[prompts/*.md] --> R
-  A[AGENTS.md] --> R
+  A[AGENTS.md] --> P
   R --> M[review-input/review-manifest.txt]
   R --> X[Codex exec: read-only]
   X --> R

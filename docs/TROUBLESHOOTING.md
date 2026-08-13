@@ -13,7 +13,7 @@ Install or expose the `codex` command, then open a new shell and run
 
 ## `Prompt file not found` — exit `2`
 
-Pass a filename that exists beneath `prompts/`; for example:
+Pass a filename that exists beneath `prompts/`; escaping paths are rejected. For example:
 
 ```powershell
 .\scripts\Run-Review.ps1 -Prompt system-review.md
@@ -38,6 +38,19 @@ This code covers malformed output, inconsistent findings, detected secrets in
 the generated report, too many findings, and a changed target Git status.
 Preserve the error message, inspect `git status --porcelain` in the target, and
 do not treat a failed run as a report.
+
+## Capture runner diagnostics
+
+Pass `-DiagnosticLogPath` to write redacted runner diagnostics. The path may be
+absolute or relative, but it must resolve beneath the harness root:
+
+```powershell
+.\scripts\Run-Review.ps1 -DiagnosticLogPath reports\diagnostics\review.log
+```
+
+The log records target resolution, dry-run preparation, the redacted Codex
+console transcript, failures, and successful artifact paths. Review it before
+sharing it; redaction is a safeguard, not a substitute for secret management.
 
 ## Agent-pack installation or removal is refused
 

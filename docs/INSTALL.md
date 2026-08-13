@@ -11,8 +11,18 @@ The local review runner requires:
 `-DryRun` does not invoke Codex, but it still requires Git because the runner
 resolves the target repository and builds its review manifest.
 
-`[VERIFY: the current Codex CLI installation, authentication, account, and
-service requirements for your environment.]`
+External Codex installation, authentication, account, and service requirements
+are outside this repository's source of truth. Make the `codex` command available
+through your approved platform process before a real review.
+
+## Obtain the harness
+
+Clone the repository, then work from its root:
+
+```powershell
+git clone https://github.com/rikterskale/codex-repo-review-harness.git
+Set-Location codex-repo-review-harness
+```
 
 ## Verify the harness
 
