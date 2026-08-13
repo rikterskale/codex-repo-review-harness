@@ -6,7 +6,7 @@ canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (latest locally verifiable release; no Git tag and no GitHub Release exist)"
 target_commit: "b72180d08e739cf404b7f0a62af998bb72af309f"
-reviewed_digest: "cef7e432b69d9f27c693ed4928783f471a053d488bb70e9aa7dc1ea378b30965"
+reviewed_digest: "d3a6569d63c0aca501254ff905bbe27e1667eee6db688e265a6968bd39c34985"
 # The harness itself is proven natively on Ubuntu: every release-readiness gate,
 # including the full new-user journey, is a required CI step there. What is not
 # supported is installing the Codex CLI, for which this project documents no

@@ -94,11 +94,12 @@ try {
   )
   $fakeReport = Join-Path $temp 'fake-report.md'
   Set-Content -LiteralPath $fakeReport -Value ($reportLines -join "`n") -Encoding ASCII
+  # Argument 7 is the --output-last-message path the harness reads the review from.
   if ($onWindows) {
-    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`ntype `"$fakeReport`"`nexit /b 0" -Encoding ASCII
+    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`ntype `"$fakeReport`" > %7`nexit /b 0" -Encoding ASCII
   } else {
     $fake = Join-Path $bin 'codex'
-    Set-Content -LiteralPath $fake -Value "#!/usr/bin/env bash`ncat `"$fakeReport`"`nexit 0`n" -Encoding ASCII
+    Set-Content -LiteralPath $fake -Value "#!/usr/bin/env bash`ncat `"$fakeReport`" > `"`$7`"`nexit 0`n" -Encoding ASCII
     & chmod +x $fake | Out-Null
   }
   $env:PATH = $bin + [IO.Path]::PathSeparator + $env:PATH

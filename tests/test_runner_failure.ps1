@@ -20,6 +20,24 @@ function Set-FakeCodex([string]$LineBody, [int]$ExitCode) {
   }
 }
 
+# The real Codex writes its final message to the path given by
+# --output-last-message, and the harness reads the review from there rather than
+# from the console. A fake that prints to stdout instead would let a regression
+# back to stdout-scraping pass unnoticed, so these write to argument 7 — the
+# runner builds `exec --sandbox read-only --color never --output-last-message
+# <file>` in that fixed order.
+function Set-ReportingFakeCodex([string]$ReportPath) {
+  if ($isWin) {
+    $cmd = @('@echo off', "type `"$ReportPath`" > %7", 'exit /b 0') -join "`n"
+    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $cmd -Encoding ASCII
+  } else {
+    $sh = @('#!/usr/bin/env bash', "cat `"$ReportPath`" > `"`$7`"", 'exit 0') -join "`n"
+    $path = Join-Path $bin 'codex'
+    Set-Content -LiteralPath $path -Value $sh -Encoding ASCII
+    & chmod +x $path | Out-Null
+  }
+}
+
 try {
   Get-ChildItem $root -Force | Where-Object { $_.Name -notin @('.git', 'reports', 'review-input', 'review-output') } |
     Copy-Item -Destination $temp -Recurse -Force
@@ -55,15 +73,7 @@ try {
   )
   $successReportPath = Join-Path $temp 'fake-report.md'
   Set-Content -LiteralPath $successReportPath -Value ($reportLines -join "`n") -Encoding ASCII
-  if ($isWin) {
-    $cmd = "@echo off`ntype `"$successReportPath`"`nexit /b 0"
-    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $cmd -Encoding ASCII
-  } else {
-    $sh = "#!/usr/bin/env bash`ncat `"$successReportPath`"`nexit 0`n"
-    $path = Join-Path $bin 'codex'
-    Set-Content -LiteralPath $path -Value $sh -Encoding ASCII
-    & chmod +x $path | Out-Null
-  }
+  Set-ReportingFakeCodex $successReportPath
   & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10
   if ($LASTEXITCODE -ne 0) { throw "Expected successful local runner exit code 0, got $LASTEXITCODE." }
 
@@ -80,21 +90,25 @@ try {
   # appearing inside it mid-run is exactly what the runner's read-only check is
   # built to catch. It caught this one.
   $capture = Join-Path ([IO.Path]::GetTempPath()) ('codex-stdin-' + [guid]::NewGuid().ToString('N') + '.txt')
-  # Exit codes: 42/43/44 wrong subcommand or sandbox, 45 a prompt was passed as
-  # an argument, 46 no prompt arrived on stdin. 45 is the one that catches the
-  # quoting defect: a prompt containing a double quote used to split into extra
-  # arguments, which is indistinguishable from passing it as an argument at all.
+  # Exit codes: 42/43/44 wrong subcommand or sandbox, 45 colour left on so ANSI
+  # escapes could reach the artifact, 46 no --output-last-message so the runner
+  # would be scraping the console again, 47 a prompt passed as an argument, 48
+  # no prompt on stdin. 47 is the one that catches the quoting defect: a prompt
+  # containing a double quote split into extra arguments, which looks exactly
+  # like passing it as an argument in the first place.
   if ($isWin) {
     $strict = @(
       '@echo off',
       'if not "%1"=="exec" exit /b 42',
       'if not "%2"=="--sandbox" exit /b 43',
       'if not "%3"=="read-only" exit /b 44',
-      'if not "%4"=="" exit /b 45',
+      'if not "%4%5"=="--colornever" exit /b 45',
+      'if not "%6"=="--output-last-message" exit /b 46',
+      'if not "%8"=="" exit /b 47',
       "findstr `"^`" > `"$capture`"",
       "findstr /C:`"BEGIN PROMPT`" `"$capture`" >nul",
-      'if errorlevel 1 exit /b 46',
-      "type `"$strictReport`"",
+      'if errorlevel 1 exit /b 48',
+      "type `"$strictReport`" > %7",
       'exit /b 0'
     ) -join "`n"
     Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $strict -Encoding ASCII
@@ -104,10 +118,12 @@ try {
       'if [ "$1" != "exec" ]; then exit 42; fi',
       'if [ "$2" != "--sandbox" ]; then exit 43; fi',
       'if [ "$3" != "read-only" ]; then exit 44; fi',
-      'if [ -n "$4" ]; then exit 45; fi',
+      'if [ "$4$5" != "--colornever" ]; then exit 45; fi',
+      'if [ "$6" != "--output-last-message" ]; then exit 46; fi',
+      'if [ -n "$8" ]; then exit 47; fi',
       "cat > `"$capture`"",
-      "grep -q 'BEGIN PROMPT' `"$capture`" || exit 46",
-      "cat `"$strictReport`"",
+      "grep -q 'BEGIN PROMPT' `"$capture`" || exit 48",
+      "cat `"$strictReport`" > `"`$7`"",
       'exit 0'
     ) -join "`n"
     $strictPath = Join-Path $bin 'codex'

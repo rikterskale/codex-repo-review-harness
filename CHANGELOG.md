@@ -15,6 +15,17 @@ that printed its title twice — are covered by
 
 ### Fixed
 
+- **The report is Codex's final message, not its console output.** The runner
+  captured everything Codex printed and wrote it into the artifact as the
+  review: the startup banner, the entire prompt echoed back including the
+  untrusted config block, tool-call transcripts, sandbox error logs, and ANSI
+  escapes. Reviews now come from `--output-last-message`, with `--color never`
+  keeping escapes out of both streams, and a leading byte-order mark is
+  tolerated (`REV-COR-007`).
+- **Fixed the duplicate-title strip.** It removed the first title found anywhere
+  in the captured text. Against a real transcript that was the copy inside the
+  echoed prompt template, so it deleted a line out of the quoted prompt and left
+  both real titles standing. It is now anchored to the start of the message.
 - **The prompt is sent to Codex on stdin, not as an argument.** Windows
   PowerShell 5.1 does not escape embedded double quotes when it builds a native
   command line, so the quoted phrase in `prompts/system-review.md` split the

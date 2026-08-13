@@ -43,11 +43,14 @@ try {
 '@
     $reportPath = Join-Path $temp 'synthetic-report.md'
     Set-Content -LiteralPath $reportPath -Value $report -Encoding UTF8
+    # Writes to argument 7, the --output-last-message path, because that is where
+    # the harness reads the review from. Printing to stdout would let a
+    # regression back to console-scraping pass here.
     if ($runningOnWindows) {
-        Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`ntype `"$reportPath`"`nexit /b 0" -Encoding ASCII
+        Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value "@echo off`ntype `"$reportPath`" > %7`nexit /b 0" -Encoding ASCII
     } else {
         $fakeCodex = Join-Path $bin 'codex'
-        Set-Content -LiteralPath $fakeCodex -Value "#!/usr/bin/env bash`ncat '$($reportPath -replace "'", "'\\''")'`nexit 0" -Encoding UTF8
+        Set-Content -LiteralPath $fakeCodex -Value "#!/usr/bin/env bash`ncat '$($reportPath -replace "'", "'\\''")' > `"`$7`"`nexit 0" -Encoding UTF8
         & chmod +x $fakeCodex
     }
     $previousPath = $env:PATH
