@@ -161,31 +161,58 @@ $job = Start-Job -ScriptBlock {
     $jobOutput = ($Prompt | & codex @CodexArgs 2>&1 | Out-String)
     [pscustomobject]@{ Output = $jobOutput; ExitCode = $LASTEXITCODE }
 } -ArgumentList $jobArguments
+$runFailureCode = 0
+$runFailureMessage = ''
+$result = $null
 try {
     if (-not (Wait-Job -Job $job -Timeout $TimeoutSeconds)) {
         Stop-Job -Job $job -ErrorAction SilentlyContinue
-        Fail 6 "Codex review timed out after $TimeoutSeconds seconds."
+        $runFailureCode = 6
+        $runFailureMessage = "Codex review timed out after $TimeoutSeconds seconds."
+    } else {
+        $result = Receive-Job -Job $job
     }
-    $result = Receive-Job -Job $job
-} finally { Remove-Job -Job $job -Force -ErrorAction SilentlyContinue }
-$exitCode = [int]$result.ExitCode
-# Read and delete the final-message file before anything can fail, so a failing
-# run cannot leave it behind. The console transcript is kept only for diagnostics.
-$transcript = ConvertTo-RedactedText ([string]$result.Output)
-Write-DiagnosticLog 'codex console transcript' $transcript
+} catch {
+    $runFailureCode = 4
+    $runFailureMessage = "Codex review could not be collected: $($_.Exception.Message)"
+} finally {
+    Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+}
+$transcript = if ($result) { ConvertTo-RedactedText ([string]$result.Output) } else { '' }
+if ($transcript) { Write-DiagnosticLog 'codex console transcript' $transcript }
+if ($runFailureCode -eq 0) {
+    $exitCode = [int]$result.ExitCode
+    if ($exitCode -ne 0) {
+        $runFailureCode = 4
+        $runFailureMessage = "Codex review failed with exit code $exitCode. Output: $transcript"
+    }
+}
 $output = ''
-if (Test-Path -LiteralPath $lastMessagePath) {
-    $output = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($lastMessagePath))
-    # A byte-order mark would sit in front of the report's title and fail the
-    # Markdown contract on a report that is otherwise perfectly well formed.
-    if ($output.Length -gt 0 -and $output[0] -eq [char]0xFEFF) { $output = $output.Substring(1) }
+try {
+    # Read the final message only after a successful Codex invocation. The file
+    # is outside the repository under review and is always removed below.
+    if ($runFailureCode -eq 0 -and (Test-Path -LiteralPath $lastMessagePath)) {
+        $output = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($lastMessagePath))
+        # A byte-order mark would sit in front of the report's title and fail the
+        # Markdown contract on a report that is otherwise perfectly well formed.
+        if ($output.Length -gt 0 -and $output[0] -eq [char]0xFEFF) { $output = $output.Substring(1) }
+    }
+    if ($runFailureCode -eq 0 -and -not $output.Trim()) {
+        $runFailureCode = 4
+        $runFailureMessage = "Codex produced no final message. Output: $transcript"
+    }
+    $statusAfter = @(git -c core.excludesfile= -C $targetRoot status --porcelain 2>$null)
+    if (($statusBefore -join "`n") -ne ($statusAfter -join "`n")) {
+        $runFailureCode = 5
+        $runFailureMessage = 'Target repository changed during a read-only review.'
+    }
+} finally {
+    # A timeout can occur after Codex creates this file. It must never survive
+    # outside the managed report directory, regardless of the review outcome.
     Remove-Item -LiteralPath $lastMessagePath -Force -ErrorAction SilentlyContinue
 }
-if ($exitCode -ne 0) { Fail 4 "Codex review failed with exit code $exitCode. Output: $transcript" }
-if (-not $output.Trim()) { Fail 4 "Codex produced no final message. Output: $transcript" }
+if ($runFailureCode -ne 0) { Fail $runFailureCode $runFailureMessage }
 $output = ConvertTo-RedactedText $output
-$statusAfter = @(git -c core.excludesfile= -C $targetRoot status --porcelain 2>$null)
-if (($statusBefore -join "`n") -ne ($statusAfter -join "`n")) { Fail 5 'Target repository changed during a read-only review.' }
 if ([Text.Encoding]::UTF8.GetByteCount($output) -gt $MaxOutputBytes) { Fail 7 "Codex output exceeded $MaxOutputBytes bytes." }
 try { Assert-ReviewMarkdown $output } catch { Fail 5 $_.Exception.Message }
 $findings = @(Get-ReviewFindings $output)

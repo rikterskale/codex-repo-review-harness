@@ -43,6 +43,8 @@ try {
     Copy-Item -Destination $temp -Recurse -Force
   Set-FakeCodex 'echo simulated Codex failure' 9
   git -C $temp init --quiet
+  git -C $temp add --all
+  git -C $temp -c user.name='Harness test' -c user.email='harness-test@example.invalid' commit --quiet -m 'Baseline'
   $oldPath = $env:PATH
   $env:PATH = $bin + [IO.Path]::PathSeparator + $oldPath
   $previousErrorAction = $ErrorActionPreference
@@ -53,6 +55,56 @@ try {
   $diagnosticLog = Join-Path $temp 'diagnostics\failure.log'
   if (-not (Test-Path -LiteralPath $diagnosticLog) -or (Get-Content -LiteralPath $diagnosticLog -Raw) -notmatch 'simulated Codex failure') { throw 'Diagnostic logging did not retain the redacted Codex failure transcript.' }
   Write-Host 'PASS: local runner propagates Codex failure.'
+
+  # A failing or timed-out Codex process must not hide a target change. The
+  # runner records the original failure internally, compares status, and makes
+  # the read-only-boundary violation (exit 5) take precedence.
+  Set-FakeCodex 'echo changed>> README.md' 9
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  $changedOutput = & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 2>&1 | Out-String
+  $ErrorActionPreference = $previousErrorAction
+  if ($LASTEXITCODE -ne 5) { throw "A target change after Codex failure must exit 5, got $LASTEXITCODE." }
+  if ($changedOutput -notmatch 'Target repository changed during a read-only review') { throw 'Target change after Codex failure was not reported.' }
+  git -C $temp restore README.md
+  Write-Host 'PASS: local runner detects a target change after Codex failure.'
+
+  # The real CLI may write its final-message file before a timeout is observed.
+  # Capture the path supplied by the runner, create it immediately, then remain
+  # running long enough for the runner to time out. Cleanup must remove it.
+  $timeoutCapture = Join-Path ([IO.Path]::GetTempPath()) ('codex-timeout-path-' + [guid]::NewGuid().ToString('N') + '.txt')
+  if ($isWin) {
+    $timeoutFake = @(
+      '@echo off',
+      "echo %7 > `"$timeoutCapture`"",
+      '> "%7" echo partial review',
+      'ping -n 11 127.0.0.1 >nul',
+      'exit /b 0'
+    ) -join "`n"
+    Set-Content -LiteralPath (Join-Path $bin 'codex.cmd') -Value $timeoutFake -Encoding ASCII
+  } else {
+    $timeoutFake = @(
+      '#!/usr/bin/env bash',
+      "printf '%s\\n' `"`$7`" > `"$timeoutCapture`"",
+      'printf "partial review\\n" > "$7"',
+      'sleep 10',
+      'exit 0'
+    ) -join "`n"
+    $timeoutPath = Join-Path $bin 'codex'
+    Set-Content -LiteralPath $timeoutPath -Value $timeoutFake -Encoding ASCII
+    & chmod +x $timeoutPath | Out-Null
+  }
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 3 2>&1 | Out-Null
+  $ErrorActionPreference = $previousErrorAction
+  if ($LASTEXITCODE -ne 6) { throw "Timed-out review must exit 6, got $LASTEXITCODE." }
+  if (-not (Test-Path -LiteralPath $timeoutCapture)) { throw 'Timed-out fake Codex did not record the final-message path.' }
+  $timedOutMessage = (Get-Content -LiteralPath $timeoutCapture -Raw).Trim()
+  if (-not $timedOutMessage -or (Test-Path -LiteralPath $timedOutMessage)) { throw 'Timed-out review left its final-message file behind.' }
+  Remove-Item -LiteralPath $timeoutCapture -Force -ErrorAction SilentlyContinue
+  Write-Host 'PASS: local runner removes the final-message file after a timeout.'
+
   $previousErrorAction = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -Prompt '..\README.md' -DryRun 2>&1 | Out-Null
@@ -157,4 +209,5 @@ try {
   $env:PATH = $oldPath
   Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
   if ($capture) { Remove-Item -LiteralPath $capture -Force -ErrorAction SilentlyContinue }
+  if ($timeoutCapture) { Remove-Item -LiteralPath $timeoutCapture -Force -ErrorAction SilentlyContinue }
 }

@@ -5,7 +5,7 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "a99314dfd5942216596914c60ad265506a401d0d2b4e68f3eb1d918b2b432bfe"
+reviewed_digest: "163fafc3e352b37651581b5b13e884c2313da77e7bda6be4b0f114a11ef708f5"
 support_status: native_supported
 validation_status: partially_verified
 validated_on: 2026-08-13

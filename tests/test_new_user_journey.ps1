@@ -19,7 +19,11 @@ function Assert-ExitCode([int]$Expected, [string]$Action) {
 
 try {
     New-Item -ItemType Directory -Path $harness, $target, $bin -Force | Out-Null
-    Get-ChildItem -LiteralPath $root -Force | Where-Object { $_.Name -notin @('.git', '.claude', 'review-input', 'review-output') } | Copy-Item -Destination $harness -Recurse -Force
+    # A first-time installation starts without generated artifacts. Copying the
+    # source workspace's ignored reports/ directory makes report-count checks
+    # depend on a maintainer's prior local reviews instead of this test run.
+    Get-ChildItem -LiteralPath $root -Force | Where-Object { $_.Name -notin @('.git', '.claude', 'reports', 'review-input', 'review-output') } | Copy-Item -Destination $harness -Recurse -Force
+    New-Item -ItemType Directory -Path (Join-Path $harness 'reports') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $target 'app.ps1') -Value "function Get-Greeting { 'hello' }" -Encoding UTF8
     git -C $harness init --quiet
     git -C $target init --quiet
