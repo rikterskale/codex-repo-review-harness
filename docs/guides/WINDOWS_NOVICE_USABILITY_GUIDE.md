@@ -5,7 +5,7 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "a77cdf05d30eea8dc85ab39152f007976ca1976d2a759b0c2dd896e7c33da689"
+reviewed_digest: "03fb8bd6a439d3d30c8da7d69e00fe0ce1e40172b7a8117f593c88a7bf7bc7fd"
 support_status: native_supported
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -59,6 +59,10 @@ Then, when the required external Codex setup is available, run:
 ```powershell
 .\scripts\Run-Review.ps1
 ```
+
+For a guided local interface, run `scripts/Start-ReviewWizard.ps1`. It lets you
+select the existing runner settings, previews the command, and requires you to
+type `REVIEW` before it starts a real read-only review.
 
 The default prompt is `prompts/system-review.md`. The runner writes successful
 artifacts beneath:

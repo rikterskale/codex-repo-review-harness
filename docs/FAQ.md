@@ -15,6 +15,12 @@ repository. The default output directory is `reports`.
 It resolves the target, reads configuration and prompt files, builds the review
 manifest and assembled prompt, then exits without invoking Codex.
 
+## Is there a guided interface?
+
+Yes. Run `scripts/Start-ReviewWizard.ps1` for an interactive local front end to
+the existing runner. It previews the selected invocation and requires `REVIEW`
+before it starts a real read-only review.
+
 ## Does a report mean a change is approved?
 
 No. The runner produces review artifacts; it does not apply, approve, or merge

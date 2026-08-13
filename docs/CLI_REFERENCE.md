@@ -23,6 +23,16 @@ review, and writes successful artifacts under the configured output directory.
 Exit codes are `0` success, `2` usage/configuration, `3` prerequisite, `4`
 Codex failure, `5` contract failure, `6` timeout, and `7` output-size limit.
 
+## `scripts/Start-ReviewWizard.ps1`
+
+Starts an interactive local interface for `Run-Review.ps1`; it accepts no
+options. The wizard selects only existing runner parameters: a bundled prompt,
+the harness or another local target, dry-run or real read-only mode, base-branch
+override, timeout, output limit, and optional diagnostic-log path. It previews
+the selected command. A real review starts only after the user types `REVIEW`;
+other input cancels without invoking the runner. The wizard exits with the
+runner's exit code.
+
 ## `scripts/Validate-Harness.ps1`
 
 Runs installation checks and accepts no options. It exits `0` when all checks
@@ -52,9 +62,9 @@ files; it exits `1` if any check fails.
 ## `scripts/ci/Repair-DocEncoding.ps1`
 
 This maintenance script repairs double-encoded UTF-8 text. `-Path <string[]>`
-defaults to the two canonical novice guides; `-DryRun` reports changes without
-writing. It exits `0` on success, including when there is nothing to repair,
-and `1` on failure.
+defaults to the tracked user-facing Markdown files known to contain repaired
+text; `-DryRun` reports changes without writing. It exits `0` on success,
+including when there is nothing to repair, and `1` on failure.
 
 ## Configuration read by the local runner
 

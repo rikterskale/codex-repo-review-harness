@@ -31,6 +31,11 @@ foreach ($parameter in [regex]::Matches($runner, '(?m)^\s*\[(?:string|int)\]\$(\
     if ($cli -notmatch [regex]::Escape("-$name")) { Add-Error "CLI reference does not document -$name" }
 }
 
+foreach ($documentation in @('README.md', 'docs\CLI_REFERENCE.md', 'docs\USAGE.md')) {
+    $text = Get-Content -LiteralPath (Join-Path $root $documentation) -Raw
+    if ($text -notmatch 'Start-ReviewWizard.ps1') { Add-Error "$documentation does not document the interactive review wizard" }
+}
+
 foreach ($guide in @('docs\guides\WINDOWS_NOVICE_USABILITY_GUIDE.md', 'docs\guides\LINUX_NOVICE_USABILITY_GUIDE.md')) {
     $text = Get-Content -LiteralPath (Join-Path $root $guide) -Raw
     if ($text -notmatch 'DiagnosticLogPath') { Add-Error "$guide does not document DiagnosticLogPath" }

@@ -12,6 +12,15 @@
 .\scripts\Run-Review.ps1
 ```
 
+## Use the guided local interface
+
+```powershell
+.\scripts\Start-ReviewWizard.ps1
+```
+
+Choose a bundled prompt and target, then inspect the command preview. Type
+`REVIEW` only when you want to start a real read-only review.
+
 ## Review another local Git repository
 
 ```powershell

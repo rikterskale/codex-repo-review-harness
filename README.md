@@ -39,6 +39,16 @@ Set-Location codex-repo-review-harness
 .\scripts\Run-Review.ps1
 ```
 
+Prefer guided setup? Run the interactive local wizard instead:
+
+```powershell
+.\scripts\Start-ReviewWizard.ps1
+```
+
+It lets you select a bundled prompt, local target, dry-run or real read-only
+mode, resource limits, and optional redacted diagnostics. A real review starts
+only after you type `REVIEW` at its confirmation prompt.
+
 Reports appear under `reports/`. To review a separate local Git repository while
 keeping artifacts in this trusted harness, pass `-RepositoryPath`:
 

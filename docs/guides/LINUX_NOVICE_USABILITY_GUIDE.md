@@ -5,7 +5,7 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "a77cdf05d30eea8dc85ab39152f007976ca1976d2a759b0c2dd896e7c33da689"
+reviewed_digest: "03fb8bd6a439d3d30c8da7d69e00fe0ce1e40172b7a8117f593c88a7bf7bc7fd"
 support_status: native_supported_except_codex_install
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -85,6 +85,15 @@ pwsh -NoProfile -File scripts/Run-Review.ps1
 pwsh -NoProfile -File scripts/Run-Review.ps1 -RepositoryPath /path/to/target-repository
 pwsh -NoProfile -File scripts/Run-Review.ps1 -Prompt security-focus.md
 ```
+
+For a guided local interface, run:
+
+```bash
+pwsh -NoProfile -File scripts/Start-ReviewWizard.ps1
+```
+
+It selects existing runner settings, previews the command, and requires you to
+type `REVIEW` before a real read-only review starts.
 
 Successful artifacts are written under:
 

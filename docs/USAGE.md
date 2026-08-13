@@ -10,6 +10,18 @@ The default prompt is `prompts/system-review.md`. The runner creates a bounded
 manifest of Git-tracked and unignored files, applies configured include/exclude
 patterns, and refuses an empty scope.
 
+## Use the interactive wizard
+
+```powershell
+.\scripts\Start-ReviewWizard.ps1
+```
+
+The local wizard lists bundled prompts, accepts either the harness or another
+local repository, selects dry-run or real read-only mode, and offers base-branch,
+timeout, output-limit, and diagnostic-log settings. It previews the exact runner
+invocation. For a real review, type `REVIEW` to confirm; any other input cancels.
+The wizard does not apply, approve, or merge changes.
+
 ## Review another local repository
 
 ```powershell

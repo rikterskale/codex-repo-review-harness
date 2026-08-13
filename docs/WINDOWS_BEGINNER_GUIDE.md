@@ -42,6 +42,10 @@ Then run the default review:
 .\scripts\Run-Review.ps1
 ```
 
+Or run `scripts/Start-ReviewWizard.ps1` to choose the same settings through a
+guided local interface. It previews the review and asks you to type `REVIEW`
+before a real read-only run starts.
+
 The runner requires Git and, except for `-DryRun`, the `codex` command. It uses
 `system-review.md` by default, applies the configured `base_branch` unless you
 pass `-BaseBranch`, and forces the Codex sandbox to `read-only`.
