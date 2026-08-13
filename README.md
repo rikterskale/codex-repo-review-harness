@@ -17,7 +17,8 @@ This project gives you:
 Codex already has excellent built-in review capabilities (`/review`, `codex exec`, sandbox modes, AGENTS.md rules).  
 What this harness adds is a **repeatable, documented, safe-by-default workflow** so that:
 
-1. Reviews are always read-only unless you deliberately change the setting.
+1. Local reviews are forced to the `read-only` sandbox, including when the
+   configuration requests another sandbox.
 2. The same prompts and severity rules are used every time.
 3. Non-experts can follow exact click-by-click steps on Windows.
 4. Results are saved as durable Markdown reports inside the repository.
@@ -68,7 +69,8 @@ It starts from installing Git and walks through every single step.
 | Setting | Value | Meaning |
 |---------|-------|---------|
 | Default sandbox | `read-only` | Codex cannot create, edit, or delete source files |
-| Report location | `reports/` | Only place the harness writes |
+| Generated artifacts | `reports/<target>/<timestamp>-<run-id>/` | Successful local reviews write `review.md`, `review.json`, and `review.sha256` here |
+| Review manifest | `review-input/review-manifest.txt` | The local runner writes the bounded file list here before invoking Codex |
 | Config enforcement | Script forces read-only | Even if you edit the YAML, the runner overrides to safe mode |
 
 ## Repository layout
@@ -158,29 +160,20 @@ enable it until the repository owner has reviewed the trust boundary and has
 configured the secret. Fork pull requests are analyzed by the trusted base
 workflow; PR source code is never checked out or executed by that workflow.
 
-A credential preflight runs before Codex is invoked, so a repository without the
-secret fails with a workflow error naming it instead of an unrelated error from
-inside the action. The preflight receives only whether the secret is set, never
-its value. The Codex sandbox is
-pinned through the action's `sandbox` input rather than through `codex-args`,
-because the action appends its own `--sandbox` argument after the pass-through
-args and would otherwise override a read-only setting with its `workspace-write`
-default.
+A credential preflight runs before the workflow invokes Codex. It receives only
+whether `OPENAI_API_KEY` is set, never its value. The workflow sets the Codex
+action's `sandbox` input to `read-only` and does not set a sandbox through
+`codex-args`.
 
-`openai/codex-action` additionally requires the triggering actor to have write
-access to the repository. Reviews of pull requests from outside collaborators
-therefore stop at that check unless the owner opts in through the action's
-`allow-users` input, which also means accepting the cost of runs triggered by
-those users.
-
-The current feature branch has no live GitHub Actions result until a pull request
-targets `main`; validation runs on `main` pushes and pull requests, not arbitrary
-branch pushes.
+`[VERIFY: current openai/codex-action triggering-user access requirement and
+supported allow-users configuration.]`
 
 ## Report contract and exit codes
 
 Reports follow `schemas/review-report.schema.json`. The local runner writes
-Markdown, JSON, and SHA-256 files to the configured nested `report.output_dir`.
+Markdown, JSON, and SHA-256 files to
+`<report.output_dir>/<target-name>/<timestamp>-<run-id>/`. It also writes the
+review manifest to `review-input/review-manifest.txt` before the review starts.
 The JSON artifact contains parsed findings and uses `passed` when no findings
 are present or `findings` when findings are present. Its deterministic exit
 codes are: `0` success, `2` usage/configuration, `3` prerequisite, `4` Codex
@@ -192,17 +185,11 @@ failure, `5` contract failure, `6` timeout, and `7` output-size limit.
 2. Add or tighten rules under `## Code Review Rules` in `AGENTS.md`.
 3. Create new prompt files in `prompts/` and pass them with `-Prompt yourfile.md`.
 
-## Relation to official Codex features
+## Scope
 
-This harness deliberately builds on the current Codex workflow (as of mid-2026):
-
-- Official Windows installer
-- `codex exec` non-interactive mode
-- Sandbox modes (`read-only` preferred)
-- `AGENTS.md` + `## Code Review Rules` for custom guidance
-- Compatibility with future official GitHub Actions / cloud review
-
-It does **not** replace Codex; it packages a safe, repeatable way to use it for repository reviews.
+This repository documents its own PowerShell runner, prompts, configuration,
+tests, and workflow files. `[VERIFY: current Codex CLI installation,
+authentication, account, and service requirements.]`
 
 ## License
 
