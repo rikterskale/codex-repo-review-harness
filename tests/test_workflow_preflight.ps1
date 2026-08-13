@@ -60,6 +60,38 @@ jobs:
       Remove-Item -LiteralPath $rogue -Force
       if ($accepted) { throw "A non-compliant .$extension workflow bypassed the workflow policy checks." }
     }
+
+    # The on-demand review path is maintainer-triggered, so its inputs are
+    # trusted at the level of a push — but only for as long as they stay data.
+    # Each mutation below is a way that stops being true.
+    $analysisPath = Join-Path $temp '.github\workflows\codex-review.yml'
+    $original = [IO.File]::ReadAllBytes($analysisPath)
+    $analysisText = [Text.Encoding]::UTF8.GetString($original)
+    $mutations = @(
+      @{ Why = 'a dispatch input interpolated straight into a run block'
+        Text = $analysisText -replace '(?m)^(\s*)\$range = .*$', '$1$range = "${{ inputs.base }}..${{ inputs.ref }}"' },
+      @{ Why = 'the plain-revision guard removed'
+        Text = $analysisText -replace "(?m)^\s*if \(\`$value -notmatch '\^\[A-Za-z0-9\].*$", '' },
+      @{ Why = 'the dispatched range replaced by a pull-request diff'
+        Text = $analysisText -replace '(?m)^(\s*)\$diff = git diff --no-color \$range\s*$', '$1$diff = gh pr diff 1' },
+      @{ Why = 'the publisher commenting on runs that have no pull request'
+        Path = (Join-Path $temp '.github\workflows\codex-review-comment.yml') }
+    )
+    foreach ($mutation in $mutations) {
+      $path = if ($mutation.Path) { $mutation.Path } else { $analysisPath }
+      $before = [IO.File]::ReadAllBytes($path)
+      $text = if ($mutation.Text) { $mutation.Text } else {
+        ([Text.Encoding]::UTF8.GetString($before) -replace "workflow_run\.event == 'pull_request_target' && ", '')
+      }
+      if ($text -eq [Text.Encoding]::UTF8.GetString($before)) { throw "The mutation for '$($mutation.Why)' changed nothing; the check would pass vacuously." }
+      [IO.File]::WriteAllBytes($path, (New-Object Text.UTF8Encoding($false)).GetBytes($text))
+      try {
+        & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\ci\Validate-WorkflowPolicy.ps1') 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { throw "Workflow policy accepted $($mutation.Why)." }
+      } finally { [IO.File]::WriteAllBytes($path, $before) }
+    }
+    & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\ci\Validate-WorkflowPolicy.ps1') 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Restoring the dispatch mutations did not restore workflow policy.' }
   } finally { $ErrorActionPreference = $previousErrorAction }
 } finally {
   Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue

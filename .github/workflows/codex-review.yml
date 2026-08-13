@@ -5,12 +5,33 @@ name: Codex Read-Only Review
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
+  # On-demand review of a ref that never went through a pull request, which is
+  # what a direct push to main leaves behind. Only a user with write access can
+  # dispatch a workflow, so the chosen ref is maintainer-supplied — the same
+  # trust level as the push itself, unlike the pull_request_target path above,
+  # which must treat its input as hostile.
+  #
+  # There is no pull request to comment on, so the review is published to the
+  # job summary and the artifact. codex-review-comment.yml deliberately ignores
+  # this event.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or SHA to review
+        required: false
+        default: main
+      base:
+        description: Base of the reviewed range; the review covers base..ref
+        required: false
+        default: HEAD~1
 
 permissions:
   {}
 
 concurrency:
-  group: codex-review-${{ github.event.pull_request.number }}
+  # A dispatched run has no pull-request number. Without the fallback every
+  # manual run would share one group and cancel the previous one.
+  group: codex-review-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,11 +44,22 @@ jobs:
       actions: read
     steps:
       - name: Checkout trusted base
+        if: ${{ github.event_name == 'pull_request_target' }}
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
           fetch-depth: 1
+
+      - name: Checkout the dispatched ref
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+          # The reviewed range needs its base commit present, and the base is an
+          # arbitrary revision, so no shallow depth is safe here.
+          fetch-depth: 0
 
       - name: Validate repository policy
         shell: pwsh
@@ -51,6 +83,7 @@ jobs:
           Write-Host 'PASS: the review credential is configured.'
 
       - name: Collect PR diff as data
+        if: ${{ github.event_name == 'pull_request_target' }}
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -65,6 +98,36 @@ jobs:
             Write-Error 'PR diff exceeds the 5 MiB review input limit.'
           }
         shell: pwsh
+
+      - name: Collect the dispatched commit range as data
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          # The inputs reach the script as environment variables and are never
+          # interpolated into the script body. A `${{ inputs.base }}` written
+          # inline is substituted before the shell parses the line, so a value
+          # containing shell metacharacters would execute as code.
+          REVIEW_BASE: ${{ inputs.base }}
+          REVIEW_REF: ${{ inputs.ref }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($name in @('REVIEW_BASE', 'REVIEW_REF')) {
+            $value = [Environment]::GetEnvironmentVariable($name)
+            if ([string]::IsNullOrWhiteSpace($value)) { throw "$name is empty." }
+            # git reads a leading dash as an option rather than a revision, so a
+            # value shaped like a flag would become one.
+            if ($value -notmatch '^[A-Za-z0-9][A-Za-z0-9._/~^-]*$') { throw "$name is not a plain revision: $value" }
+          }
+          New-Item -ItemType Directory -Path review-input -Force | Out-Null
+          $range = '{0}..{1}' -f $env:REVIEW_BASE, $env:REVIEW_REF
+          $diff = git diff --no-color $range
+          if ($LASTEXITCODE -ne 0) { throw "git diff failed for range $range (exit code $LASTEXITCODE)." }
+          if (-not $diff) { throw "The range $range contains no changes to review." }
+          Set-Content -LiteralPath review-input/pr.diff -Value ($diff -join "`n") -Encoding UTF8
+          if ((Get-Item review-input/pr.diff).Length -gt 5242880) {
+            Write-Error 'Reviewed range exceeds the 5 MiB review input limit.'
+          }
+          Write-Host "Collected $range for review."
 
       - name: Prepare bounded review prompt
         shell: pwsh
@@ -104,6 +167,26 @@ jobs:
           path: review-output/
           retention-days: 14
           if-no-files-found: error
+
+      # A dispatched run has no pull request, so codex-review-comment.yml never
+      # fires for it. Without this the review would exist only inside a
+      # downloadable artifact, which is a review nobody reads.
+      - name: Publish the review to the job summary
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        env:
+          REVIEW_BASE: ${{ inputs.base }}
+          REVIEW_REF: ${{ inputs.ref }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $report = Join-Path (Get-Location) 'review-output/review.md'
+          $body = if (Test-Path -LiteralPath $report) {
+            [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($report))
+          } else {
+            'No review artifact was produced. Inspect the step logs above.'
+          }
+          $header = "Reviewed ``$($env:REVIEW_BASE)..$($env:REVIEW_REF)`` on demand. No pull request was involved, so this summary and the ``codex-review`` artifact are the only outputs."
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value ($header + "`n`n---`n`n" + $body)
 
   # This job is intentionally in a separate workflow file. It is the only job
   # allowed to write a PR conversation comment.

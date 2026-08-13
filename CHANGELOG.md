@@ -19,6 +19,15 @@ All notable changes to this project are documented here.
   every readiness step after the requirement it proves.
 - Rewrote `test_release_readiness.ps1` as a mutation test: it breaks each
   requirement in a copy of the tree and requires the gate to reject it.
+- Added an on-demand `workflow_dispatch` trigger to the Codex review workflow so
+  a commit that reached `main` without a pull request can still be reviewed. It
+  takes a `ref` and a range `base`, collects the diff with `git diff` instead of
+  `gh pr diff`, and publishes to the job summary because no pull request exists
+  to comment on. Dispatch inputs reach the script through `env:` and are
+  constrained to plain revisions: interpolating them into a `run:` body would
+  let a value shaped like a shell command or a git flag execute as one.
+  `Validate-WorkflowPolicy.ps1` now enforces all of that, and
+  `test_workflow_preflight.ps1` breaks each rule to prove it is enforced.
 - Dropped the branch-protection clause from RR-10. Branch protection is
   unavailable on this repository, so requiring `analyze` as a status check was a
   rule nobody could satisfy. RR-10 now asserts only that the job exists, and

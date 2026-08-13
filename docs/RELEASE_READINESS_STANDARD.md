@@ -106,10 +106,21 @@ Actions produces the evidence.
 **Deliberate gap.** This requirement does *not* ask for `analyze` to be a
 required status check. Branch protection is unavailable on this repository
 today, so requiring it would be a rule nobody could satisfy. The cost is real
-and worth stating plainly: nothing blocks a merge while `analyze` is red. RR-12
-is what catches that, and it is a human reading the commit's checks, not a rule
-enforcing them. Restore the branch-protection clause here as soon as protection
-becomes available.
+and worth stating plainly: nothing blocks a merge while `analyze` is red, and a
+direct push to `main` triggers no review at all. RR-12 is what catches that, and
+it is a human reading the commit's checks, not a rule enforcing them. Restore
+the branch-protection clause here as soon as protection becomes available.
+
+**Reviewing a commit that skipped the pull-request path.** `analyze` also runs
+on demand, so a change already on `main` can still be reviewed:
+
+```bash
+gh workflow run codex-review.yml -f ref=main -f base=HEAD~1
+```
+
+The result lands in the run's job summary and the `codex-review` artifact —
+there is no pull request to comment on. This is a tool, not a guarantee: it runs
+only when someone remembers, which is why the gap above stands as written.
 
 ## RR-11 — Real-Codex smoke test (Human, not automatable)
 
