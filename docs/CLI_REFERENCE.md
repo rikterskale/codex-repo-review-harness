@@ -17,6 +17,7 @@ review, and writes successful artifacts under the configured output directory.
 | `-BaseBranch <string>` | `config.base_branch` | Overrides the configured base branch in the assembled prompt and report header. |
 | `-TimeoutSeconds <int>` | `900` | Must be at least `1`; timeout exits `6`. |
 | `-MaxOutputBytes <int>` | `5242880` | Must be at least `1024`; an over-limit final message exits `7`. |
+| `-DiagnosticLogPath <string>` | Empty | Writes redacted runner diagnostics to a path beneath the harness root. |
 | `-DryRun` | Off | Resolves the target and prompt but does not invoke Codex. |
 
 Exit codes are `0` success, `2` usage/configuration, `3` prerequisite, `4`

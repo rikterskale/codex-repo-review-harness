@@ -5,7 +5,7 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "8a04ab2e1a11aa9e865cfee5b51b0538d44fea38032869aa9606de814dfa9353"
+reviewed_digest: "34050a04ea83d046bfb0ec0134450bad697976057467423b2f62ef3456c0357c"
 support_status: native_supported_except_codex_install
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -23,9 +23,9 @@ checked against.
 ## Linux support boundary
 
 The CI workflow runs the harness checks on `ubuntu-latest` with PowerShell 7.
-The repository does not provide a Linux installation path for the external
-Codex CLI. Therefore this guide documents local validation and dry-run behavior,
-but does not invent a Linux Codex installation or sign-in command.
+OpenAI's current Codex CLI guide documents the same standalone installer for
+macOS and Linux. This repository's CI evidence remains Ubuntu-only; Debian and
+Kali use the same documented Linux flow but are not CI-tested by this project.
 
 ## What the harness does
 
@@ -49,6 +49,31 @@ pwsh -NoProfile -File scripts/Run-Review.ps1 -DryRun
 
 The dry run requires Git but does not invoke Codex. It resolves the target,
 configuration, prompt, and review manifest, then prints preparation details.
+
+## Install and sign in on Debian, Ubuntu, or Kali
+
+Install Git with the distribution package manager:
+
+```bash
+sudo apt install git
+```
+
+Install or update Codex using OpenAI's Linux installer:
+
+```bash
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+```
+
+Open a project directory and run `codex`. On its first run, select **Sign in
+with ChatGPT** or another sign-in method that Codex offers. These steps come
+from the [official Codex CLI guide](https://developers.openai.com/codex/cli/).
+
+Confirm the commands are available before starting a real harness review:
+
+```bash
+git --version
+codex --version
+```
 
 ## When Codex is already available
 
@@ -101,6 +126,21 @@ does not provide its own update command.
 To clean up managed specialist files, use `scripts/Remove-AgentPack.ps1` with
 `-DryRun` first. Its `-RestoreLatest` option restores the most recent managed
 backup when one exists. See [Agent pack](../modules/agent-pack.md).
+
+## Diagnostic logging
+
+Pass `-DiagnosticLogPath` to preserve redacted runner diagnostics. The path is
+relative to the harness root and must remain beneath it.
+
+```bash
+pwsh -NoProfile -File scripts/Run-Review.ps1 \
+  -DiagnosticLogPath reports/diagnostics/review.log
+```
+
+The log records target resolution, dry-run preparation, the redacted Codex
+console transcript, failure messages, and successful artifact paths. Do not
+share a log until you have reviewed it; redaction is a safeguard, not a
+substitute for secret management.
 
 ## Next steps
 

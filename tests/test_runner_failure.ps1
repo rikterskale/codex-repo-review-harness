@@ -47,9 +47,11 @@ try {
   $env:PATH = $bin + [IO.Path]::PathSeparator + $oldPath
   $previousErrorAction = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
-  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 2>&1 | Out-Null
+  & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $temp 'scripts\Run-Review.ps1') -TimeoutSeconds 10 -DiagnosticLogPath 'diagnostics\failure.log' 2>&1 | Out-Null
   $ErrorActionPreference = $previousErrorAction
   if ($LASTEXITCODE -ne 4) { throw "Expected local runner exit code 4, got $LASTEXITCODE." }
+  $diagnosticLog = Join-Path $temp 'diagnostics\failure.log'
+  if (-not (Test-Path -LiteralPath $diagnosticLog) -or (Get-Content -LiteralPath $diagnosticLog -Raw) -notmatch 'simulated Codex failure') { throw 'Diagnostic logging did not retain the redacted Codex failure transcript.' }
   Write-Host 'PASS: local runner propagates Codex failure.'
   $reportLines = @(
     '# Codex Repository Review Report',

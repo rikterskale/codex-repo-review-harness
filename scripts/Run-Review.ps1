@@ -13,6 +13,7 @@ param(
     [string]$BaseBranch = '',
     [int]$TimeoutSeconds = 900,
     [int]$MaxOutputBytes = 5242880,
+    [string]$DiagnosticLogPath = '',
     [switch]$DryRun
 )
 
@@ -21,7 +22,22 @@ $HarnessRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pa
 Set-Location $HarnessRoot
 . (Join-Path $HarnessRoot 'scripts\ci\Review-Helpers.ps1')
 
-function Fail([int]$Code, [string]$Message) { [Console]::Error.WriteLine($Message); exit $Code }
+$resolvedDiagnosticLogPath = ''
+function Write-DiagnosticLog([string]$Event, [string]$Detail) {
+    if (-not $resolvedDiagnosticLogPath) { return }
+    try {
+        $record = "[$((Get-Date).ToUniversalTime().ToString('o'))] $Event`n$(ConvertTo-RedactedText $Detail)`n"
+        [IO.File]::AppendAllText($resolvedDiagnosticLogPath, $record, (New-Object Text.UTF8Encoding($false)))
+    } catch { [Console]::Error.WriteLine("Diagnostic log write failed: $($_.Exception.Message)") }
+}
+function Fail([int]$Code, [string]$Message) { Write-DiagnosticLog "failure exit=$Code" $Message; [Console]::Error.WriteLine($Message); exit $Code }
+if ($DiagnosticLogPath) {
+    try {
+        $candidate = if ([IO.Path]::IsPathRooted($DiagnosticLogPath)) { $DiagnosticLogPath } else { Join-Path $HarnessRoot $DiagnosticLogPath }
+        $resolvedDiagnosticLogPath = Resolve-ContainedPath $HarnessRoot $candidate 'DiagnosticLogPath'
+        New-Item -ItemType Directory -Path (Split-Path -Parent $resolvedDiagnosticLogPath) -Force | Out-Null
+    } catch { Fail 2 "DiagnosticLogPath must resolve beneath the harness root: $($_.Exception.Message)" }
+}
 if ($TimeoutSeconds -lt 1 -or $MaxOutputBytes -lt 1024) { Fail 2 'TimeoutSeconds must be positive and MaxOutputBytes must be at least 1024.' }
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) { Fail 3 'Git is not installed or not on PATH.' }
@@ -38,6 +54,7 @@ if ($RepositoryPath) {
 $gitTop = git -c core.excludesfile= -C $targetRoot rev-parse --show-toplevel 2>$null
 if (-not $gitTop) { Fail 3 'RepositoryPath must be inside a Git repository.' }
 $targetRoot = $gitTop.Trim()
+Write-DiagnosticLog 'target resolved' "repository=$targetRoot; dry_run=$DryRun; timeout_seconds=$TimeoutSeconds; max_output_bytes=$MaxOutputBytes"
 $statusBefore = @(git -c core.excludesfile= -C $targetRoot status --porcelain 2>$null)
 
 $configPath = Join-Path $HarnessRoot 'config\review-config.yaml'
@@ -119,6 +136,7 @@ $lastMessagePath = Join-Path ([IO.Path]::GetTempPath()) ('codex-review-' + [guid
 $codexArgs = @('exec', '--sandbox', 'read-only', '--color', 'never', '--output-last-message', $lastMessagePath)
 if ($config.model) { $codexArgs += @('--model', $config.model) }
 if ($DryRun) {
+    Write-DiagnosticLog 'dry run prepared' "prompt_length=$($fullPrompt.Length)"
     Write-Host "Prepared bounded read-only review; prompt length=$($fullPrompt.Length), timeout=$TimeoutSeconds seconds, max_output_bytes=$MaxOutputBytes."
     exit 0
 }
@@ -151,6 +169,7 @@ $exitCode = [int]$result.ExitCode
 # Read and delete the final-message file before anything can fail, so a failing
 # run cannot leave it behind. The console transcript is kept only for diagnostics.
 $transcript = ConvertTo-RedactedText ([string]$result.Output)
+Write-DiagnosticLog 'codex console transcript' $transcript
 $output = ''
 if (Test-Path -LiteralPath $lastMessagePath) {
     $output = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($lastMessagePath))
@@ -202,4 +221,5 @@ Write-ReviewUtf8 $jsonFile ($report | ConvertTo-Json -Depth 8)
 $hashLines = Get-FileHash -Algorithm SHA256 $reportFile, $jsonFile | ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), $_.Path.Substring($runReportsDir.Length + 1) }
 Write-ReviewUtf8 $hashFile (($hashLines -join "`n") + "`n")
 Write-Host "Review finished. Markdown: $reportFile; JSON: $jsonFile; SHA-256: $hashFile"
+Write-DiagnosticLog 'review succeeded' "markdown=$reportFile; json=$jsonFile; sha256=$hashFile"
 exit 0
