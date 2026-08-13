@@ -182,7 +182,15 @@ $exitCodes = @()
 if ($null -eq $runnerText) {
   Add-Failure 'RR-07' 'scripts/Run-Review.ps1 is missing; the documented exit codes cannot be checked against it.'
 } else {
-  $exitCodes = @([regex]::Matches($runnerText, '(?m)\bFail\s+(\d+)\b') | ForEach-Object { [int]$_.Groups[1].Value } | Sort-Object -Unique)
+  # Most failures call Fail with a literal code. The runner defers Codex
+  # failure and timeout exits until it has verified target integrity, so those
+  # codes are assigned to $runFailureCode before one final Fail call. Include
+  # both forms; otherwise a deferred exit code silently drops out of the
+  # documentation contract.
+  $exitCodes = @(
+    [regex]::Matches($runnerText, '(?m)\bFail\s+(\d+)\b') | ForEach-Object { [int]$_.Groups[1].Value }
+    [regex]::Matches($runnerText, '(?m)\$runFailureCode\s*=\s*(\d+)\b') | ForEach-Object { [int]$_.Groups[1].Value }
+  ) | Where-Object { $_ -gt 0 } | Sort-Object -Unique
   if ($exitCodes.Count -eq 0) { Add-Failure 'RR-07' 'No stable exit codes could be read from scripts/Run-Review.ps1.' }
 }
 
@@ -232,8 +240,8 @@ foreach ($guide in $guides.Keys) {
     }
     foreach ($id in $referenced) {
       if (-not $rows.ContainsKey($id)) { Add-Failure 'RR-07' "$guide sends exit code $code to $id, which is not a row in the troubleshooting table."; continue }
-      if (-not $rows[$id].Action) { Add-Failure 'RR-07' "$guide row $id (exit code $code) has no corrective action." }
-      if (-not $rows[$id].Verification) { Add-Failure 'RR-07' "$guide row $id (exit code $code) has no verification command, so the user cannot confirm the fix worked." }
+      if ([string]::IsNullOrWhiteSpace([string]$rows[$id].Action)) { Add-Failure 'RR-07' "$guide row $id (exit code $code) has no corrective action." }
+      if ([string]::IsNullOrWhiteSpace([string]$rows[$id].Verification)) { Add-Failure 'RR-07' "$guide row $id (exit code $code) has no verification command, so the user cannot confirm the fix worked." }
     }
   }
 
