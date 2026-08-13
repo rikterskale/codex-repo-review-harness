@@ -5,13 +5,13 @@ platform: linux
 canonical_path: docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
 target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "4c5797d180e799a8029d63cdcdc56c41cf693fcbce2de63b4acd1ced976fdae3"
-support_status: native_supported_except_codex_install
+reviewed_digest: "a99314dfd5942216596914c60ad265506a401d0d2b4e68f3eb1d918b2b432bfe"
+support_status: native_supported_with_external_codex_setup
 validation_status: partially_verified
 validated_on: 2026-08-13
 maintainer_source_of_truth: "README.md, AGENTS.md, config/review-config.yaml, scripts/Run-Review.ps1, .github/workflows/ci.yml"
 known_limitations:
-  - "The repository documents a Linux setup path but cannot verify current external Codex installation, account, authentication, or service requirements."
+  - "The project CI verifies Ubuntu only. Debian and Kali are not CI-tested by this project."
 ---
 
 # Linux novice guide
@@ -49,7 +49,7 @@ pwsh -NoProfile -File scripts/Run-Review.ps1 -DryRun
 The dry run requires Git but does not invoke Codex. It resolves the target,
 configuration, prompt, and review manifest, then prints preparation details.
 
-## Install Git on Debian, Ubuntu, or Kali
+## Install Git and Codex on Debian, Ubuntu, or Kali
 
 Install Git with the distribution package manager:
 
@@ -57,13 +57,17 @@ Install Git with the distribution package manager:
 sudo apt install git
 ```
 
-This repository does not contain evidence for a current Codex installation,
-authentication, account, or service procedure on Linux.
+OpenAI's [Codex CLI documentation](https://developers.openai.com/codex/cli/)
+documents its standalone installer for Linux:
 
-[VERIFY: maintainer-approved current Codex installation and authentication instructions for Debian, Ubuntu, and Kali.]
+```bash
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+```
 
-After completing the approved external setup, open a project directory and run
-`codex` as required by that environment.
+Open a project directory and run `codex`. On the first run, select **Sign in
+with ChatGPT** or another sign-in method offered by the CLI. This project does
+not verify account eligibility or service availability. Its CI evidence remains
+Ubuntu-only; Debian and Kali are not CI-tested by this project.
 
 Confirm the commands are available before starting a real harness review:
 

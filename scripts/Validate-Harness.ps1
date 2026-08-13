@@ -56,12 +56,13 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Check "Inside a Git repository" ($inside -eq "true") "Run 'git init' or clone a repository first."
 }
 
-# Codex installation and authentication are external to this repository. Do not
-# present an unverified external installer as a supported setup procedure.
+# Codex installation and authentication are external to this repository. OpenAI
+# documents this installer for Linux; the harness itself tests only its local
+# behavior and does not determine account eligibility or service availability.
 $codexHint = if ($onWindows) {
     'Obtain your maintainer-approved Codex setup instructions for Windows, then re-run this script.'
 } else {
-    'This repository has no verified Linux Codex setup procedure. Obtain maintainer-approved instructions, then re-run this script.'
+    'Install Codex for Linux: curl -fsSL https://chatgpt.com/codex/install.sh | sh; then run codex to sign in and re-run this script.'
 }
 Check "Codex CLI is installed" (Get-Command codex -ErrorAction SilentlyContinue) $codexHint
 

@@ -69,11 +69,11 @@ try {
   $windowsInstaller = 'chatgpt\.com/codex/install\.ps1'
   $windowsGit = 'git-scm\.com/download/win'
   if ($onWindows) {
-    if ($validation.Output -notmatch $windowsInstaller) { throw 'The Windows validator no longer offers the Windows Codex installer.' }
+    if ($validation.Output -notmatch 'maintainer-approved Codex setup instructions for Windows') { throw 'The Windows validator no longer explains how to obtain its supported setup instructions.' }
   } else {
     if ($validation.Output -match $windowsInstaller) { throw 'The validator still prints the Windows Codex installer on a non-Windows host.' }
     if ($validation.Output -match $windowsGit) { throw 'The validator still prints the Windows Git download on a non-Windows host.' }
-    if ($validation.Output -notmatch "official Codex CLI instructions") { throw 'The validator gives non-Windows users no way forward.' }
+    if ($validation.Output -notmatch 'chatgpt\.com/codex/install\.sh') { throw 'The validator gives non-Windows users no way to install Codex.' }
   }
 
   # REV-DOC-004: the written report must carry its title exactly once.
