@@ -2,12 +2,13 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.2.1] - 2026-08-13
 
 ### Documentation
 
 - Refreshed the source-verified documentation set, including the CLI reference,
   installation, usage, troubleshooting, contributor, and architecture guides.
+- Added the repository-local documentation lifecycle review checklist.
 - Recorded post-release readiness evidence on 2026-08-13. A real Codex CLI
   v0.147.0 read-only review of this repository at harness commit `3d58e4d`
   completed and left the target Git status unchanged. This was a workstation
@@ -15,6 +16,17 @@ All notable changes to this project are documented here.
   `analyze` job for the `v0.2.0` release commit `75da840`:
   https://github.com/rikterskale/codex-repo-review-harness/actions/runs/31753090434
   GitHub returned no open issues at the time of the check.
+
+### Fixed
+
+- A failed or timed-out review now compares the target Git status before it
+  exits. A target change is reported as exit code `5`, which takes precedence
+  over the original Codex failure or timeout (`9ae675d`).
+- The temporary Codex final-message file is removed after every review outcome,
+  including timeout (`9ae675d`).
+- The release-readiness gate now derives deferred runner exit codes as well as
+  literal `Fail` calls, so all documented stable codes remain audited
+  (`b26a4c7`).
 
 ## [0.2.0] - 2026-08-13
 

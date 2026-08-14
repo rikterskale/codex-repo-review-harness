@@ -4,8 +4,8 @@ guide_schema_version: 1
 platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: "Codex Repo Review Harness"
-target_release: "0.2.0 (tagged v0.2.0)"
-reviewed_digest: "87313b1e4c50f5aa80de427739c648926c93c7efa91292619661fe448e9600e3"
+target_release: "0.2.1 (tagged v0.2.1)"
+reviewed_digest: "24ac493aa0a974c831432772303c93319694c5c44388608720c701c38fd7f66b"
 support_status: native_supported
 validation_status: partially_verified
 validated_on: 2026-08-13
@@ -16,7 +16,7 @@ known_limitations:
 
 # Windows novice guide
 
-This is the concise, source-verified Windows guide for release 0.2.0, released
+This is the concise, source-verified Windows guide for release 0.2.1, released
 on 2026-08-13. The `reviewed_digest` records the harness surface this guide was
 checked against.
 
